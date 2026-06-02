@@ -21,6 +21,9 @@ pub(crate) struct AppState {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    // Load environment variables from .env file if it exists
+    dotenvy::dotenv().ok();
+
     init_tracing();
 
     let config = Config::from_env().context("failed to load configuration")?;

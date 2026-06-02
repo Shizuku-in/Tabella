@@ -66,6 +66,7 @@ dependencies = [
  "argon2",
  "axum",
  "axum-extra",
+ "dotenvy",
  "hex",
  "image",
  "serde",
