@@ -396,7 +396,7 @@ async fn process_single_file(
             sha256, original_path, preview_path, thumbnail_path, original_filename,
             mime_type, width, height, file_size, rating
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10::image_rating
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
         )
         RETURNING id
         "#,
