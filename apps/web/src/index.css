@@ -1,5 +1,12 @@
 @import '@fontsource-variable/manrope';
 
+@font-face {
+  font-family: 'Google Sans Code';
+  src: url('/fonts/GoogleSansCode-Italic.ttf') format('truetype');
+  font-style: italic;
+  font-weight: 100 900;
+}
+
 html,
 body,
 #root {

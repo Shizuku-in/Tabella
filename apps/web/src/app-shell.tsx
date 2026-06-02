@@ -1,6 +1,7 @@
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import {
   AdminPanelSettingsOutlined,
+  PlaylistAdd,
   ArtTrack,
   DarkModeOutlined,
   LightModeOutlined,
@@ -180,6 +181,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
               sx={{
                 flexShrink: 0,
                 color: 'text.primary',
+                fontFamily: '"Google Sans Code", monospace',
                 fontStyle: 'italic',
                 fontWeight: 700,
                 textDecoration: 'none',
@@ -195,6 +197,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
               <Typography
                 sx={{
                   color: 'text.secondary',
+                  fontFamily: '"Google Sans Code", monospace',
                   fontWeight: 500,
                   fontSize: '0.95rem',
                   ml: 0.5,
@@ -321,9 +324,9 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                 sx={{ p: 0.75, borderRadius: '50%' }}
               >
                 {mode === 'light' ? (
-                  <DarkModeOutlined fontSize="small" />
-                ) : (
                   <LightModeOutlined fontSize="small" />
+                ) : (
+                  <DarkModeOutlined fontSize="small" />
                 )}
               </IconButton>
             </Tooltip>
@@ -446,7 +449,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
             selected={isAdminRoute}
             onClick={() => setUserAnchor(null)}
           >
-            <AdminPanelSettingsOutlined fontSize="small" sx={{ mr: 1 }} />
+            <PlaylistAdd fontSize="small" sx={{ mr: 1 }} />
             Import Jobs
           </MenuItem>
         ) : null}
@@ -460,7 +463,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
       <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>Gallery Settings</DialogTitle>
         <DialogContent dividers sx={{ p: 0 }}>
-          <Accordion disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
+          <Accordion square disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
             <AccordionSummary expandIcon={<ExpandMore />}>
               <Typography variant="subtitle2">Masonry Columns</Typography>
             </AccordionSummary>
@@ -489,7 +492,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
             </AccordionDetails>
           </Accordion>
 
-          <Accordion disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
+          <Accordion square disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
             <AccordionSummary expandIcon={<ExpandMore />}>
               <Typography variant="subtitle2">Grid Columns</Typography>
             </AccordionSummary>

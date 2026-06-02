@@ -22,6 +22,10 @@ const queryClient = new QueryClient({
 })
 
 function detectInitialMode(): PaletteMode {
+  const storedMode = localStorage.getItem('theme-mode')
+  if (storedMode === 'light' || storedMode === 'dark') {
+    return storedMode
+  }
   return window.matchMedia('(prefers-color-scheme: dark)').matches
     ? 'dark'
     : 'light'
@@ -32,7 +36,11 @@ function App() {
 
   const handleToggleMode = () => {
     startTransition(() => {
-      setMode((currentMode) => (currentMode === 'light' ? 'dark' : 'light'))
+      setMode((currentMode) => {
+        const newMode = currentMode === 'light' ? 'dark' : 'light'
+        localStorage.setItem('theme-mode', newMode)
+        return newMode
+      })
     })
   }
 

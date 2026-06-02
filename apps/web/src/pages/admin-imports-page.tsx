@@ -200,7 +200,7 @@ export function AdminImportsPage() {
           <TableBody>
             {Object.values(activeUploads).reverse().map((job) => (
               <TableRow key={job.id}>
-                <TableCell sx={{ fontFamily: 'monospace' }}>Uploading...</TableCell>
+                <TableCell>Uploading...</TableCell>
                 <TableCell>{new Date(job.createdAt).toLocaleString()}</TableCell>
                 <TableCell>
                   <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%', maxWidth: 500 }}>
@@ -243,7 +243,7 @@ export function AdminImportsPage() {
 
               return (
                 <TableRow key={job.id}>
-                  <TableCell sx={{ fontFamily: 'monospace' }}>{job.id.substring(0, 8)}</TableCell>
+                  <TableCell>{job.id.substring(0, 8)}</TableCell>
                   <TableCell>{new Date(job.createdAt).toLocaleString()}</TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%', maxWidth: 500 }}>
