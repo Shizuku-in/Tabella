@@ -23,6 +23,10 @@ interface GalleryUiContextValue {
   setHoverInfo: (value: { name: boolean; resolution: boolean; tags: boolean; loved: boolean; rating: boolean }) => void
   showResultsCount: boolean
   setShowResultsCount: (value: boolean) => void
+  galleryImageQuality: 'thumbnail' | 'sample' | 'original'
+  setGalleryImageQuality: (value: 'thumbnail' | 'sample' | 'original') => void
+  lightboxImageQuality: 'thumbnail' | 'sample' | 'original'
+  setLightboxImageQuality: (value: 'thumbnail' | 'sample' | 'original') => void
 }
 
 const GalleryUiContext = createContext<GalleryUiContextValue | null>(null)
@@ -64,8 +68,22 @@ function readInitialHoverInfo() {
 }
 
 function readInitialResultsCount(): boolean {
-  const stored = window.localStorage.getItem('tabella.gallery.showResultsCount')
-  return stored === 'true'
+  const stored = window.localStorage.getItem('tabella.gallery.resultsCount')
+  return stored !== 'false' // default true
+}
+
+function readInitialGalleryQuality(): 'thumbnail' | 'sample' | 'original' {
+  const stored = window.localStorage.getItem('tabella.gallery.galleryQuality')
+  if (stored === 'original') return 'original'
+  if (stored === 'sample') return 'sample'
+  return 'thumbnail'
+}
+
+function readInitialLightboxQuality(): 'thumbnail' | 'sample' | 'original' {
+  const stored = window.localStorage.getItem('tabella.gallery.lightboxQuality')
+  if (stored === 'original') return 'original'
+  if (stored === 'thumbnail') return 'thumbnail'
+  return 'sample' // default sample for lightbox
 }
 
 export function GalleryUiProvider({ children }: { children: ReactNode }) {
@@ -78,6 +96,8 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
   const [showMobileDetails, setShowMobileDetails] = useState<boolean>(readInitialMobileDetails)
   const [hoverInfo, setHoverInfo] = useState(readInitialHoverInfo)
   const [showResultsCount, setShowResultsCount] = useState<boolean>(readInitialResultsCount)
+  const [galleryImageQuality, setGalleryImageQuality] = useState<'thumbnail' | 'sample' | 'original'>(readInitialGalleryQuality)
+  const [lightboxImageQuality, setLightboxImageQuality] = useState<'thumbnail' | 'sample' | 'original'>(readInitialLightboxQuality)
 
   useEffect(() => {
     window.localStorage.setItem(LAYOUT_STORAGE_KEY, layoutMode)
@@ -100,8 +120,16 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
   }, [hoverInfo])
 
   useEffect(() => {
-    window.localStorage.setItem('tabella.gallery.showResultsCount', String(showResultsCount))
+    window.localStorage.setItem('tabella.gallery.resultsCount', String(showResultsCount))
   }, [showResultsCount])
+
+  useEffect(() => {
+    window.localStorage.setItem('tabella.gallery.galleryQuality', galleryImageQuality)
+  }, [galleryImageQuality])
+
+  useEffect(() => {
+    window.localStorage.setItem('tabella.gallery.lightboxQuality', lightboxImageQuality)
+  }, [lightboxImageQuality])
 
   return (
     <GalleryUiContext.Provider
@@ -124,6 +152,10 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
         setHoverInfo,
         showResultsCount,
         setShowResultsCount,
+        galleryImageQuality,
+        setGalleryImageQuality,
+        lightboxImageQuality,
+        setLightboxImageQuality,
       }}
     >
       {children}

@@ -10,6 +10,8 @@ export interface GalleryItem {
   id: number
   filename: string
   thumbnailSrc: string
+  sampleSrc?: string
+  originalSrc?: string
   width: number
   height: number
   rating: Rating

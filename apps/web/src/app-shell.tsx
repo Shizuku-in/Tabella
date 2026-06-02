@@ -30,6 +30,8 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  Radio,
+  RadioGroup,
   Slider,
   Switch,
   Stack,
@@ -92,6 +94,10 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     setHoverInfo,
     showResultsCount,
     setShowResultsCount,
+    galleryImageQuality,
+    setGalleryImageQuality,
+    lightboxImageQuality,
+    setLightboxImageQuality,
   } = useGalleryUi()
   const [searchVisible, setSearchVisible] = useState(() => searchText.length > 0)
   const [sortAnchor, setSortAnchor] = useState<HTMLElement | null>(null)
@@ -552,6 +558,36 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                   />
                 ))}
               </FormGroup>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Image Quality (Gallery)
+              </Typography>
+              <RadioGroup
+                row
+                value={galleryImageQuality}
+                onChange={(e) => setGalleryImageQuality(e.target.value as 'thumbnail' | 'sample' | 'original')}
+              >
+                <FormControlLabel value="thumbnail" control={<Radio size="small" />} label="Thumbnail" />
+                <FormControlLabel value="sample" control={<Radio size="small" />} label="Sample" />
+                <FormControlLabel value="original" control={<Radio size="small" />} label="Original" />
+              </RadioGroup>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Image Quality (Lightbox)
+              </Typography>
+              <RadioGroup
+                row
+                value={lightboxImageQuality}
+                onChange={(e) => setLightboxImageQuality(e.target.value as 'thumbnail' | 'sample' | 'original')}
+              >
+                <FormControlLabel value="thumbnail" control={<Radio size="small" />} label="Thumbnail" />
+                <FormControlLabel value="sample" control={<Radio size="small" />} label="Sample" />
+                <FormControlLabel value="original" control={<Radio size="small" />} label="Original" />
+              </RadioGroup>
             </Box>
             </Stack>
           </Box>

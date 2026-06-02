@@ -6,6 +6,7 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { Masonry } from '@mui/lab'
 import { useGalleryUi } from '../gallery/gallery-ui-provider.tsx'
 import { LazyImage } from '../components/lazy-image.tsx'
+import { LightboxViewer } from '../components/lightbox-viewer.tsx'
 import { queryGalleryPage } from '../mocks/gallery.ts'
 import type { GalleryItem, LayoutMode, Rating } from '../types.ts'
 
@@ -23,9 +24,11 @@ const ratingLabel: Record<Rating, string> = {
   explicit: 'Explicit',
 }
 
+
 export function GalleryPage() {
-  const { layoutMode, searchText, sort, ratingFilter, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount } = useGalleryUi()
+  const { layoutMode, searchText, sort, ratingFilter, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality } = useGalleryUi()
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<number, boolean>>({})
+  const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   const galleryQuery = useInfiniteQuery({
@@ -197,7 +200,7 @@ export function GalleryPage() {
         <>
           {layoutMode === 'masonry' ? (
             <Masonry columns={masonryColumns} spacing={1.25}>
-              {items.map((item) => (
+              {items.map((item, index) => (
                 <GalleryCard
                   key={item.id}
                   item={item}
@@ -206,6 +209,8 @@ export function GalleryPage() {
                   hoverInfo={hoverInfo}
                   isFavorite={favoriteOverrides[item.id] ?? item.favorite}
                   onToggleFavorite={() => handleToggleFavorite(item.id)}
+                  onClick={() => setSelectedImageIndex(index)}
+                  imageQuality={galleryImageQuality}
                 />
               ))}
             </Masonry>
@@ -223,7 +228,7 @@ export function GalleryPage() {
                 }),
               }}
             >
-              {items.map((item) => (
+              {items.map((item, index) => (
                 <GalleryCard
                   key={item.id}
                   item={item}
@@ -232,6 +237,8 @@ export function GalleryPage() {
                   hoverInfo={hoverInfo}
                   isFavorite={favoriteOverrides[item.id] ?? item.favorite}
                   onToggleFavorite={() => handleToggleFavorite(item.id)}
+                  onClick={() => setSelectedImageIndex(index)}
+                  imageQuality={galleryImageQuality}
                 />
               ))}
             </Box>
@@ -256,6 +263,21 @@ export function GalleryPage() {
           </Box>
         </>
       )}
+
+      {selectedImageIndex !== null && (
+        <LightboxViewer
+          open={true}
+          onClose={() => setSelectedImageIndex(null)}
+          items={items}
+          initialIndex={selectedImageIndex}
+          onIndexChange={(newIndex) => {
+            // Load more if we are nearing the end (e.g. last 3 items)
+            if (newIndex >= items.length - 3 && galleryQuery.hasNextPage && !galleryQuery.isFetchingNextPage) {
+              galleryQuery.fetchNextPage()
+            }
+          }}
+        />
+      )}
     </Stack>
   )
 }
@@ -267,6 +289,8 @@ function GalleryCard({
   hoverInfo,
   isFavorite,
   onToggleFavorite,
+  onClick,
+  imageQuality,
 }: {
   item: GalleryItem
   layoutMode: LayoutMode
@@ -274,6 +298,8 @@ function GalleryCard({
   hoverInfo: { name: boolean; resolution: boolean; tags: boolean; loved: boolean; rating: boolean }
   isFavorite: boolean
   onToggleFavorite: () => void
+  onClick: () => void
+  imageQuality: 'thumbnail' | 'sample' | 'original'
 }) {
   const isJustified = layoutMode === 'justified'
   const isGrid = layoutMode === 'grid'
@@ -281,11 +307,13 @@ function GalleryCard({
   return (
     <Box
       className="gallery-card"
+      onClick={onClick}
       sx={{
         position: 'relative',
         display: 'inline-block',
         width: '100%',
         overflow: 'hidden',
+        cursor: 'pointer',
         borderRadius: 0.75,
         maxHeight: isGrid ? 'none' : '60vh',
         breakInside: layoutMode === 'masonry' ? 'avoid' : 'auto',
@@ -300,7 +328,11 @@ function GalleryCard({
       }}
     >
       <LazyImage
-        src={item.thumbnailSrc}
+        src={
+          imageQuality === 'original' && item.originalSrc ? item.originalSrc :
+          (imageQuality === 'original' || imageQuality === 'sample') && item.sampleSrc ? item.sampleSrc :
+          item.thumbnailSrc
+        }
         alt={item.filename}
         aspectRatio={isGrid ? '1' : `${item.width} / ${item.height}`}
       />
@@ -399,7 +431,10 @@ function GalleryCard({
         {hoverInfo.loved && (
           <IconButton
             size="small"
-            onClick={onToggleFavorite}
+            onClick={(e) => {
+              e.stopPropagation()
+              onToggleFavorite()
+            }}
             aria-label={isFavorite ? 'remove favorite' : 'add favorite'}
             sx={{
               width: 32,
