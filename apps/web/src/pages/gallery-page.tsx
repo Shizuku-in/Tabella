@@ -7,10 +7,10 @@ import { Masonry } from '@mui/lab'
 import { useGalleryUi } from '../gallery/gallery-ui-provider.tsx'
 import { LazyImage } from '../components/lazy-image.tsx'
 import { LightboxViewer } from '../components/lightbox-viewer.tsx'
-import { queryGalleryPage } from '../mocks/gallery.ts'
+import { listImages, toggleFavorite } from '../lib/api.ts'
 import type { GalleryItem, LayoutMode, Rating } from '../types.ts'
 
-const PAGE_SIZE = 8
+const PAGE_SIZE = 50
 
 const ratingTone: Record<Rating, string> = {
   safe: 'rgba(238, 241, 248, 0.86)',
@@ -24,7 +24,6 @@ const ratingLabel: Record<Rating, string> = {
   explicit: 'Explicit',
 }
 
-
 export function GalleryPage() {
   const { layoutMode, searchText, sort, ratingFilter, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality } = useGalleryUi()
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<number, boolean>>({})
@@ -33,14 +32,35 @@ export function GalleryPage() {
 
   const galleryQuery = useInfiniteQuery({
     queryKey: ['gallery', searchText, sort, ratingFilter],
-    queryFn: ({ pageParam }) =>
-      queryGalleryPage({
-        searchText,
-        sort,
-        ratingFilter,
+    queryFn: async ({ pageParam }) => {
+      // Split search text by spaces into tags
+      const tags = searchText.trim() ? searchText.trim().split(/\s+/) : []
+
+      const response = await listImages({
         cursor: pageParam,
         limit: PAGE_SIZE,
-      }),
+        sort: sort,
+        rating: ratingFilter === 'all' ? undefined : [ratingFilter],
+        include_tags: tags,
+      })
+
+      return {
+        items: response.items.map((item) => ({
+          id: item.id,
+          filename: item.original_filename,
+          thumbnailSrc: item.thumbnail_url,
+          sampleSrc: item.preview_url,
+          originalSrc: item.original_url || undefined,
+          width: item.width,
+          height: item.height,
+          rating: item.rating,
+          tags: item.tags,
+          favorite: item.is_favorite,
+          importedAt: '', // We don't have importedAt in ImageListItem right now
+        }) as GalleryItem),
+        nextCursor: response.next_cursor,
+      }
+    },
     initialPageParam: null as string | null,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
   })
@@ -94,19 +114,24 @@ export function GalleryPage() {
   }, [ratingFilter, searchText, sort])
 
   const handleToggleFavorite = (id: number) => {
-    setFavoriteOverrides((currentOverrides) => {
-      const item = items.find((entry) => entry.id === id)
+    const item = items.find((entry) => entry.id === id)
+    if (!item) return
 
-      if (!item) {
-        return currentOverrides
-      }
+    const currentValue = favoriteOverrides[id] ?? item.favorite
+    const newValue = !currentValue
 
-      const currentValue = currentOverrides[id] ?? item.favorite
+    setFavoriteOverrides((currentOverrides) => ({
+      ...currentOverrides,
+      [id]: newValue,
+    }))
 
-      return {
+    toggleFavorite(id, newValue).catch((error) => {
+      console.error('Failed to toggle favorite', error)
+      // Revert optimistic update on failure
+      setFavoriteOverrides((currentOverrides) => ({
         ...currentOverrides,
-        [id]: !currentValue,
-      }
+        [id]: currentValue,
+      }))
     })
   }
 

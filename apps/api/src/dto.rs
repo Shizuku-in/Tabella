@@ -93,6 +93,7 @@ pub(crate) struct ImageListItem {
     pub(crate) original_filename: String,
     pub(crate) thumbnail_url: String,
     pub(crate) preview_url: String,
+    pub(crate) original_url: Option<String>,
     pub(crate) width: u32,
     pub(crate) height: u32,
     pub(crate) rating: Rating,

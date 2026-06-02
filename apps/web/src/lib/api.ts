@@ -63,3 +63,56 @@ export async function logout(): Promise<void> {
     method: 'POST',
   })
 }
+
+// ----- Gallery API -----
+
+export interface BackendImageListItem {
+  id: number
+  original_filename: string
+  thumbnail_url: string
+  preview_url: string
+  original_url: string | null
+  width: number
+  height: number
+  rating: 'safe' | 'suggestive' | 'explicit'
+  is_favorite: boolean
+  tags: string[]
+}
+
+export interface BackendListImagesResponse {
+  items: BackendImageListItem[]
+  next_cursor: string | null
+}
+
+export async function listImages(query: {
+  cursor?: string | null
+  limit?: number
+  sort?: string
+  rating?: string[]
+  include_tags?: string[]
+  favorites_only?: boolean
+}): Promise<BackendListImagesResponse> {
+  const params = new URLSearchParams()
+  if (query.cursor) params.set('cursor', query.cursor)
+  if (query.limit) params.set('limit', query.limit.toString())
+  if (query.sort) params.set('sort', query.sort)
+  if (query.favorites_only) params.set('favorites_only', 'true')
+  if (query.rating && query.rating.length > 0) {
+    for (const r of query.rating) {
+      params.append('rating', r)
+    }
+  }
+  if (query.include_tags && query.include_tags.length > 0) {
+    for (const t of query.include_tags) {
+      params.append('include_tags', t)
+    }
+  }
+
+  return request<BackendListImagesResponse>(`/api/images?${params.toString()}`)
+}
+
+export async function toggleFavorite(imageId: number, isFavorite: boolean): Promise<void> {
+  await request<void>(`/api/favorites/${imageId}`, {
+    method: isFavorite ? 'POST' : 'DELETE',
+  })
+}

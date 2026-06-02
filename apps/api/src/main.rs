@@ -42,6 +42,8 @@ async fn main() -> anyhow::Result<()> {
     };
 
     let app = Router::new()
+        .nest_service("/media", tower_http::services::ServeDir::new(&config.media_root))
+        .nest_service("/tmp", tower_http::services::ServeDir::new(&config.temp_root))
         .merge(api::router(app_state))
         .layer(TraceLayer::new_for_http());
 

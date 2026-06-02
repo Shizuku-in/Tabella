@@ -14,7 +14,7 @@ use crate::{
     AppState, auth,
     dto::{
         AuthUserResponse, DownloadJobRequest, HealthResponse, ListImagesQuery, ListImagesResponse,
-        LoginRequest, SessionUser, TagSuggestQuery, UserRole,
+        LoginRequest, SessionUser, TagSuggestQuery, UserRole, Rating, ImageListItem
     },
 };
 
@@ -122,13 +122,89 @@ async fn list_images(
     jar: CookieJar,
     Query(query): Query<ListImagesQuery>,
 ) -> Result<Json<ListImagesResponse>, ApiError> {
-    let _user = require_user(&state, &jar).await?;
-    let _ = query;
+    let user = require_user(&state, &jar).await?;
 
-    Ok(Json(ListImagesResponse {
-        items: Vec::new(),
-        next_cursor: None,
-    }))
+    let limit = query.limit.unwrap_or(50).clamp(1, 100) as i64;
+    let mut builder = sqlx::QueryBuilder::new(
+        "SELECT i.id, i.original_filename, i.thumbnail_path, i.preview_path, i.original_path, i.width, i.height, i.rating, \
+         (f.image_id IS NOT NULL) AS is_favorite, \
+         COALESCE(array_agg(t.name) FILTER (WHERE t.name IS NOT NULL), '{}') AS tags \
+         FROM images i \
+         LEFT JOIN favorites f ON f.image_id = i.id AND f.user_id = ",
+    );
+    builder.push_bind(user.id);
+    builder.push(" LEFT JOIN image_tags it ON it.image_id = i.id \
+                  LEFT JOIN tags t ON t.id = it.tag_id \
+                  WHERE 1=1 ");
+
+    if query.favorites_only {
+        builder.push(" AND f.image_id IS NOT NULL ");
+    }
+
+    if !query.rating.is_empty() {
+        builder.push(" AND i.rating = ANY(");
+        let ratings: Vec<String> = query.rating.into_iter().map(|r| match r {
+            Rating::Safe => "safe".to_string(),
+            Rating::Suggestive => "suggestive".to_string(),
+            Rating::Explicit => "explicit".to_string(),
+        }).collect();
+        builder.push_bind(ratings);
+        builder.push(") ");
+    }
+
+    if let Some(cursor) = query.cursor {
+        if let Ok(id) = cursor.parse::<i64>() {
+            builder.push(" AND i.id < ");
+            builder.push_bind(id);
+        }
+    }
+
+    builder.push(" GROUP BY i.id, f.image_id ");
+    builder.push(" ORDER BY i.id DESC LIMIT ");
+    builder.push_bind(limit + 1);
+
+    let rows: Vec<sqlx::postgres::PgRow> = builder
+        .build()
+        .fetch_all(&state.pool)
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
+
+    use sqlx::Row;
+    let mut items = Vec::new();
+    for row in rows {
+        let rating_str: String = row.try_get("rating").unwrap_or_else(|_| "safe".to_string());
+        let rating = match rating_str.as_str() {
+            "suggestive" => Rating::Suggestive,
+            "explicit" => Rating::Explicit,
+            _ => Rating::Safe,
+        };
+
+        let thumbnail_path: String = row.try_get("thumbnail_path").unwrap_or_default();
+        let preview_path: String = row.try_get("preview_path").unwrap_or_default();
+        let original_path: String = row.try_get("original_path").unwrap_or_default();
+
+        items.push(ImageListItem {
+            id: row.try_get("id").unwrap_or(0),
+            original_filename: row.try_get("original_filename").unwrap_or_default(),
+            thumbnail_url: format!("/media/{}", thumbnail_path),
+            preview_url: format!("/media/{}", preview_path),
+            original_url: Some(format!("/media/{}", original_path)),
+            width: row.try_get::<i32, _>("width").unwrap_or(0) as u32,
+            height: row.try_get::<i32, _>("height").unwrap_or(0) as u32,
+            rating,
+            is_favorite: row.try_get("is_favorite").unwrap_or(false),
+            tags: row.try_get("tags").unwrap_or_default(),
+        });
+    }
+
+    let next_cursor = if items.len() > limit as usize {
+        items.pop(); // Remove the extra item
+        items.last().map(|item| item.id.to_string())
+    } else {
+        None
+    };
+
+    Ok(Json(ListImagesResponse { items, next_cursor }))
 }
 
 async fn suggest_tags(
@@ -149,11 +225,18 @@ async fn add_favorite(
     jar: CookieJar,
     Path(image_id): Path<i64>,
 ) -> Result<Response, ApiError> {
-    let _user = require_user(&state, &jar).await?;
-    let _ = image_id;
-    Err(ApiError::not_implemented(
-        "Favorites persistence is not implemented yet.",
-    ))
+    let user = require_user(&state, &jar).await?;
+
+    sqlx::query(
+        "INSERT INTO favorites (user_id, image_id) VALUES ($1, $2) ON CONFLICT DO NOTHING"
+    )
+    .bind(user.id)
+    .bind(image_id)
+    .execute(&state.pool)
+    .await
+    .map_err(|e| ApiError::internal(e.into()))?;
+
+    Ok(StatusCode::NO_CONTENT.into_response())
 }
 
 async fn remove_favorite(
@@ -161,11 +244,18 @@ async fn remove_favorite(
     jar: CookieJar,
     Path(image_id): Path<i64>,
 ) -> Result<Response, ApiError> {
-    let _user = require_user(&state, &jar).await?;
-    let _ = image_id;
-    Err(ApiError::not_implemented(
-        "Favorites persistence is not implemented yet.",
-    ))
+    let user = require_user(&state, &jar).await?;
+
+    sqlx::query(
+        "DELETE FROM favorites WHERE user_id = $1 AND image_id = $2"
+    )
+    .bind(user.id)
+    .bind(image_id)
+    .execute(&state.pool)
+    .await
+    .map_err(|e| ApiError::internal(e.into()))?;
+
+    Ok(StatusCode::NO_CONTENT.into_response())
 }
 
 async fn create_import_job(
