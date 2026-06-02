@@ -24,7 +24,7 @@ const ratingLabel: Record<Rating, string> = {
 }
 
 export function GalleryPage() {
-  const { layoutMode, searchText, sort, ratingFilter } = useGalleryUi()
+  const { layoutMode, searchText, sort, ratingFilter, masonryColumns, showMobileDetails, hoverInfo, showResultsCount } = useGalleryUi()
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<number, boolean>>({})
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
@@ -134,34 +134,36 @@ export function GalleryPage() {
 
   return (
     <Stack spacing={1.5}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-        justifyContent="space-between"
-        spacing={0.5}
-        sx={{
-          px: { xs: 0.25, md: 0.5 },
-          minHeight: 24,
-        }}
-      >
-        <Typography variant="body2" color="text.secondary">
-          {showInitialLoading ? 'Loading gallery...' : `${items.length} results`}
-          {galleryQuery.isFetchingNextPage ? ' · Loading more' : ''}
-        </Typography>
-        <Typography
-          variant="caption"
-          color="text.secondary"
+      {showResultsCount && (
+        <Stack
+          direction={{ xs: 'column', sm: 'row' }}
+          alignItems={{ xs: 'flex-start', sm: 'center' }}
+          justifyContent="space-between"
+          spacing={0.5}
           sx={{
-            display: 'block',
-            maxWidth: '100%',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
+            px: { xs: 0.25, md: 0.5 },
+            minHeight: 24,
           }}
         >
-          {activeFilterLabels.join(' · ')}
-        </Typography>
-      </Stack>
+          <Typography variant="body2" color="text.secondary">
+            {showInitialLoading ? 'Loading gallery...' : `${items.length} results`}
+            {galleryQuery.isFetchingNextPage ? ' · Loading more' : ''}
+          </Typography>
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{
+              display: 'block',
+              maxWidth: '100%',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
+            {activeFilterLabels.join(' · ')}
+          </Typography>
+        </Stack>
+      )}
 
       {showInitialLoading ? (
         <Box
@@ -194,12 +196,14 @@ export function GalleryPage() {
       ) : (
         <>
           {layoutMode === 'masonry' ? (
-            <Masonry columns={{ xs: 2, sm: 3, lg: 4, xl: 5 }} spacing={1}>
+            <Masonry columns={masonryColumns} spacing={1.25}>
               {items.map((item) => (
                 <GalleryCard
                   key={item.id}
                   item={item}
                   layoutMode={layoutMode}
+                  showMobileDetails={showMobileDetails}
+                  hoverInfo={hoverInfo}
                   isFavorite={favoriteOverrides[item.id] ?? item.favorite}
                   onToggleFavorite={() => handleToggleFavorite(item.id)}
                 />
@@ -212,6 +216,8 @@ export function GalleryPage() {
                   key={item.id}
                   item={item}
                   layoutMode={layoutMode}
+                  showMobileDetails={showMobileDetails}
+                  hoverInfo={hoverInfo}
                   isFavorite={favoriteOverrides[item.id] ?? item.favorite}
                   onToggleFavorite={() => handleToggleFavorite(item.id)}
                 />
@@ -245,11 +251,15 @@ export function GalleryPage() {
 function GalleryCard({
   item,
   layoutMode,
+  showMobileDetails,
+  hoverInfo,
   isFavorite,
   onToggleFavorite,
 }: {
   item: GalleryItem
   layoutMode: LayoutMode
+  showMobileDetails: boolean
+  hoverInfo: { name: boolean; resolution: boolean; tags: boolean; loved: boolean; rating: boolean }
   isFavorite: boolean
   onToggleFavorite: () => void
 }) {
@@ -292,29 +302,31 @@ function GalleryCard({
           insetInline: 0,
           top: 0,
           p: 1,
-          opacity: { xs: 1, md: 0 },
+          opacity: { xs: showMobileDetails ? 1 : 0, md: 0 },
           transition: 'opacity 0.18s ease',
           '.gallery-card:hover &': {
             opacity: 1,
           },
         }}
       >
-        <Box
-          sx={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            height: 24,
-            px: 1,
-            borderRadius: 999,
-            fontSize: '0.68rem',
-            fontWeight: 700,
-            color: 'rgba(18, 23, 35, 0.94)',
-            bgcolor: ratingTone[item.rating],
-            backdropFilter: 'blur(10px)',
-          }}
-        >
-          {ratingLabel[item.rating]}
-        </Box>
+        {hoverInfo.rating && (
+          <Box
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              height: 24,
+              px: 1,
+              borderRadius: 999,
+              fontSize: '0.68rem',
+              fontWeight: 700,
+              color: 'rgba(18, 23, 35, 0.94)',
+              bgcolor: ratingTone[item.rating],
+              backdropFilter: 'blur(10px)',
+            }}
+          >
+            {ratingLabel[item.rating]}
+          </Box>
+        )}
       </Stack>
 
       <Box
@@ -330,7 +342,7 @@ function GalleryCard({
           color: 'common.white',
           background:
             'linear-gradient(180deg, rgba(6,9,14,0) 0%, rgba(6,9,14,0.28) 34%, rgba(6,9,14,0.78) 100%)',
-          opacity: { xs: 1, md: 0 },
+          opacity: { xs: showMobileDetails ? 1 : 0, md: 0 },
           transform: { xs: 'translateY(0)', md: 'translateY(10px)' },
           transition: 'opacity 0.18s ease, transform 0.18s ease',
           '.gallery-card:hover &': {
@@ -340,45 +352,54 @@ function GalleryCard({
         }}
       >
         <Stack spacing={0.25} sx={{ minWidth: 0 }}>
-          <Typography
-            variant="body2"
-            sx={{
-              fontWeight: 700,
-              textShadow: '0 1px 6px rgba(0,0,0,0.45)',
-            }}
-            noWrap
-          >
-            {item.filename}
-          </Typography>
-          <Typography
-            variant="caption"
-            sx={{
-              color: 'rgba(255,255,255,0.74)',
-              textShadow: '0 1px 4px rgba(0,0,0,0.3)',
-            }}
-            noWrap
-          >
-            {item.width} × {item.height} · {item.tags.slice(0, 2).join(' ')}
-          </Typography>
+          {hoverInfo.name && (
+            <Typography
+              variant="body2"
+              sx={{
+                fontWeight: 700,
+                textShadow: '0 1px 6px rgba(0,0,0,0.45)',
+              }}
+              noWrap
+            >
+              {item.filename}
+            </Typography>
+          )}
+          {(hoverInfo.resolution || hoverInfo.tags) && (
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'rgba(255,255,255,0.74)',
+                textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+              }}
+              noWrap
+            >
+              {[
+                hoverInfo.resolution ? `${item.width} × ${item.height}` : null,
+                hoverInfo.tags ? item.tags.slice(0, 2).join(' ') : null,
+              ].filter(Boolean).join(' · ')}
+            </Typography>
+          )}
         </Stack>
-        <IconButton
-          size="small"
-          onClick={onToggleFavorite}
-          aria-label={isFavorite ? 'remove favorite' : 'add favorite'}
-          sx={{
-            width: 32,
-            height: 32,
-            flexShrink: 0,
-            color: 'common.white',
-            bgcolor: alpha('#ffffff', 0.12),
-            backdropFilter: 'blur(10px)',
-            '&:hover': {
-              bgcolor: alpha('#ffffff', 0.18),
-            },
-          }}
-        >
-          {isFavorite ? <Favorite fontSize="small" /> : <FavoriteBorder fontSize="small" />}
-        </IconButton>
+        {hoverInfo.loved && (
+          <IconButton
+            size="small"
+            onClick={onToggleFavorite}
+            aria-label={isFavorite ? 'remove favorite' : 'add favorite'}
+            sx={{
+              width: 32,
+              height: 32,
+              flexShrink: 0,
+              color: 'common.white',
+              bgcolor: alpha('#ffffff', 0.12),
+              backdropFilter: 'blur(10px)',
+              '&:hover': {
+                bgcolor: alpha('#ffffff', 0.18),
+              },
+            }}
+          >
+            {isFavorite ? <Favorite fontSize="small" /> : <FavoriteBorder fontSize="small" />}
+          </IconButton>
+        )}
       </Box>
     </Box>
   )

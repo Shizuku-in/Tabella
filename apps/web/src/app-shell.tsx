@@ -6,6 +6,7 @@ import {
   LightModeOutlined,
   LogoutOutlined,
   Search,
+  SettingsOutlined,
   Sort,
   Star,
 } from '@mui/icons-material'
@@ -13,10 +14,20 @@ import {
   AppBar,
   Avatar,
   Box,
+  Button,
   Container,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Checkbox,
+  FormControlLabel,
+  FormGroup,
   IconButton,
   Menu,
   MenuItem,
+  Slider,
+  Switch,
   Stack,
   TextField,
   Tooltip,
@@ -67,12 +78,21 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     setSort,
     ratingFilter,
     setRatingFilter,
+    masonryColumns,
+    setMasonryColumns,
+    showMobileDetails,
+    setShowMobileDetails,
+    hoverInfo,
+    setHoverInfo,
+    showResultsCount,
+    setShowResultsCount,
   } = useGalleryUi()
   const [searchVisible, setSearchVisible] = useState(() => searchText.length > 0)
   const [sortAnchor, setSortAnchor] = useState<HTMLElement | null>(null)
   const [layoutAnchor, setLayoutAnchor] = useState<HTMLElement | null>(null)
   const [ratingAnchor, setRatingAnchor] = useState<HTMLElement | null>(null)
   const [userAnchor, setUserAnchor] = useState<HTMLElement | null>(null)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const isGalleryRoute = location.pathname === '/'
   const isAdminRoute = location.pathname.startsWith('/admin/imports')
@@ -281,6 +301,17 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
               </IconButton>
             </Tooltip>
 
+            <Tooltip title="Settings">
+              <IconButton
+                color="default"
+                onClick={() => setSettingsOpen(true)}
+                aria-label="settings"
+                sx={{ p: 0.75, borderRadius: '50%' }}
+              >
+                <SettingsOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
             <IconButton
               onClick={(event) => setUserAnchor(event.currentTarget)}
               aria-label="user menu"
@@ -398,6 +429,98 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
           Sign out
         </MenuItem>
       </Menu>
+
+      <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Gallery Settings</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={3}>
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Masonry Columns
+              </Typography>
+              <Stack spacing={2} sx={{ mt: 1, px: 1 }}>
+                {(['xs', 'sm', 'lg', 'xl'] as const).map((breakpoint) => (
+                  <Stack key={breakpoint} direction="row" spacing={2} alignItems="center">
+                    <Typography variant="body2" sx={{ width: 24, fontWeight: 700 }}>
+                      {breakpoint.toUpperCase()}
+                    </Typography>
+                    <Slider
+                      value={masonryColumns[breakpoint]}
+                      onChange={(_, value) =>
+                        setMasonryColumns({ ...masonryColumns, [breakpoint]: value as number })
+                      }
+                      step={1}
+                      marks
+                      min={1}
+                      max={10}
+                      valueLabelDisplay="auto"
+                      size="small"
+                    />
+                  </Stack>
+                ))}
+              </Stack>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Display
+              </Typography>
+              <FormGroup>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={showResultsCount}
+                      onChange={(e) => setShowResultsCount(e.target.checked)}
+                    />
+                  }
+                  label={
+                    <Typography variant="body2">
+                      Show results count and sort
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={showMobileDetails}
+                      onChange={(e) => setShowMobileDetails(e.target.checked)}
+                    />
+                  }
+                  label={
+                    <Typography variant="body2">
+                      Show image details on mobile
+                    </Typography>
+                  }
+                />
+              </FormGroup>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Hover Info
+              </Typography>
+              <FormGroup row>
+                {(['name', 'resolution', 'tags', 'loved', 'rating'] as const).map((key) => (
+                  <FormControlLabel
+                    key={key}
+                    control={
+                      <Checkbox
+                        checked={hoverInfo[key]}
+                        onChange={(e) => setHoverInfo({ ...hoverInfo, [key]: e.target.checked })}
+                        size="small"
+                      />
+                    }
+                    label={<Typography variant="body2" sx={{ textTransform: 'capitalize' }}>{key}</Typography>}
+                  />
+                ))}
+              </FormGroup>
+            </Box>
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSettingsOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
 
       <Container
         maxWidth={false}
