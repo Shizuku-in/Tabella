@@ -271,7 +271,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
           triggerDownload(item.thumbnailSrc, `${baseName}_thumb.webp`)
         }}>
           <Stack>
-            <Typography variant="body1" sx={{ fontWeight: 600 }}>下载缩略图</Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>Thumbnail</Typography>
             <Typography variant="caption" color="text.secondary">
               {thumbWidth}×{thumbHeight} [{formatSizeStr(fileSizes.thumb)}] WEBP
             </Typography>
@@ -283,7 +283,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
           triggerDownload(item.sampleSrc || item.thumbnailSrc, `${baseName}_sample.webp`)
         }}>
           <Stack>
-            <Typography variant="body1" sx={{ fontWeight: 600 }}>下载预览图</Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>Sample</Typography>
             <Typography variant="caption" color="text.secondary">
               {item.width}×{item.height} [{formatSizeStr(fileSizes.sample)}] WEBP
             </Typography>
@@ -292,7 +292,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
         
         <MenuItem onClick={() => triggerDownload(item.originalSrc || item.sampleSrc || item.thumbnailSrc, item.filename)}>
           <Stack>
-            <Typography variant="body1" sx={{ fontWeight: 600 }}>下载原文件</Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>Original</Typography>
             <Typography variant="caption" color="text.secondary">
               {item.width}×{item.height} [{formatSizeStr(fileSizes.original)}] {getExt(item.filename)}
             </Typography>

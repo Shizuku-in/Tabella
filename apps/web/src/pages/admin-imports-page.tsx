@@ -1,4 +1,5 @@
 import { CloudUploadOutlined, Done, Error as ErrorIcon, PlayArrowOutlined, WarningAmberOutlined } from '@mui/icons-material'
+import UploadOutlinedIcon from '@mui/icons-material/UploadOutlined'
 import {
   Button,
   type LinearProgressProps,
@@ -165,7 +166,7 @@ export function AdminImportsPage() {
           />
           <Button 
             variant="outlined" 
-            startIcon={<CloudUploadOutlined />}
+            startIcon={<UploadOutlinedIcon />}
             onClick={() => packageInputRef.current?.click()}
             disabled={uploadMutation.isPending}
           >
@@ -173,7 +174,7 @@ export function AdminImportsPage() {
           </Button>
           <Button 
             variant="outlined" 
-            startIcon={<CloudUploadOutlined />}
+            startIcon={<UploadOutlinedIcon />}
             onClick={() => folderInputRef.current?.click()}
             disabled={uploadMutation.isPending}
           >
@@ -316,12 +317,12 @@ export function AdminImportsPage() {
           <Button onClick={() => setServerDialogOpen(false)}>Cancel</Button>
           <Button 
             variant="contained" 
-            color="secondary"
+            color="primary"
             startIcon={<PlayArrowOutlined />}
             onClick={() => startJobMutation.mutate(serverPath)}
             disabled={startJobMutation.isPending}
           >
-            Scan & Import
+            Import
           </Button>
         </DialogActions>
       </Dialog>
