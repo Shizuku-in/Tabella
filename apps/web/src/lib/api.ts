@@ -84,7 +84,7 @@ export async function uploadWithProgress<T>(
         try {
           const response = JSON.parse(xhr.responseText)
           resolve(response)
-        } catch (e) {
+        } catch {
           resolve(xhr.responseText as unknown as T)
         }
       } else {
@@ -92,7 +92,7 @@ export async function uploadWithProgress<T>(
         try {
           const errRes = JSON.parse(xhr.responseText)
           errorMsg = errRes.message || errorMsg
-        } catch (e) {
+        } catch {
           // ignore
         }
         reject(new ApiError(xhr.status, errorMsg))

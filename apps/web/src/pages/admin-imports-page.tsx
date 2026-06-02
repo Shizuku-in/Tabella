@@ -1,4 +1,4 @@
-import { CloudOutlined, UploadOutlined, FolderOutlined, InsertDriveFileOutlined, PlayArrowOutlined, Done, Error as ErrorIcon } from '@mui/icons-material'
+import { CloudUploadOutlined, Done, Error as ErrorIcon } from '@mui/icons-material'
 import {
   Button,
   Paper,
@@ -14,7 +14,6 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Chip,
   CircularProgress,
   LinearProgress,
 } from '@mui/material'
@@ -93,7 +92,7 @@ export function AdminImportsPage() {
         const result = await uploadWithProgress<{ id: string; status: string }>(
           `/api/admin/imports/upload?type=${sourceType}`,
           formData,
-          (percent) => {
+          (percent: number) => {
             setActiveUploads(prev => ({
               ...prev,
               [tempId]: { ...prev[tempId], progress: percent }
@@ -157,6 +156,7 @@ export function AdminImportsPage() {
           <input 
             type="file" 
             ref={folderInputRef} 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             {...{ webkitdirectory: "true", directory: "true" } as any}
             style={{ display: 'none' }} 
             onChange={handleFolderSelect}
@@ -164,7 +164,7 @@ export function AdminImportsPage() {
           />
           <Button 
             variant="outlined" 
-            startIcon={<UploadOutlined />}
+            startIcon={<CloudUploadOutlined />}
             onClick={() => packageInputRef.current?.click()}
             disabled={uploadMutation.isPending}
           >
@@ -172,7 +172,7 @@ export function AdminImportsPage() {
           </Button>
           <Button 
             variant="outlined" 
-            startIcon={<UploadOutlined />}
+            startIcon={<CloudUploadOutlined />}
             onClick={() => folderInputRef.current?.click()}
             disabled={uploadMutation.isPending}
           >
@@ -180,7 +180,7 @@ export function AdminImportsPage() {
           </Button>
           <Button 
             variant="outlined" 
-            startIcon={<CloudOutlined />}
+            startIcon={<CloudUploadOutlined />}
             onClick={() => setServerDialogOpen(true)}
           >
             Server
@@ -223,7 +223,7 @@ export function AdminImportsPage() {
             {jobsQuery.data?.items.map((job) => {
               let icon = <CircularProgress size={24} color="secondary" />
               let color = 'secondary.main'
-              let label = job.status
+              const label = job.status
 
               if (job.status === 'completed') {
                 icon = <Done color="success" />

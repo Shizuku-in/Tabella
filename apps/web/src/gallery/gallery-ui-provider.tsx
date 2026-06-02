@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { GallerySort, LayoutMode, RatingFilter } from '../types.ts'
@@ -41,7 +42,7 @@ function readInitialLayout(): LayoutMode {
 function readInitialColumns() {
   const stored = window.localStorage.getItem('tabella.gallery.columns')
   if (stored) {
-    try { return JSON.parse(stored) } catch (e) { /* ignore */ }
+    try { return JSON.parse(stored) } catch { /* ignore */ }
   }
   return { xs: 2, sm: 3, lg: 4, xl: 5 }
 }
@@ -49,7 +50,7 @@ function readInitialColumns() {
 function readInitialGridColumns() {
   const stored = window.localStorage.getItem('tabella.gallery.gridColumns')
   if (stored) {
-    try { return JSON.parse(stored) } catch (e) { /* ignore */ }
+    try { return JSON.parse(stored) } catch { /* ignore */ }
   }
   return { xs: 2, sm: 3, lg: 4, xl: 5 }
 }
@@ -62,7 +63,7 @@ function readInitialMobileDetails(): boolean {
 function readInitialHoverInfo() {
   const stored = window.localStorage.getItem('tabella.gallery.hoverInfo')
   if (stored) {
-    try { return JSON.parse(stored) } catch (e) { /* ignore */ }
+    try { return JSON.parse(stored) } catch { /* ignore */ }
   }
   return { name: true, resolution: true, tags: true, loved: true, rating: true }
 }

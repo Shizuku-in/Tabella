@@ -96,6 +96,7 @@ export function GalleryPage() {
     return () => {
       observer.disconnect()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [galleryQuery.fetchNextPage, galleryQuery.hasNextPage, galleryQuery.isFetchingNextPage])
 
   const activeFilterLabels = useMemo(() => {

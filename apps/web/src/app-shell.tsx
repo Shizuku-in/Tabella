@@ -1,6 +1,6 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import {
-  AdminPanelSettingsOutlined,
   PlaylistAdd,
   ArtTrack,
   DarkModeOutlined,
