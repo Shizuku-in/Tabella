@@ -36,8 +36,8 @@ Tabella is a modern, high-performance private image gallery designed for small, 
 
 1. **Install dependencies and start the Frontend:**
 ```bash
-npm install
-npm run dev:web
+pnpm install
+pnpm run dev:web
 ```
 *The frontend proxy is configured to forward `/api` requests to `http://127.0.0.1:8787` during local development.*
 
