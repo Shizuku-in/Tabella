@@ -15,6 +15,8 @@ interface GalleryUiContextValue {
   setRatingFilter: (value: RatingFilter) => void
   masonryColumns: { xs: number; sm: number; lg: number; xl: number }
   setMasonryColumns: (value: { xs: number; sm: number; lg: number; xl: number }) => void
+  gridColumns: { xs: number; sm: number; lg: number; xl: number }
+  setGridColumns: (value: { xs: number; sm: number; lg: number; xl: number }) => void
   showMobileDetails: boolean
   setShowMobileDetails: (value: boolean) => void
   hoverInfo: { name: boolean; resolution: boolean; tags: boolean; loved: boolean; rating: boolean }
@@ -34,6 +36,14 @@ function readInitialLayout(): LayoutMode {
 
 function readInitialColumns() {
   const stored = window.localStorage.getItem('tabella.gallery.columns')
+  if (stored) {
+    try { return JSON.parse(stored) } catch (e) { /* ignore */ }
+  }
+  return { xs: 2, sm: 3, lg: 4, xl: 5 }
+}
+
+function readInitialGridColumns() {
+  const stored = window.localStorage.getItem('tabella.gallery.gridColumns')
   if (stored) {
     try { return JSON.parse(stored) } catch (e) { /* ignore */ }
   }
@@ -64,6 +74,7 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
   const [sort, setSort] = useState<GallerySort>('newest')
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>('all')
   const [masonryColumns, setMasonryColumns] = useState(readInitialColumns)
+  const [gridColumns, setGridColumns] = useState(readInitialGridColumns)
   const [showMobileDetails, setShowMobileDetails] = useState<boolean>(readInitialMobileDetails)
   const [hoverInfo, setHoverInfo] = useState(readInitialHoverInfo)
   const [showResultsCount, setShowResultsCount] = useState<boolean>(readInitialResultsCount)
@@ -75,6 +86,10 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     window.localStorage.setItem('tabella.gallery.columns', JSON.stringify(masonryColumns))
   }, [masonryColumns])
+
+  useEffect(() => {
+    window.localStorage.setItem('tabella.gallery.gridColumns', JSON.stringify(gridColumns))
+  }, [gridColumns])
 
   useEffect(() => {
     window.localStorage.setItem('tabella.gallery.mobileDetails', String(showMobileDetails))
@@ -101,6 +116,8 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
         setRatingFilter,
         masonryColumns,
         setMasonryColumns,
+        gridColumns,
+        setGridColumns,
         showMobileDetails,
         setShowMobileDetails,
         hoverInfo,

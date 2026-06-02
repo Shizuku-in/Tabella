@@ -9,8 +9,12 @@ import {
   SettingsOutlined,
   Sort,
   Star,
+  ExpandMore,
 } from '@mui/icons-material'
 import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   AppBar,
   Avatar,
   Box,
@@ -80,6 +84,8 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     setRatingFilter,
     masonryColumns,
     setMasonryColumns,
+    gridColumns,
+    setGridColumns,
     showMobileDetails,
     setShowMobileDetails,
     hoverInfo,
@@ -432,13 +438,13 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
 
       <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} maxWidth="xs" fullWidth>
         <DialogTitle>Gallery Settings</DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={3}>
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Masonry Columns
-              </Typography>
-              <Stack spacing={2} sx={{ mt: 1, px: 1 }}>
+        <DialogContent dividers sx={{ p: 0 }}>
+          <Accordion disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle2">Masonry Columns</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ pt: 0, pb: 2 }}>
+              <Stack spacing={2} sx={{ px: 1 }}>
                 {(['xs', 'sm', 'lg', 'xl'] as const).map((breakpoint) => (
                   <Stack key={breakpoint} direction="row" spacing={2} alignItems="center">
                     <Typography variant="body2" sx={{ width: 24, fontWeight: 700 }}>
@@ -459,9 +465,41 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                   </Stack>
                 ))}
               </Stack>
-            </Box>
+            </AccordionDetails>
+          </Accordion>
 
-            <Box>
+          <Accordion disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
+            <AccordionSummary expandIcon={<ExpandMore />}>
+              <Typography variant="subtitle2">Grid Columns</Typography>
+            </AccordionSummary>
+            <AccordionDetails sx={{ pt: 0, pb: 2 }}>
+              <Stack spacing={2} sx={{ px: 1 }}>
+                {(['xs', 'sm', 'lg', 'xl'] as const).map((breakpoint) => (
+                  <Stack key={breakpoint} direction="row" spacing={2} alignItems="center">
+                    <Typography variant="body2" sx={{ width: 24, fontWeight: 700 }}>
+                      {breakpoint.toUpperCase()}
+                    </Typography>
+                    <Slider
+                      value={gridColumns[breakpoint]}
+                      onChange={(_, value) =>
+                        setGridColumns({ ...gridColumns, [breakpoint]: value as number })
+                      }
+                      step={1}
+                      marks
+                      min={1}
+                      max={10}
+                      valueLabelDisplay="auto"
+                      size="small"
+                    />
+                  </Stack>
+                ))}
+              </Stack>
+            </AccordionDetails>
+          </Accordion>
+
+          <Box sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
+            <Stack spacing={3}>
+              <Box>
               <Typography variant="subtitle2" gutterBottom>
                 Display
               </Typography>
@@ -515,7 +553,8 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                 ))}
               </FormGroup>
             </Box>
-          </Stack>
+            </Stack>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setSettingsOpen(false)}>Close</Button>

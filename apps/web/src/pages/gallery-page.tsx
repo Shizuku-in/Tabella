@@ -24,7 +24,7 @@ const ratingLabel: Record<Rating, string> = {
 }
 
 export function GalleryPage() {
-  const { layoutMode, searchText, sort, ratingFilter, masonryColumns, showMobileDetails, hoverInfo, showResultsCount } = useGalleryUi()
+  const { layoutMode, searchText, sort, ratingFilter, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount } = useGalleryUi()
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<number, boolean>>({})
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
@@ -210,7 +210,19 @@ export function GalleryPage() {
               ))}
             </Masonry>
           ) : (
-            <Box sx={galleryLayoutStyles[layoutMode]}>
+            <Box
+              sx={{
+                ...galleryLayoutStyles[layoutMode],
+                ...(layoutMode === 'grid' && {
+                  gridTemplateColumns: {
+                    xs: `repeat(${gridColumns.xs}, minmax(0, 1fr))`,
+                    sm: `repeat(${gridColumns.sm}, minmax(0, 1fr))`,
+                    lg: `repeat(${gridColumns.lg}, minmax(0, 1fr))`,
+                    xl: `repeat(${gridColumns.xl}, minmax(0, 1fr))`,
+                  },
+                }),
+              }}
+            >
               {items.map((item) => (
                 <GalleryCard
                   key={item.id}
@@ -322,6 +334,8 @@ function GalleryCard({
               color: 'rgba(18, 23, 35, 0.94)',
               bgcolor: ratingTone[item.rating],
               backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              transform: 'translateZ(0)',
             }}
           >
             {ratingLabel[item.rating]}
@@ -345,6 +359,8 @@ function GalleryCard({
           opacity: { xs: showMobileDetails ? 1 : 0, md: 0 },
           transform: { xs: 'translateY(0)', md: 'translateY(10px)' },
           transition: 'opacity 0.18s ease, transform 0.18s ease',
+          willChange: 'opacity, transform',
+          backfaceVisibility: 'hidden',
           '.gallery-card:hover &': {
             opacity: 1,
             transform: 'translateY(0)',
@@ -392,6 +408,8 @@ function GalleryCard({
               color: 'common.white',
               bgcolor: alpha('#ffffff', 0.12),
               backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
+              transform: 'translateZ(0)',
               '&:hover': {
                 bgcolor: alpha('#ffffff', 0.18),
               },
