@@ -1,0 +1,77 @@
+use std::{
+    env,
+    net::{IpAddr, Ipv4Addr, SocketAddr},
+    path::PathBuf,
+};
+
+use anyhow::{Context, Result};
+
+#[derive(Clone, Debug)]
+pub(crate) struct Config {
+    pub(crate) listen_addr: SocketAddr,
+    pub(crate) database_url: String,
+    pub(crate) media_root: PathBuf,
+    pub(crate) temp_root: PathBuf,
+    pub(crate) session_cookie_name: String,
+    pub(crate) session_ttl_hours: u64,
+    pub(crate) secure_cookies: bool,
+    pub(crate) bootstrap_admin_username: String,
+    pub(crate) bootstrap_admin_password: String,
+    pub(crate) max_download_images: usize,
+    pub(crate) max_download_total_bytes: u64,
+    pub(crate) download_retention_hours: u64,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Self {
+            listen_addr: SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), 8787),
+            database_url: String::new(),
+            media_root: PathBuf::from("var/media"),
+            temp_root: PathBuf::from("var/tmp"),
+            session_cookie_name: String::from("tabella_session"),
+            session_ttl_hours: 24 * 30,
+            secure_cookies: false,
+            bootstrap_admin_username: String::from("admin"),
+            bootstrap_admin_password: String::from("admin"),
+            max_download_images: 500,
+            max_download_total_bytes: 2 * 1024 * 1024 * 1024,
+            download_retention_hours: 24,
+        }
+    }
+}
+
+impl Config {
+    pub(crate) fn from_env() -> Result<Self> {
+        let defaults = Self::default();
+
+        Ok(Self {
+            listen_addr: read_env("TABELLA_LISTEN_ADDR").unwrap_or(defaults.listen_addr),
+            database_url: env::var("DATABASE_URL").context("DATABASE_URL is required")?,
+            media_root: read_env("TABELLA_MEDIA_ROOT").unwrap_or(defaults.media_root),
+            temp_root: read_env("TABELLA_TEMP_ROOT").unwrap_or(defaults.temp_root),
+            session_cookie_name: env::var("TABELLA_SESSION_COOKIE_NAME")
+                .unwrap_or(defaults.session_cookie_name),
+            session_ttl_hours: read_env("TABELLA_SESSION_TTL_HOURS")
+                .unwrap_or(defaults.session_ttl_hours),
+            secure_cookies: read_env("TABELLA_SECURE_COOKIES").unwrap_or(defaults.secure_cookies),
+            bootstrap_admin_username: env::var("TABELLA_BOOTSTRAP_ADMIN_USERNAME")
+                .unwrap_or(defaults.bootstrap_admin_username),
+            bootstrap_admin_password: env::var("TABELLA_BOOTSTRAP_ADMIN_PASSWORD")
+                .unwrap_or(defaults.bootstrap_admin_password),
+            max_download_images: read_env("TABELLA_MAX_DOWNLOAD_IMAGES")
+                .unwrap_or(defaults.max_download_images),
+            max_download_total_bytes: read_env("TABELLA_MAX_DOWNLOAD_TOTAL_BYTES")
+                .unwrap_or(defaults.max_download_total_bytes),
+            download_retention_hours: read_env("TABELLA_DOWNLOAD_RETENTION_HOURS")
+                .unwrap_or(defaults.download_retention_hours),
+        })
+    }
+}
+
+fn read_env<T>(key: &str) -> Option<T>
+where
+    T: std::str::FromStr,
+{
+    env::var(key).ok()?.parse().ok()
+}
