@@ -166,7 +166,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                     color={sortAnchor ? 'primary' : 'default'}
                     aria-label="sort options"
                     onClick={(event) => setSortAnchor(event.currentTarget)}
-                    sx={{ p: 0.75, borderRadius: 1.5 }}
+                    sx={{ p: 0.75, borderRadius: '50%' }}
                   >
                     <Sort fontSize="small" />
                   </IconButton>
@@ -177,7 +177,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                     color={layoutAnchor ? 'primary' : 'default'}
                     aria-label="layout options"
                     onClick={(event) => setLayoutAnchor(event.currentTarget)}
-                    sx={{ p: 0.75, borderRadius: 1.5 }}
+                    sx={{ p: 0.75, borderRadius: '50%' }}
                   >
                     <ArtTrack fontSize="small" />
                   </IconButton>
@@ -188,7 +188,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                     color={ratingFilter !== 'all' || ratingAnchor ? 'primary' : 'default'}
                     aria-label="rating options"
                     onClick={(event) => setRatingAnchor(event.currentTarget)}
-                    sx={{ p: 0.75, borderRadius: 1.5 }}
+                    sx={{ p: 0.75, borderRadius: '50%' }}
                   >
                     <Star fontSize="small" />
                   </IconButton>
@@ -256,7 +256,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                     color={searchVisible || searchText ? 'primary' : 'default'}
                     aria-label="toggle search"
                     onClick={handleSearchToggle}
-                    sx={{ p: 0.75, borderRadius: 1.5 }}
+                    sx={{ p: 0.75, borderRadius: '50%' }}
                   >
                     <Search fontSize="small" />
                   </IconButton>
@@ -271,7 +271,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                 color="default"
                 onClick={onToggleMode}
                 aria-label="toggle color mode"
-                sx={{ p: 0.75, borderRadius: 1.5 }}
+                sx={{ p: 0.75, borderRadius: '50%' }}
               >
                 {mode === 'light' ? (
                   <DarkModeOutlined fontSize="small" />
