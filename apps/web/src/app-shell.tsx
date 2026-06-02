@@ -10,8 +10,11 @@ import {
   Search,
   SettingsOutlined,
   Sort,
-  Star,
+  StarBorderOutlined,
+  StarOutlined,
   PersonOutline,
+  FavoriteBorderOutlined,
+  FavoriteOutlined,
 } from '@mui/icons-material'
 import {
   AppBar,
@@ -72,6 +75,8 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     setSort,
     ratingFilter,
     setRatingFilter,
+    favoritesOnly,
+    setFavoritesOnly,
   } = useGalleryUi()
   const [searchVisible, setSearchVisible] = useState(() => searchText.length > 0)
   const [sortAnchor, setSortAnchor] = useState<HTMLElement | null>(null)
@@ -247,7 +252,18 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                     onClick={(event) => setRatingAnchor(event.currentTarget)}
                     sx={{ p: 0.75, borderRadius: '50%' }}
                   >
-                    <Star fontSize="small" />
+                    {ratingFilter !== 'all' ? <StarOutlined fontSize="small" /> : <StarBorderOutlined fontSize="small" />}
+                  </IconButton>
+                </Tooltip>
+
+                <Tooltip title="Favorites Only">
+                  <IconButton
+                    color={favoritesOnly ? 'primary' : 'default'}
+                    aria-label="toggle favorites only"
+                    onClick={() => setFavoritesOnly(!favoritesOnly)}
+                    sx={{ p: 0.75, borderRadius: '50%' }}
+                  >
+                    {favoritesOnly ? <FavoriteOutlined fontSize="small" /> : <FavoriteBorderOutlined fontSize="small" />}
                   </IconButton>
                 </Tooltip>
 

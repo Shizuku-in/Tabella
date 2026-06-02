@@ -14,6 +14,8 @@ interface GalleryUiContextValue {
   setSort: (value: GallerySort) => void
   ratingFilter: RatingFilter
   setRatingFilter: (value: RatingFilter) => void
+  favoritesOnly: boolean
+  setFavoritesOnly: (value: boolean) => void
   masonryColumns: { xs: number; sm: number; lg: number; xl: number }
   setMasonryColumns: (value: { xs: number; sm: number; lg: number; xl: number }) => void
   gridColumns: { xs: number; sm: number; lg: number; xl: number }
@@ -92,6 +94,7 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
   const [searchText, setSearchText] = useState('')
   const [sort, setSort] = useState<GallerySort>('newest')
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>('all')
+  const [favoritesOnly, setFavoritesOnly] = useState<boolean>(false)
   const [masonryColumns, setMasonryColumns] = useState(readInitialColumns)
   const [gridColumns, setGridColumns] = useState(readInitialGridColumns)
   const [showMobileDetails, setShowMobileDetails] = useState<boolean>(readInitialMobileDetails)
@@ -143,6 +146,8 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
         setSort,
         ratingFilter,
         setRatingFilter,
+        favoritesOnly,
+        setFavoritesOnly,
         masonryColumns,
         setMasonryColumns,
         gridColumns,

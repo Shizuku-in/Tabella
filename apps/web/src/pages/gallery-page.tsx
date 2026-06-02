@@ -11,13 +11,13 @@ import { GalleryCard, ratingLabel } from '../components/gallery-card.tsx'
 const PAGE_SIZE = 50
 
 export function GalleryPage() {
-  const { layoutMode, searchText, sort, ratingFilter, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality } = useGalleryUi()
+  const { layoutMode, searchText, sort, ratingFilter, favoritesOnly, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality } = useGalleryUi()
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<number, boolean>>({})
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   const galleryQuery = useInfiniteQuery({
-    queryKey: ['gallery', searchText, sort, ratingFilter],
+    queryKey: ['gallery', searchText, sort, ratingFilter, favoritesOnly],
     queryFn: async ({ pageParam }) => {
       // Split search text by spaces into tags
       const tags = searchText.trim() ? searchText.trim().split(/\s+/) : []
@@ -28,6 +28,7 @@ export function GalleryPage() {
         sort: sort,
         rating: ratingFilter === 'all' ? undefined : [ratingFilter],
         include_tags: tags,
+        favorites_only: favoritesOnly ? true : undefined,
       })
 
       return {
