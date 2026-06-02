@@ -102,13 +102,57 @@ async fn run_import_job(
             }
         }
     } else if source_path.is_file() {
-        // Handle ZIP extraction later if needed
-        // For now, assume it's either a directory or a single image
         let ext = source_path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
         if matches!(ext.as_str(), "zip") {
-            // TODO: Implement ZIP extraction
-            tracing::warn!("ZIP extraction not yet fully implemented");
-            return Ok(true);
+            tracing::info!("Extracting ZIP archive: {:?}", source_path);
+            let file = std::fs::File::open(&source_path)?;
+            let mut archive = zip::ZipArchive::new(file)?;
+            
+            // Create a temporary extraction directory inside media root
+            let temp_extract_dir = config.media_root.join("temp_extract").join(job_id.to_string());
+            std::fs::create_dir_all(&temp_extract_dir)?;
+            
+            for i in 0..archive.len() {
+                let mut file = archive.by_index(i)?;
+                let outpath = match file.enclosed_name() {
+                    Some(path) => path.to_owned(),
+                    None => continue,
+                };
+                
+                let outpath = temp_extract_dir.join(outpath);
+                if (*file.name()).ends_with('/') {
+                    std::fs::create_dir_all(&outpath)?;
+                } else {
+                    if let Some(p) = outpath.parent() {
+                        if !p.exists() {
+                            std::fs::create_dir_all(p)?;
+                        }
+                    }
+                    let mut outfile = std::fs::File::create(&outpath)?;
+                    std::io::copy(&mut file, &mut outfile)?;
+                    
+                    let out_ext = outpath.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+                    if matches!(out_ext.as_str(), "jpg" | "jpeg" | "png" | "webp" | "gif") {
+                        files_to_process.push(outpath);
+                    }
+                }
+            }
+        } else if matches!(ext.as_str(), "7z") {
+            tracing::info!("Extracting 7Z archive: {:?}", source_path);
+            let temp_extract_dir = config.media_root.join("temp_extract").join(job_id.to_string());
+            std::fs::create_dir_all(&temp_extract_dir)?;
+            
+            sevenz_rust::decompress_file(&source_path, &temp_extract_dir).map_err(|e| anyhow::anyhow!("7z extraction failed: {:?}", e))?;
+            
+            // Collect extracted files
+            for entry in WalkDir::new(&temp_extract_dir).into_iter().filter_map(|e| e.ok()) {
+                if entry.file_type().is_file() {
+                    let ext = entry.path().extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+                    if matches!(ext.as_str(), "jpg" | "jpeg" | "png" | "webp" | "gif") {
+                        files_to_process.push(entry.path().to_path_buf());
+                    }
+                }
+            }
         } else if matches!(ext.as_str(), "jpg" | "jpeg" | "png" | "webp" | "gif") {
             files_to_process.push(source_path.clone());
         }

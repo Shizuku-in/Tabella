@@ -191,6 +191,21 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
               Tabella
             </Typography>
 
+            {isAdminRoute && (
+              <Typography
+                sx={{
+                  color: 'text.secondary',
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                  ml: 0.5,
+                  mr: 1,
+                  fontStyle: 'italic',
+                }}
+              >
+                / Imports
+              </Typography>
+            )}
+
             {isGalleryRoute ? (
               <>
                 <Tooltip title="Sort">

@@ -18,7 +18,7 @@ export interface GalleryItem {
   tags: string[]
   favorite: boolean
   importedAt: string
-  fileSize: number
+  fileSize?: number
 }
 
 export interface GalleryQueryInput {

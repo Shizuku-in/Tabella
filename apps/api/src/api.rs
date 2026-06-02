@@ -1,12 +1,12 @@
 use anyhow::Context;
 use axum::{
     Json, Router,
-    extract::{Path, State},
+    extract::{DefaultBodyLimit, Path, Query, State},
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
 };
-use axum_extra::extract::{CookieJar, Query};
+use axum_extra::extract::CookieJar;
 use serde_json::json;
 use uuid::Uuid;
 
@@ -19,7 +19,7 @@ use crate::{
 };
 
 pub(crate) fn router(state: AppState) -> Router {
-    Router::new()
+    let api_routes = Router::new()
         .route("/healthz", get(healthz))
         .route("/api/me", get(get_me))
         .route("/api/auth/login", post(login))
@@ -30,12 +30,15 @@ pub(crate) fn router(state: AppState) -> Router {
             "/api/favorites/{image_id}",
             post(add_favorite).delete(remove_favorite),
         )
-        .route("/api/admin/imports", post(create_import_job))
+        .route("/api/admin/imports", get(list_import_jobs).post(create_import_job))
+        .route("/api/admin/imports/upload", post(upload_import_files))
         .route("/api/admin/imports/{job_id}", get(get_import_job))
         .route("/api/download-jobs", post(create_download_job))
         .route("/api/download-jobs/{job_id}", get(get_download_job))
         .route("/api/download-jobs/{job_id}/file", get(download_job_file))
-        .with_state(state)
+        .layer(DefaultBodyLimit::disable());
+
+    Router::new().merge(api_routes).with_state(state)
 }
 
 async fn healthz(State(state): State<AppState>) -> Json<HealthResponse> {
@@ -484,4 +487,90 @@ impl IntoResponse for ApiError {
             }
         }
     }
+}
+
+use axum::extract::Multipart;
+
+async fn upload_import_files(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    mut multipart: Multipart,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let user = require_admin(&state, &jar).await?;
+    
+    // Create a temp directory for this upload batch
+    let batch_id = uuid::Uuid::new_v4();
+    let temp_dir = state.config.media_root.join("temp").join(batch_id.to_string());
+    tokio::fs::create_dir_all(&temp_dir).await.map_err(|e| ApiError::internal(e.into()))?;
+    
+    while let Some(field) = multipart.next_field().await.map_err(|e| ApiError::internal(e.into()))? {
+        if let Some(file_name) = field.file_name() {
+            let file_name = file_name.to_string(); // we must clone since field is consumed
+            // Create subdirectories if necessary (for webkitdirectory)
+            let file_path = temp_dir.join(&file_name);
+            if let Some(parent) = file_path.parent() {
+                tokio::fs::create_dir_all(parent).await.map_err(|e| ApiError::internal(e.into()))?;
+            }
+            
+            let data = field.bytes().await.map_err(|e| ApiError::internal(e.into()))?;
+            tokio::fs::write(&file_path, data).await.map_err(|e| ApiError::internal(e.into()))?;
+        }
+    }
+    
+    // Create an import job for this temp directory
+    let job_id = uuid::Uuid::new_v4();
+    let source_path_str = temp_dir.to_string_lossy().to_string();
+    
+    sqlx::query(
+        "INSERT INTO import_jobs (id, created_by_user_id, source_filename, source_archive_path, status) VALUES ($1, $2, $3, $4, 'queued')"
+    )
+    .bind(job_id)
+    .bind(user.id)
+    .bind("Web Upload")
+    .bind(source_path_str)
+    .execute(&state.pool)
+    .await
+    .map_err(|e| ApiError::internal(e.into()))?;
+
+    Ok(Json(json!({
+        "id": job_id,
+        "status": "queued"
+    })))
+}
+
+async fn list_import_jobs(
+    State(state): State<AppState>,
+    jar: CookieJar,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let _user = require_admin(&state, &jar).await?;
+
+    let limit = 50i64;
+    let rows = sqlx::query(
+        r#"
+        SELECT id, status, total_items, processed_items, succeeded_items, failed_items, created_at
+        FROM import_jobs
+        ORDER BY created_at DESC
+        LIMIT $1
+        "#
+    )
+    .bind(limit)
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|e| ApiError::internal(e.into()))?;
+
+    use sqlx::Row;
+    let mut items = Vec::new();
+    for row in rows {
+        items.push(json!({
+            "id": row.try_get::<uuid::Uuid, _>("id").unwrap_or_default(),
+            "status": row.try_get::<String, _>("status").unwrap_or_default(),
+            "totalItems": row.try_get::<i32, _>("total_items").unwrap_or_default(),
+            "processedItems": row.try_get::<i32, _>("processed_items").unwrap_or_default(),
+            "succeededItems": row.try_get::<i32, _>("succeeded_items").unwrap_or_default(),
+            "failedItems": row.try_get::<i32, _>("failed_items").unwrap_or_default(),
+            "createdAt": row.try_get::<time::OffsetDateTime, _>("created_at").unwrap_or_else(|_| time::OffsetDateTime::now_utc()),
+        }));
+    }
+
+    Ok(Json(json!({ "items": items })))
 }

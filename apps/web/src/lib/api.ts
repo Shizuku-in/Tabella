@@ -13,13 +13,19 @@ export class ApiError extends Error {
 }
 
 export async function request<T>(input: string, init?: RequestInit): Promise<T> {
+  const isFormData = init?.body instanceof FormData
+  const headers: HeadersInit = {
+    ...(init?.headers ?? {}),
+  }
+  
+  if (!isFormData) {
+    headers['Content-Type'] = 'application/json'
+  }
+
   const response = await fetch(input, {
     credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      ...(init?.headers ?? {}),
-    },
     ...init,
+    headers,
   })
 
   if (response.status === 204) {
@@ -65,6 +71,29 @@ export async function logout(): Promise<void> {
 }
 
 // ----- Gallery API -----
+
+export interface ImageDetails {
+  id: string
+  hash: string
+  width: number
+  height: number
+  format: string
+  file_size: number
+  createdAt: string
+  tags: string[]
+  sourceUrl?: string
+  rating: 'safe' | 'suggestive' | 'explicit'
+}
+
+export interface ImportJobRow {
+  id: string
+  status: string
+  totalItems: number
+  processedItems: number
+  succeededItems: number
+  failedItems: number
+  createdAt: string
+}
 
 export interface BackendImageListItem {
   id: number
