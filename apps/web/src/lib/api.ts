@@ -98,14 +98,10 @@ export async function listImages(query: {
   if (query.sort) params.set('sort', query.sort)
   if (query.favorites_only) params.set('favorites_only', 'true')
   if (query.rating && query.rating.length > 0) {
-    for (const r of query.rating) {
-      params.append('rating', r)
-    }
+    params.set('rating', query.rating.join(','))
   }
   if (query.include_tags && query.include_tags.length > 0) {
-    for (const t of query.include_tags) {
-      params.append('include_tags', t)
-    }
+    params.set('include_tags', query.include_tags.join(','))
   }
 
   return request<BackendListImagesResponse>(`/api/images?${params.toString()}`)

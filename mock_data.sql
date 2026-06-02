@@ -1,54 +1,56 @@
--- This script inserts some mock data into your local Tabella database
--- so you can test the frontend /api/images integration.
-
--- You can run this with:
--- psql -d <your-db-name> -f mock_data.sql
-
 BEGIN;
-
--- 1. Insert some dummy tags
-INSERT INTO tags (id, namespace, name, normalized_namespace, normalized_name)
-VALUES 
-    (1, '', 'nature', '', 'nature'),
-    (2, '', 'waterfall', '', 'waterfall'),
-    (3, 'artist', 'johndoe', 'artist', 'johndoe'),
-    (4, 'series', 'landscape', 'series', 'landscape')
-ON CONFLICT DO NOTHING;
-
--- 2. Insert some dummy images
--- We will use some random unsplash image URLs for preview/thumbnail 
--- to simulate the images we were fetching in the mock.
--- In a real scenario, these would be local file paths inside `media_root`.
--- To test without a local static server, we can put absolute http URLs here, 
--- but the backend prepends `/media/`. Let's just put `https://images.unsplash.com/...`
--- Actually, the backend code `format!("/media/{}", path)` will result in `/media/https://...`.
--- Since `api.rs` does `format!("/media/{}", path)`, we need to make sure the frontend can load them.
--- If the user doesn't have a static server, the images will 404.
--- For local testing, you might need to create the `var/media` folder and put an image there.
--- Let's assume we place a dummy image at `var/media/test.jpg`.
-
-INSERT INTO images (
-    id, sha256, original_path, preview_path, thumbnail_path, original_filename, 
-    mime_type, width, height, file_size, rating
-)
-VALUES 
-    (1, 'dummy_sha_1', 'test.jpg', 'test.jpg', 'test.jpg', 'nature1.jpg', 'image/jpeg', 800, 600, 102400, 'safe'),
-    (2, 'dummy_sha_2', 'test2.jpg', 'test2.jpg', 'test2.jpg', 'nature2.jpg', 'image/jpeg', 1200, 1600, 204800, 'safe'),
-    (3, 'dummy_sha_3', 'test3.jpg', 'test3.jpg', 'test3.jpg', 'portrait.jpg', 'image/jpeg', 1000, 1000, 150000, 'suggestive')
-ON CONFLICT DO NOTHING;
-
--- 3. Link images to tags
-INSERT INTO image_tags (image_id, tag_id)
-VALUES 
-    (1, 1),
-    (1, 2),
-    (2, 1),
-    (2, 3),
-    (3, 4)
-ON CONFLICT DO NOTHING;
-
--- Also reset the sequence so future inserts work properly
+INSERT INTO tags (id, namespace, name, normalized_namespace, normalized_name) VALUES (1, '', 'demo', '', 'demo') ON CONFLICT DO NOTHING;
+INSERT INTO images (id, sha256, original_path, preview_path, thumbnail_path, original_filename, mime_type, width, height, file_size, rating) VALUES 
+(1, 'demo_sha256_000001', '001 - Copy.jpg', '001 - Copy.jpg', '001 - Copy.jpg', '001 - Copy.jpg', 'image/jpeg', 1566, 1265, 61757, 'safe'),
+(2, 'demo_sha256_000002', '0289287C31F622F80EA787579EE8D982 - Copy.jpg', '0289287C31F622F80EA787579EE8D982 - Copy.jpg', '0289287C31F622F80EA787579EE8D982 - Copy.jpg', '0289287C31F622F80EA787579EE8D982 - Copy.jpg', 'image/jpeg', 1100, 1377, 233749, 'safe'),
+(3, 'demo_sha256_000003', '1080_1920_ryohka_139-576x1024 - Copy.jpg', '1080_1920_ryohka_139-576x1024 - Copy.jpg', '1080_1920_ryohka_139-576x1024 - Copy.jpg', '1080_1920_ryohka_139-576x1024 - Copy.jpg', 'image/jpeg', 1369, 1259, 382053, 'safe'),
+(4, 'demo_sha256_000004', '123 - Copy.jpg', '123 - Copy.jpg', '123 - Copy.jpg', '123 - Copy.jpg', 'image/jpeg', 1425, 1422, 304692, 'safe'),
+(5, 'demo_sha256_000005', '129087f8-0c8e-4c6f-a84e-5bec6bbe82fe - Copy.jpeg', '129087f8-0c8e-4c6f-a84e-5bec6bbe82fe - Copy.jpeg', '129087f8-0c8e-4c6f-a84e-5bec6bbe82fe - Copy.jpeg', '129087f8-0c8e-4c6f-a84e-5bec6bbe82fe - Copy.jpeg', 'image/jpeg', 1267, 1088, 1431552, 'safe'),
+(6, 'demo_sha256_000006', '464526_5 - Copy.png', '464526_5 - Copy.png', '464526_5 - Copy.png', '464526_5 - Copy.png', 'image/jpeg', 894, 961, 2412751, 'safe'),
+(7, 'demo_sha256_000007', '479229 - Copy.jpg', '479229 - Copy.jpg', '479229 - Copy.jpg', '479229 - Copy.jpg', 'image/jpeg', 1146, 1005, 30520, 'safe'),
+(8, 'demo_sha256_000008', '67881947_p0_master1200 - Copy.jpg', '67881947_p0_master1200 - Copy.jpg', '67881947_p0_master1200 - Copy.jpg', '67881947_p0_master1200 - Copy.jpg', 'image/jpeg', 1193, 1109, 679416, 'safe'),
+(9, 'demo_sha256_000009', '6f9449d84753cb6d13c6b1c8dcca9baa36f1053f - Copy.jpg', '6f9449d84753cb6d13c6b1c8dcca9baa36f1053f - Copy.jpg', '6f9449d84753cb6d13c6b1c8dcca9baa36f1053f - Copy.jpg', '6f9449d84753cb6d13c6b1c8dcca9baa36f1053f - Copy.jpg', 'image/jpeg', 1285, 1317, 2393644, 'safe'),
+(10, 'demo_sha256_000010', '7D781CFEB6211F70FB4A3BCF83FF689D - Copy.jpg', '7D781CFEB6211F70FB4A3BCF83FF689D - Copy.jpg', '7D781CFEB6211F70FB4A3BCF83FF689D - Copy.jpg', '7D781CFEB6211F70FB4A3BCF83FF689D - Copy.jpg', 'image/jpeg', 985, 1011, 1164458, 'safe'),
+(11, 'demo_sha256_000011', '90465806_p0 - Copy.jpg', '90465806_p0 - Copy.jpg', '90465806_p0 - Copy.jpg', '90465806_p0 - Copy.jpg', 'image/jpeg', 1123, 960, 1391242, 'safe'),
+(12, 'demo_sha256_000012', '94647006_p0_master1200 - Copy.jpg', '94647006_p0_master1200 - Copy.jpg', '94647006_p0_master1200 - Copy.jpg', '94647006_p0_master1200 - Copy.jpg', 'image/jpeg', 1581, 1306, 1199465, 'safe'),
+(13, 'demo_sha256_000013', '95684ACF41889233D18BC3F330949D5B - Copy.png', '95684ACF41889233D18BC3F330949D5B - Copy.png', '95684ACF41889233D18BC3F330949D5B - Copy.png', '95684ACF41889233D18BC3F330949D5B - Copy.png', 'image/jpeg', 1252, 843, 1028273, 'safe'),
+(14, 'demo_sha256_000014', '9b48abb646f8e428589403c2c55904094b97b946 - Copy.jpg', '9b48abb646f8e428589403c2c55904094b97b946 - Copy.jpg', '9b48abb646f8e428589403c2c55904094b97b946 - Copy.jpg', '9b48abb646f8e428589403c2c55904094b97b946 - Copy.jpg', 'image/jpeg', 1268, 1254, 771130, 'safe'),
+(15, 'demo_sha256_000015', 'bkgrd - Copy.jpg', 'bkgrd - Copy.jpg', 'bkgrd - Copy.jpg', 'bkgrd - Copy.jpg', 'image/jpeg', 1557, 905, 1055515, 'safe'),
+(16, 'demo_sha256_000016', 'c4a66f5367a7079fe676eb9b49e527fdc5e1717e - Copy.jpg', 'c4a66f5367a7079fe676eb9b49e527fdc5e1717e - Copy.jpg', 'c4a66f5367a7079fe676eb9b49e527fdc5e1717e - Copy.jpg', 'c4a66f5367a7079fe676eb9b49e527fdc5e1717e - Copy.jpg', 'image/jpeg', 1212, 1496, 218779, 'safe'),
+(17, 'demo_sha256_000017', 'yande.re 1025631 5_nenme_no_houkago kantoku pantyhose seifuku shizuku_(kantoku) umbrella_waifu2x_3x_png.png', 'yande.re 1025631 5_nenme_no_houkago kantoku pantyhose seifuku shizuku_(kantoku) umbrella_waifu2x_3x_png.png', 'yande.re 1025631 5_nenme_no_houkago kantoku pantyhose seifuku shizuku_(kantoku) umbrella_waifu2x_3x_png.png', 'yande.re 1025631 5_nenme_no_houkago kantoku pantyhose seifuku shizuku_(kantoku) umbrella_waifu2x_3x_png.png', 'image/jpeg', 1016, 1146, 19292618, 'safe'),
+(18, 'demo_sha256_000018', 'yande.re 1158968 anmi dress garter megane_shoujo no_bra wet.png', 'yande.re 1158968 anmi dress garter megane_shoujo no_bra wet.png', 'yande.re 1158968 anmi dress garter megane_shoujo no_bra wet.png', 'yande.re 1158968 anmi dress garter megane_shoujo no_bra wet.png', 'image/jpeg', 1555, 1592, 14945937, 'safe'),
+(19, 'demo_sha256_000019', 'yande.re 1167505 sample angel dress skirt_lift tatekawa_mako wet wings - Copy - Copy.jpg', 'yande.re 1167505 sample angel dress skirt_lift tatekawa_mako wet wings - Copy - Copy.jpg', 'yande.re 1167505 sample angel dress skirt_lift tatekawa_mako wet wings - Copy - Copy.jpg', 'yande.re 1167505 sample angel dress skirt_lift tatekawa_mako wet wings - Copy - Copy.jpg', 'image/jpeg', 1307, 1045, 328064, 'safe'),
+(20, 'demo_sha256_000020', 'yande.re 300367 anmi megane_shoujo paper_texture.png', 'yande.re 300367 anmi megane_shoujo paper_texture.png', 'yande.re 300367 anmi megane_shoujo paper_texture.png', 'yande.re 300367 anmi megane_shoujo paper_texture.png', 'image/jpeg', 1341, 922, 6582984, 'safe'),
+(21, 'demo_sha256_000021', 'yande.re 966318 dress kantoku pantyhose sweater_waifu2x_3x_jpg.png', 'yande.re 966318 dress kantoku pantyhose sweater_waifu2x_3x_jpg.png', 'yande.re 966318 dress kantoku pantyhose sweater_waifu2x_3x_jpg.png', 'yande.re 966318 dress kantoku pantyhose sweater_waifu2x_3x_jpg.png', 'image/jpeg', 858, 1539, 23020909, 'safe'),
+(22, 'demo_sha256_000022', '_background - Copy.jpg', '_background - Copy.jpg', '_background - Copy.jpg', '_background - Copy.jpg', 'image/jpeg', 1482, 1410, 1576858, 'safe'),
+(23, 'demo_sha256_000023', '{0B5BA7E0-C4F2-8FEA-B865-57322BFDCF01} - Copy.jpg', '{0B5BA7E0-C4F2-8FEA-B865-57322BFDCF01} - Copy.jpg', '{0B5BA7E0-C4F2-8FEA-B865-57322BFDCF01} - Copy.jpg', '{0B5BA7E0-C4F2-8FEA-B865-57322BFDCF01} - Copy.jpg', 'image/jpeg', 1387, 900, 145333, 'safe'),
+(24, 'demo_sha256_000024', '{AA2893B1-DC28-FFBB-D9C8-5BE2F625C6B7} - Copy.jpg', '{AA2893B1-DC28-FFBB-D9C8-5BE2F625C6B7} - Copy.jpg', '{AA2893B1-DC28-FFBB-D9C8-5BE2F625C6B7} - Copy.jpg', '{AA2893B1-DC28-FFBB-D9C8-5BE2F625C6B7} - Copy.jpg', 'image/jpeg', 1481, 1438, 182719, 'safe') ON CONFLICT DO NOTHING;
+INSERT INTO image_tags (image_id, tag_id) VALUES 
+(1, 1),
+(2, 1),
+(3, 1),
+(4, 1),
+(5, 1),
+(6, 1),
+(7, 1),
+(8, 1),
+(9, 1),
+(10, 1),
+(11, 1),
+(12, 1),
+(13, 1),
+(14, 1),
+(15, 1),
+(16, 1),
+(17, 1),
+(18, 1),
+(19, 1),
+(20, 1),
+(21, 1),
+(22, 1),
+(23, 1),
+(24, 1) ON CONFLICT DO NOTHING;
 SELECT setval('images_id_seq', (SELECT MAX(id) FROM images));
 SELECT setval('tags_id_seq', (SELECT MAX(id) FROM tags));
-
 COMMIT;
+

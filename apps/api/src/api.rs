@@ -1,20 +1,20 @@
 use anyhow::Context;
 use axum::{
     Json, Router,
-    extract::{Path, Query, State},
+    extract::{Path, State},
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
 };
-use axum_extra::extract::CookieJar;
+use axum_extra::extract::{CookieJar, Query};
 use serde_json::json;
 use uuid::Uuid;
 
 use crate::{
     AppState, auth,
     dto::{
-        AuthUserResponse, DownloadJobRequest, HealthResponse, ListImagesQuery, ListImagesResponse,
-        LoginRequest, SessionUser, TagSuggestQuery, UserRole, Rating, ImageListItem
+        AuthUserResponse, DownloadJobRequest, HealthResponse, ImageListItem, ListImagesQuery,
+        ListImagesResponse, LoginRequest, Rating, SessionUser, TagSuggestQuery, UserRole,
     },
 };
 
@@ -133,9 +133,11 @@ async fn list_images(
          LEFT JOIN favorites f ON f.image_id = i.id AND f.user_id = ",
     );
     builder.push_bind(user.id);
-    builder.push(" LEFT JOIN image_tags it ON it.image_id = i.id \
+    builder.push(
+        " LEFT JOIN image_tags it ON it.image_id = i.id \
                   LEFT JOIN tags t ON t.id = it.tag_id \
-                  WHERE 1=1 ");
+                  WHERE 1=1 ",
+    );
 
     if query.favorites_only {
         builder.push(" AND f.image_id IS NOT NULL ");
@@ -143,11 +145,7 @@ async fn list_images(
 
     if !query.rating.is_empty() {
         builder.push(" AND i.rating = ANY(");
-        let ratings: Vec<String> = query.rating.into_iter().map(|r| match r {
-            Rating::Safe => "safe".to_string(),
-            Rating::Suggestive => "suggestive".to_string(),
-            Rating::Explicit => "explicit".to_string(),
-        }).collect();
+        let ratings: Vec<&str> = query.rating.iter().map(|rating| rating.as_str()).collect();
         builder.push_bind(ratings);
         builder.push(") ");
     }
@@ -227,14 +225,12 @@ async fn add_favorite(
 ) -> Result<Response, ApiError> {
     let user = require_user(&state, &jar).await?;
 
-    sqlx::query(
-        "INSERT INTO favorites (user_id, image_id) VALUES ($1, $2) ON CONFLICT DO NOTHING"
-    )
-    .bind(user.id)
-    .bind(image_id)
-    .execute(&state.pool)
-    .await
-    .map_err(|e| ApiError::internal(e.into()))?;
+    sqlx::query("INSERT INTO favorites (user_id, image_id) VALUES ($1, $2) ON CONFLICT DO NOTHING")
+        .bind(user.id)
+        .bind(image_id)
+        .execute(&state.pool)
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
 
     Ok(StatusCode::NO_CONTENT.into_response())
 }
@@ -246,14 +242,12 @@ async fn remove_favorite(
 ) -> Result<Response, ApiError> {
     let user = require_user(&state, &jar).await?;
 
-    sqlx::query(
-        "DELETE FROM favorites WHERE user_id = $1 AND image_id = $2"
-    )
-    .bind(user.id)
-    .bind(image_id)
-    .execute(&state.pool)
-    .await
-    .map_err(|e| ApiError::internal(e.into()))?;
+    sqlx::query("DELETE FROM favorites WHERE user_id = $1 AND image_id = $2")
+        .bind(user.id)
+        .bind(image_id)
+        .execute(&state.pool)
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
 
     Ok(StatusCode::NO_CONTENT.into_response())
 }
