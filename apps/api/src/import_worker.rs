@@ -347,6 +347,7 @@ async fn process_single_file(
 
     // 3.5 Read metadata JSON if exists
     let mut tags_to_insert: Vec<String> = Vec::new();
+    let mut rating_to_insert = "safe".to_string();
     let json_path = file_path.with_extension("json");
     if json_path.exists() {
         if let Ok(content) = std::fs::read_to_string(&json_path) {
@@ -356,6 +357,12 @@ async fn process_single_file(
                         if let Some(tag_str) = tag_val.as_str() {
                             tags_to_insert.push(tag_str.to_string());
                         }
+                    }
+                }
+                if let Some(rating_str) = json_val.get("rating").and_then(|v| v.as_str()) {
+                    let r = rating_str.to_lowercase();
+                    if r == "safe" || r == "suggestive" || r == "explicit" {
+                        rating_to_insert = r;
                     }
                 }
             }
@@ -389,7 +396,7 @@ async fn process_single_file(
             sha256, original_path, preview_path, thumbnail_path, original_filename,
             mime_type, width, height, file_size, rating
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, 'safe'
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10::image_rating
         )
         RETURNING id
         "#,
@@ -403,6 +410,7 @@ async fn process_single_file(
     .bind(metadata.width as i32)
     .bind(metadata.height as i32)
     .bind(file_size)
+    .bind(&rating_to_insert)
     .fetch_one(pool)
     .await?;
 
