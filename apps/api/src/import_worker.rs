@@ -40,7 +40,7 @@ async fn process_next_job(pool: &PgPool, config: &Config) -> Result<()> {
             LIMIT 1
         )
         RETURNING id, source_archive_path, source_type
-        "#
+        "#,
     )
     .fetch_optional(pool)
     .await?;
@@ -53,11 +53,24 @@ async fn process_next_job(pool: &PgPool, config: &Config) -> Result<()> {
     tracing::info!("Found import job: {} (type: {})", job.id, job.source_type);
 
     // 2. Process the job
-    let result = run_import_job(job.id, &job.source_archive_path, &job.source_type, pool, config).await;
+    let result = run_import_job(
+        job.id,
+        &job.source_archive_path,
+        &job.source_type,
+        pool,
+        config,
+    )
+    .await;
 
     // 3. Finalize the job
     let final_status = match result {
-        Ok(has_errors) => if has_errors { "completed_with_errors" } else { "completed" },
+        Ok(has_errors) => {
+            if has_errors {
+                "completed_with_errors"
+            } else {
+                "completed"
+            }
+        }
         Err(ref e) => {
             tracing::error!("Job {} failed: {:?}", job.id, e);
             "failed"
@@ -94,9 +107,17 @@ async fn run_import_job(
     // If it's a package upload but the path points to the temp directory, we must find the archive inside it
     if source_type == "package" && source_path.is_dir() {
         let mut found = false;
-        for entry in WalkDir::new(&source_path).into_iter().filter_map(|e| e.ok()) {
+        for entry in WalkDir::new(&source_path)
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
             if entry.file_type().is_file() {
-                let ext = entry.path().extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+                let ext = entry
+                    .path()
+                    .extension()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("")
+                    .to_lowercase();
                 if ext == "zip" || ext == "7z" {
                     source_path = entry.path().to_path_buf();
                     found = true;
@@ -111,23 +132,35 @@ async fn run_import_job(
 
     // Collect all image files
     let mut files_to_process = Vec::new();
-    
+
     if source_path.is_dir() {
         // Folder or server import: scan for images
-        for entry in WalkDir::new(&source_path).into_iter().filter_map(|e| e.ok()) {
+        for entry in WalkDir::new(&source_path)
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
             if entry.file_type().is_file() {
-                let ext = entry.path().extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+                let ext = entry
+                    .path()
+                    .extension()
+                    .and_then(|s| s.to_str())
+                    .unwrap_or("")
+                    .to_lowercase();
                 if matches!(ext.as_str(), "jpg" | "jpeg" | "png" | "webp" | "gif") {
                     files_to_process.push(entry.path().to_path_buf());
                 }
             }
         }
     } else if source_path.is_file() {
-        let ext = source_path.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+        let ext = source_path
+            .extension()
+            .and_then(|s| s.to_str())
+            .unwrap_or("")
+            .to_lowercase();
 
         if matches!(ext.as_str(), "zip") {
             tracing::info!("Extracting ZIP archive: {:?}", source_path);
-            
+
             // Set status to extracting and update total items based on zip length
             sqlx::query(
                 "UPDATE import_jobs SET status = 'extracting', total_items = $1, updated_at = now() WHERE id = $2"
@@ -140,26 +173,29 @@ async fn run_import_job(
             let file = std::fs::File::open(&source_path)?;
             let mut archive = zip::ZipArchive::new(file)?;
             let total_files = archive.len() as i32;
-            
+
             sqlx::query(
-                "UPDATE import_jobs SET total_items = $1, updated_at = now() WHERE id = $2"
+                "UPDATE import_jobs SET total_items = $1, updated_at = now() WHERE id = $2",
             )
             .bind(total_files)
             .bind(job_id)
             .execute(pool)
             .await?;
-            
+
             // Create a temporary extraction directory inside media root
-            let temp_extract_dir = config.media_root.join("temp_extract").join(job_id.to_string());
+            let temp_extract_dir = config
+                .media_root
+                .join("temp_extract")
+                .join(job_id.to_string());
             std::fs::create_dir_all(&temp_extract_dir)?;
-            
+
             for i in 0..archive.len() {
                 let mut file = archive.by_index(i)?;
                 let outpath = match file.enclosed_name() {
                     Some(path) => path.to_owned(),
                     None => continue,
                 };
-                
+
                 let outpath = temp_extract_dir.join(outpath);
                 if (*file.name()).ends_with('/') {
                     std::fs::create_dir_all(&outpath)?;
@@ -171,13 +207,17 @@ async fn run_import_job(
                     }
                     let mut outfile = std::fs::File::create(&outpath)?;
                     std::io::copy(&mut file, &mut outfile)?;
-                    
-                    let out_ext = outpath.extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+
+                    let out_ext = outpath
+                        .extension()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or("")
+                        .to_lowercase();
                     if matches!(out_ext.as_str(), "jpg" | "jpeg" | "png" | "webp" | "gif") {
                         files_to_process.push(outpath);
                     }
                 }
-                
+
                 // Report progress every 50 files
                 if i % 50 == 0 && i > 0 {
                     sqlx::query(
@@ -191,23 +231,35 @@ async fn run_import_job(
             }
         } else if matches!(ext.as_str(), "7z") {
             tracing::info!("Extracting 7Z archive: {:?}", source_path);
-            
+
             sqlx::query(
-                "UPDATE import_jobs SET status = 'extracting', updated_at = now() WHERE id = $2"
+                "UPDATE import_jobs SET status = 'extracting', updated_at = now() WHERE id = $1",
             )
             .bind(job_id)
             .execute(pool)
             .await?;
 
-            let temp_extract_dir = config.media_root.join("temp_extract").join(job_id.to_string());
+            let temp_extract_dir = config
+                .media_root
+                .join("temp_extract")
+                .join(job_id.to_string());
             std::fs::create_dir_all(&temp_extract_dir)?;
-            
-            sevenz_rust::decompress_file(&source_path, &temp_extract_dir).map_err(|e| anyhow::anyhow!("7z extraction failed: {:?}", e))?;
-            
+
+            sevenz_rust::decompress_file(&source_path, &temp_extract_dir)
+                .map_err(|e| anyhow::anyhow!("7z extraction failed: {:?}", e))?;
+
             // Collect extracted files
-            for entry in WalkDir::new(&temp_extract_dir).into_iter().filter_map(|e| e.ok()) {
+            for entry in WalkDir::new(&temp_extract_dir)
+                .into_iter()
+                .filter_map(|e| e.ok())
+            {
                 if entry.file_type().is_file() {
-                    let ext = entry.path().extension().and_then(|s| s.to_str()).unwrap_or("").to_lowercase();
+                    let ext = entry
+                        .path()
+                        .extension()
+                        .and_then(|s| s.to_str())
+                        .unwrap_or("")
+                        .to_lowercase();
                     if matches!(ext.as_str(), "jpg" | "jpeg" | "png" | "webp" | "gif") {
                         files_to_process.push(entry.path().to_path_buf());
                     }
@@ -239,7 +291,7 @@ async fn run_import_job(
 
     for (index, file_path) in files_to_process.into_iter().enumerate() {
         match process_single_file(&file_path, &originals_dir, pool, config).await {
-            Ok(true) => succeeded += 1, // Success
+            Ok(true) => succeeded += 1,  // Success
             Ok(false) => succeeded += 1, // Skipped (already exists), user wants it counted as succeeded
             Err(e) => {
                 tracing::warn!("Failed to process file {:?}: {:?}", file_path, e);
@@ -311,19 +363,26 @@ async fn process_single_file(
     }
 
     // 4. Move original file to media_root/originals/
-    let ext = file_path.extension().and_then(|e| e.to_str()).unwrap_or("jpg");
+    let ext = file_path
+        .extension()
+        .and_then(|e| e.to_str())
+        .unwrap_or("jpg");
     let original_filename = format!("{}.{}", sha256, ext);
     let target_original_path = originals_dir.join(&original_filename);
-    
+
     // Copy instead of move, in case it's an external library
     std::fs::copy(file_path, &target_original_path).context("failed to copy original file")?;
-    
+
     let file_size = target_original_path.metadata()?.len() as i64;
-    let original_filename_str = file_path.file_name().and_then(|n| n.to_str()).unwrap_or("unknown").to_string();
+    let original_filename_str = file_path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("unknown")
+        .to_string();
 
     // 5. Insert into DB
     let original_relative_path = format!("originals/{}", original_filename);
-    
+
     let image_id: Option<i64> = sqlx::query_scalar(
         r#"
         INSERT INTO images (
@@ -362,7 +421,7 @@ async fn process_single_file(
                 UNION ALL
                 SELECT id FROM tags WHERE normalized_namespace = '' AND normalized_name = $2
                 LIMIT 1
-                "#
+                "#,
             )
             .bind(&tag)
             .bind(&tag.to_lowercase())
@@ -370,7 +429,7 @@ async fn process_single_file(
             .await?;
 
             sqlx::query(
-                "INSERT INTO image_tags (image_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING"
+                "INSERT INTO image_tags (image_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
             )
             .bind(id)
             .bind(tag_id)

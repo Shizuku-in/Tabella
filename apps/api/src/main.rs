@@ -48,8 +48,14 @@ async fn main() -> anyhow::Result<()> {
     tokio::spawn(import_worker::start_worker(pool.clone(), config.clone()));
 
     let app = Router::new()
-        .nest_service("/media", tower_http::services::ServeDir::new(&config.media_root))
-        .nest_service("/tmp", tower_http::services::ServeDir::new(&config.temp_root))
+        .nest_service(
+            "/media",
+            tower_http::services::ServeDir::new(&config.media_root),
+        )
+        .nest_service(
+            "/tmp",
+            tower_http::services::ServeDir::new(&config.temp_root),
+        )
         .merge(api::router(app_state))
         .layer(TraceLayer::new_for_http());
 

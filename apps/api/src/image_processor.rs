@@ -58,8 +58,7 @@ pub(crate) fn process_image(
 
     // 2. Generate Sample (Original resolution, WebP, Quality 80)
     // We don't resize, just encode to WebP
-    encode_webp(&img, &sample_full_path, 80.0)
-        .context("failed to encode sample webp")?;
+    encode_webp(&img, &sample_full_path, 80.0).context("failed to encode sample webp")?;
 
     Ok(ImageMetadata {
         width,
@@ -73,9 +72,7 @@ fn encode_webp(img: &DynamicImage, output_path: &Path, quality: f32) -> Result<(
     // webp crate encoder expects rgb or rgba
     let rgba; // declare outside to extend lifetime
     let encoder = match img {
-        DynamicImage::ImageRgb8(rgb) => {
-            Encoder::from_rgb(rgb.as_raw(), img.width(), img.height())
-        }
+        DynamicImage::ImageRgb8(rgb) => Encoder::from_rgb(rgb.as_raw(), img.width(), img.height()),
         DynamicImage::ImageRgba8(rgba_img) => {
             Encoder::from_rgba(rgba_img.as_raw(), img.width(), img.height())
         }

@@ -1,13 +1,16 @@
+use std::path::{Component, Path as StdPath, PathBuf};
+
 use anyhow::Context;
 use axum::{
     Json, Router,
-    extract::{DefaultBodyLimit, Path, Query, State},
+    extract::{DefaultBodyLimit, Multipart, Path, Query, State},
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
     routing::{get, post},
 };
 use axum_extra::extract::CookieJar;
 use serde_json::json;
+use tokio::io::AsyncWriteExt;
 use uuid::Uuid;
 
 use crate::{
@@ -17,6 +20,8 @@ use crate::{
         ListImagesResponse, LoginRequest, Rating, SessionUser, TagSuggestQuery, UserRole,
     },
 };
+
+const MAX_ADMIN_UPLOAD_BYTES: usize = 1_024 * 1_024 * 1_024;
 
 pub(crate) fn router(state: AppState) -> Router {
     let api_routes = Router::new()
@@ -30,13 +35,18 @@ pub(crate) fn router(state: AppState) -> Router {
             "/api/favorites/{image_id}",
             post(add_favorite).delete(remove_favorite),
         )
-        .route("/api/admin/imports", get(list_import_jobs).post(create_import_job))
-        .route("/api/admin/imports/upload", post(upload_import_files))
+        .route(
+            "/api/admin/imports",
+            get(list_import_jobs).post(create_import_job),
+        )
+        .route(
+            "/api/admin/imports/upload",
+            post(upload_import_files).layer(DefaultBodyLimit::max(MAX_ADMIN_UPLOAD_BYTES)),
+        )
         .route("/api/admin/imports/{job_id}", get(get_import_job))
         .route("/api/download-jobs", post(create_download_job))
         .route("/api/download-jobs/{job_id}", get(get_download_job))
-        .route("/api/download-jobs/{job_id}/file", get(download_job_file))
-        .layer(DefaultBodyLimit::disable());
+        .route("/api/download-jobs/{job_id}/file", get(download_job_file));
 
     Router::new().merge(api_routes).with_state(state)
 }
@@ -314,7 +324,7 @@ async fn get_import_job(
     Path(job_id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let _admin = require_admin(&state, &jar).await?;
-    
+
     let job: Option<JobStatusRow> = sqlx::query_as(
         r#"
         SELECT id, status, total_items, processed_items, succeeded_items, failed_items, created_at, finished_at, last_error
@@ -401,6 +411,7 @@ enum ApiError {
     BadRequest { code: &'static str, message: String },
     Unauthorized { code: &'static str, message: String },
     Forbidden { code: &'static str, message: String },
+    PayloadTooLarge { message: String },
     NotFound { code: &'static str, message: String },
     NotImplemented { message: String },
     Internal(anyhow::Error),
@@ -424,6 +435,12 @@ impl ApiError {
     fn forbidden(code: &'static str, message: impl Into<String>) -> Self {
         Self::Forbidden {
             code,
+            message: message.into(),
+        }
+    }
+
+    fn payload_too_large(message: impl Into<String>) -> Self {
+        Self::PayloadTooLarge {
             message: message.into(),
         }
     }
@@ -464,6 +481,11 @@ impl IntoResponse for ApiError {
                 Json(json!({ "error": code, "message": message })),
             )
                 .into_response(),
+            Self::PayloadTooLarge { message } => (
+                StatusCode::PAYLOAD_TOO_LARGE,
+                Json(json!({ "error": "payload_too_large", "message": message })),
+            )
+                .into_response(),
             Self::NotFound { code, message } => (
                 StatusCode::NOT_FOUND,
                 Json(json!({ "error": code, "message": message })),
@@ -489,8 +511,6 @@ impl IntoResponse for ApiError {
     }
 }
 
-use axum::extract::Multipart;
-
 #[derive(serde::Deserialize)]
 pub(crate) struct UploadQuery {
     #[serde(rename = "type")]
@@ -504,27 +524,56 @@ async fn upload_import_files(
     mut multipart: Multipart,
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let user = require_admin(&state, &jar).await?;
-    
+
     // Create a temp directory for this upload batch
     let batch_id = uuid::Uuid::new_v4();
-    let temp_dir = state.config.media_root.join("temp").join(batch_id.to_string());
-    tokio::fs::create_dir_all(&temp_dir).await.map_err(|e| ApiError::internal(e.into()))?;
-    
+    let temp_dir = state
+        .config
+        .media_root
+        .join("temp")
+        .join(batch_id.to_string());
+    tokio::fs::create_dir_all(&temp_dir)
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
+
     let mut has_files = false;
-    while let Some(field) = multipart.next_field().await.map_err(|e| ApiError::internal(e.into()))? {
+    while let Some(mut field) = multipart
+        .next_field()
+        .await
+        .map_err(api_error_from_multipart)?
+    {
         let name = field.name().unwrap_or("unknown_name").to_string();
         let file_name_opt = field.file_name().map(|s| s.to_string());
-        tracing::info!("Received field: name={}, file_name={:?}", name, file_name_opt);
-        
+        tracing::info!(
+            "Received field: name={}, file_name={:?}",
+            name,
+            file_name_opt
+        );
+
         if let Some(file_name) = file_name_opt {
-            // Create subdirectories if necessary (for webkitdirectory)
-            let file_path = temp_dir.join(&file_name);
+            let relative_path = sanitize_upload_path(&file_name)?;
+            let file_path = temp_dir.join(relative_path);
             if let Some(parent) = file_path.parent() {
-                tokio::fs::create_dir_all(parent).await.map_err(|e| ApiError::internal(e.into()))?;
+                tokio::fs::create_dir_all(parent)
+                    .await
+                    .map_err(|e| ApiError::internal(e.into()))?;
             }
-            
-            let data = field.bytes().await.map_err(|e| ApiError::internal(e.into()))?;
-            tokio::fs::write(&file_path, data).await.map_err(|e| ApiError::internal(e.into()))?;
+
+            let mut output = tokio::fs::File::create(&file_path)
+                .await
+                .map_err(|e| ApiError::internal(e.into()))?;
+
+            while let Some(chunk) = field.chunk().await.map_err(api_error_from_multipart)? {
+                output
+                    .write_all(&chunk)
+                    .await
+                    .map_err(|e| ApiError::internal(e.into()))?;
+            }
+
+            output
+                .flush()
+                .await
+                .map_err(|e| ApiError::internal(e.into()))?;
             has_files = true;
         }
     }
@@ -534,7 +583,7 @@ async fn upload_import_files(
     }
 
     let source_type = query.source_type.unwrap_or_else(|| "folder".to_string());
-    
+
     // Create an import job for this temp directory
     sqlx::query(
         r#"
@@ -555,6 +604,40 @@ async fn upload_import_files(
         "id": batch_id,
         "status": "queued"
     })))
+}
+
+fn sanitize_upload_path(file_name: &str) -> Result<PathBuf, ApiError> {
+    let mut sanitized = PathBuf::new();
+
+    for component in StdPath::new(file_name).components() {
+        match component {
+            Component::Normal(part) => sanitized.push(part),
+            Component::CurDir => {}
+            Component::ParentDir | Component::RootDir | Component::Prefix(_) => {
+                return Err(ApiError::bad_request(
+                    "invalid_upload_path",
+                    "Upload path must stay inside the server staging directory.",
+                ));
+            }
+        }
+    }
+
+    if sanitized.as_os_str().is_empty() {
+        return Err(ApiError::bad_request(
+            "invalid_upload_path",
+            "Upload path must include a file name.",
+        ));
+    }
+
+    Ok(sanitized)
+}
+
+fn api_error_from_multipart(error: axum::extract::multipart::MultipartError) -> ApiError {
+    match error.status() {
+        StatusCode::PAYLOAD_TOO_LARGE => ApiError::payload_too_large(error.body_text()),
+        StatusCode::BAD_REQUEST => ApiError::bad_request("invalid_multipart", error.body_text()),
+        _ => ApiError::internal(error.into()),
+    }
 }
 
 async fn list_import_jobs(
@@ -593,4 +676,29 @@ async fn list_import_jobs(
     }
 
     Ok(Json(json!({ "items": items })))
+}
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use super::sanitize_upload_path;
+
+    #[test]
+    fn sanitize_upload_path_keeps_relative_structure() {
+        assert_eq!(
+            sanitize_upload_path("albums/cover.jpg").unwrap(),
+            PathBuf::from("albums").join("cover.jpg"),
+        );
+    }
+
+    #[test]
+    fn sanitize_upload_path_rejects_parent_traversal() {
+        assert!(sanitize_upload_path("../escape.jpg").is_err());
+    }
+
+    #[test]
+    fn sanitize_upload_path_rejects_absolute_paths() {
+        assert!(sanitize_upload_path("/escape.jpg").is_err());
+    }
 }
