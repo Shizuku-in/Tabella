@@ -35,7 +35,7 @@ interface LocalUploadJob {
 
 export function AdminImportsPage() {
   const [serverDialogOpen, setServerDialogOpen] = useState(false)
-  const [serverPath, setServerPath] = useState('d:/Tabella/demopic')
+  const [serverPath, setServerPath] = useState('')
   const [activeUploads, setActiveUploads] = useState<Record<string, LocalUploadJob>>({})
   const packageInputRef = useRef<HTMLInputElement>(null)
   const folderInputRef = useRef<HTMLInputElement>(null)
