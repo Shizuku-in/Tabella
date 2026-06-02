@@ -12,7 +12,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(input: string, init?: RequestInit): Promise<T> {
+export async function request<T>(input: string, init?: RequestInit): Promise<T> {
   const response = await fetch(input, {
     credentials: 'include',
     headers: {
@@ -77,6 +77,7 @@ export interface BackendImageListItem {
   rating: 'safe' | 'suggestive' | 'explicit'
   is_favorite: boolean
   tags: string[]
+  file_size: number
 }
 
 export interface BackendListImagesResponse {

@@ -2,6 +2,9 @@ mod api;
 mod auth;
 mod config;
 mod dto;
+mod image_processor;
+
+mod import_worker;
 
 use anyhow::Context;
 use axum::Router;
@@ -38,8 +41,11 @@ async fn main() -> anyhow::Result<()> {
 
     let app_state = AppState {
         config: config.clone(),
-        pool,
+        pool: pool.clone(),
     };
+
+    // Spawn import worker in the background
+    tokio::spawn(import_worker::start_worker(pool.clone(), config.clone()));
 
     let app = Router::new()
         .nest_service("/media", tower_http::services::ServeDir::new(&config.media_root))

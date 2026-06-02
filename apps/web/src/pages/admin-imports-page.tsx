@@ -1,27 +1,37 @@
-import { CloudUploadOutlined, DownloadOutlined } from '@mui/icons-material'
+import { CloudUploadOutlined, DownloadOutlined, PlayArrowOutlined } from '@mui/icons-material'
 import {
   Box,
   Button,
-  Chip,
   Paper,
   Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
   Typography,
+  TextField,
 } from '@mui/material'
-import { importJobRows } from '../mocks/gallery.ts'
-
-const statusColorMap = {
-  queued: 'default',
-  running: 'primary',
-  completed: 'success',
-  completed_with_errors: 'warning',
-} as const
+import { useMutation } from '@tanstack/react-query'
+import { useState } from 'react'
+import { request } from '../lib/api.ts'
 
 export function AdminImportsPage() {
+  const [sourcePath, setSourcePath] = useState('d:/Tabella/demopic')
+
+  const startJobMutation = useMutation({
+    mutationFn: async () => {
+      return request<{ id: string; status: string }>('/api/admin/imports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source_path: sourcePath }),
+      })
+    },
+    onSuccess: (data) => {
+      // In a real app we would refetch the list of jobs, but for now we just 
+      // add it to a local list or trigger a refetch of a specific job
+      alert('任务已创建，Job ID: ' + data.id)
+    },
+    onError: (err) => {
+      alert('创建失败: ' + err.message)
+    }
+  })
+
   return (
     <Stack spacing={3}>
       <Stack
@@ -47,40 +57,31 @@ export function AdminImportsPage() {
         </Stack>
       </Stack>
 
-      <Paper sx={{ overflow: 'hidden' }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Job ID</TableCell>
-              <TableCell>状态</TableCell>
-              <TableCell align="right">总数</TableCell>
-              <TableCell align="right">已处理</TableCell>
-              <TableCell align="right">成功</TableCell>
-              <TableCell align="right">失败</TableCell>
-              <TableCell>创建时间</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {importJobRows.map((job) => (
-              <TableRow key={job.id} hover>
-                <TableCell sx={{ fontFamily: 'monospace' }}>{job.id}</TableCell>
-                <TableCell>
-                  <Chip
-                    label={job.status}
-                    color={statusColorMap[job.status]}
-                    variant={job.status === 'queued' ? 'outlined' : 'filled'}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell align="right">{job.totalItems}</TableCell>
-                <TableCell align="right">{job.processedItems}</TableCell>
-                <TableCell align="right">{job.succeededItems}</TableCell>
-                <TableCell align="right">{job.failedItems}</TableCell>
-                <TableCell>{job.createdAt}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <Paper sx={{ p: 2, display: 'flex', gap: 2, alignItems: 'center' }}>
+        <TextField 
+          label="本地文件夹路径" 
+          variant="outlined" 
+          size="small" 
+          fullWidth
+          value={sourcePath}
+          onChange={(e) => setSourcePath(e.target.value)}
+        />
+        <Button 
+          variant="contained" 
+          color="secondary"
+          startIcon={<PlayArrowOutlined />}
+          onClick={() => startJobMutation.mutate()}
+          disabled={startJobMutation.isPending}
+          sx={{ whiteSpace: 'nowrap' }}
+        >
+          {startJobMutation.isPending ? '提交中...' : '一键扫描入库'}
+        </Button>
+      </Paper>
+
+      <Paper sx={{ overflow: 'hidden', p: 3, textAlign: 'center' }}>
+        <Typography color="text.secondary">
+          （历史任务列表表格暂未对接 API，可以通过刷新主页查看新图是否入库）
+        </Typography>
       </Paper>
     </Stack>
   )

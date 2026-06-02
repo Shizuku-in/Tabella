@@ -127,6 +127,7 @@ pub(crate) struct ImageListItem {
     pub(crate) rating: Rating,
     pub(crate) is_favorite: bool,
     pub(crate) tags: Vec<String>,
+    pub(crate) file_size: i64,
 }
 
 #[derive(Debug, Clone, Serialize)]

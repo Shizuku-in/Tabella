@@ -11,6 +11,8 @@ import {
   alpha,
   CircularProgress,
   Tooltip,
+  Divider,
+  Typography,
 } from '@mui/material'
 import {
   ChevronLeft,
@@ -49,6 +51,9 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
   const [showOverlays, setShowOverlays] = useState(true)
   const [downloadAnchorEl, setDownloadAnchorEl] = useState<null | HTMLElement>(null)
   const [imgStatus, setImgStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
+  const [fileSizes, setFileSizes] = useState({ thumb: 0, sample: 0, original: 0 })
+
+  const item = items[currentIndex]
 
   useEffect(() => {
     if (open) {
@@ -57,7 +62,24 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
     }
   }, [open, initialIndex])
 
-  const item = items[currentIndex]
+  useEffect(() => {
+    if (!item) return
+    setFileSizes({ thumb: 0, sample: 0, original: item.fileSize || 0 })
+    
+    if (item.thumbnailSrc) {
+      fetch(item.thumbnailSrc, { method: 'HEAD' }).then(res => {
+        const size = Number(res.headers.get('content-length'))
+        if (!isNaN(size)) setFileSizes(s => ({ ...s, thumb: size }))
+      }).catch(() => {})
+    }
+    
+    if (item.sampleSrc) {
+      fetch(item.sampleSrc, { method: 'HEAD' }).then(res => {
+        const size = Number(res.headers.get('content-length'))
+        if (!isNaN(size)) setFileSizes(s => ({ ...s, sample: size }))
+      }).catch(() => {})
+    }
+  }, [item])
 
   const imgSrc = useMemo(() => {
     if (!item) return ''
@@ -76,8 +98,6 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
       onIndexChange(currentIndex)
     }
   }, [currentIndex, open, onIndexChange])
-
-
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -113,7 +133,22 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
     handleDownloadClose()
   }
 
+  const formatSizeStr = (bytes: number) => {
+    if (!bytes) return '未知'
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + 'KB'
+    return (bytes / (1024 * 1024)).toFixed(2) + 'MB'
+  }
+
+  const getExt = (filename: string) => {
+    const parts = filename.split('.')
+    return parts.length > 1 ? parts.pop()?.toUpperCase() : 'UNKNOWN'
+  }
+
   if (!item) return null
+
+  const thumbRatio = Math.min(500 / item.width, 500 / item.height)
+  const thumbWidth = Math.round(item.width * thumbRatio)
+  const thumbHeight = Math.round(item.height * thumbRatio)
 
   return (
     <Dialog
@@ -231,14 +266,37 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
         onClose={() => handleDownloadClose()}
         onClick={(e) => e.stopPropagation()}
       >
-        <MenuItem onClick={() => triggerDownload(item.thumbnailSrc, `${item.filename}_thumb`)}>
-          Download Thumbnail
+        <MenuItem onClick={() => {
+          const baseName = item.filename.includes('.') ? item.filename.substring(0, item.filename.lastIndexOf('.')) : item.filename;
+          triggerDownload(item.thumbnailSrc, `${baseName}_thumb.webp`)
+        }}>
+          <Stack>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>下载缩略图</Typography>
+            <Typography variant="caption" color="text.secondary">
+              {thumbWidth}×{thumbHeight} [{formatSizeStr(fileSizes.thumb)}] WEBP
+            </Typography>
+          </Stack>
         </MenuItem>
-        <MenuItem onClick={() => triggerDownload(item.sampleSrc || item.thumbnailSrc, `${item.filename}_sample`)}>
-          Download Sample
+        
+        <MenuItem onClick={() => {
+          const baseName = item.filename.includes('.') ? item.filename.substring(0, item.filename.lastIndexOf('.')) : item.filename;
+          triggerDownload(item.sampleSrc || item.thumbnailSrc, `${baseName}_sample.webp`)
+        }}>
+          <Stack>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>下载预览图</Typography>
+            <Typography variant="caption" color="text.secondary">
+              {item.width}×{item.height} [{formatSizeStr(fileSizes.sample)}] WEBP
+            </Typography>
+          </Stack>
         </MenuItem>
+        
         <MenuItem onClick={() => triggerDownload(item.originalSrc || item.sampleSrc || item.thumbnailSrc, item.filename)}>
-          Download Original
+          <Stack>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>下载原文件</Typography>
+            <Typography variant="caption" color="text.secondary">
+              {item.width}×{item.height} [{formatSizeStr(fileSizes.original)}] {getExt(item.filename)}
+            </Typography>
+          </Stack>
         </MenuItem>
       </Menu>
 

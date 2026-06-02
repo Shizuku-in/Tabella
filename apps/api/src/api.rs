@@ -126,7 +126,7 @@ async fn list_images(
 
     let limit = query.limit.unwrap_or(50).clamp(1, 100) as i64;
     let mut builder = sqlx::QueryBuilder::new(
-        "SELECT i.id, i.original_filename, i.thumbnail_path, i.preview_path, i.original_path, i.width, i.height, i.rating, \
+        "SELECT i.id, i.original_filename, i.thumbnail_path, i.preview_path, i.original_path, i.width, i.height, i.rating, i.file_size, \
          (f.image_id IS NOT NULL) AS is_favorite, \
          COALESCE(array_agg(t.name) FILTER (WHERE t.name IS NOT NULL), '{}') AS tags \
          FROM images i \
@@ -192,6 +192,7 @@ async fn list_images(
             rating,
             is_favorite: row.try_get("is_favorite").unwrap_or(false),
             tags: row.try_get("tags").unwrap_or_default(),
+            file_size: row.try_get::<i64, _>("file_size").unwrap_or(0),
         });
     }
 
@@ -252,26 +253,90 @@ async fn remove_favorite(
     Ok(StatusCode::NO_CONTENT.into_response())
 }
 
+#[derive(serde::Deserialize)]
+pub(crate) struct CreateImportRequest {
+    pub(crate) source_path: String,
+}
+
 async fn create_import_job(
     State(state): State<AppState>,
     jar: CookieJar,
-) -> Result<Response, ApiError> {
-    let _admin = require_admin(&state, &jar).await?;
-    Err(ApiError::not_implemented(
-        "Zip import job enqueueing is not implemented yet.",
-    ))
+    Json(request): Json<CreateImportRequest>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let admin = require_admin(&state, &jar).await?;
+
+    let job_id = uuid::Uuid::new_v4();
+    let source_filename = std::path::Path::new(&request.source_path)
+        .file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("unknown")
+        .to_string();
+
+    sqlx::query(
+        r#"
+        INSERT INTO import_jobs (id, created_by_user_id, source_filename, source_archive_path, status)
+        VALUES ($1, $2, $3, $4, 'queued')
+        "#,
+    )
+    .bind(job_id)
+    .bind(admin.id)
+    .bind(source_filename)
+    .bind(request.source_path)
+    .execute(&state.pool)
+    .await
+    .map_err(|e| ApiError::internal(e.into()))?;
+
+    Ok(Json(serde_json::json!({
+        "id": job_id,
+        "status": "queued",
+    })))
+}
+
+#[derive(serde::Serialize, sqlx::FromRow)]
+struct JobStatusRow {
+    id: uuid::Uuid,
+    status: String,
+    total_items: i32,
+    processed_items: i32,
+    succeeded_items: i32,
+    failed_items: i32,
+    created_at: time::OffsetDateTime,
+    finished_at: Option<time::OffsetDateTime>,
+    last_error: Option<String>,
 }
 
 async fn get_import_job(
     State(state): State<AppState>,
     jar: CookieJar,
     Path(job_id): Path<Uuid>,
-) -> Result<Response, ApiError> {
+) -> Result<Json<serde_json::Value>, ApiError> {
     let _admin = require_admin(&state, &jar).await?;
-    let _ = job_id;
-    Err(ApiError::not_implemented(
-        "Import job status lookup is not implemented yet.",
-    ))
+    
+    let job: Option<JobStatusRow> = sqlx::query_as(
+        r#"
+        SELECT id, status, total_items, processed_items, succeeded_items, failed_items, created_at, finished_at, last_error
+        FROM import_jobs
+        WHERE id = $1
+        "#,
+    )
+    .bind(job_id)
+    .fetch_optional(&state.pool)
+    .await
+    .map_err(|e| ApiError::internal(e.into()))?;
+
+    let job = job.ok_or_else(|| ApiError::not_found("Import job not found"))?;
+
+    Ok(Json(serde_json::json!({
+        "id": job.id,
+        "status": job.status,
+        "total_items": job.total_items,
+        "processed_items": job.processed_items,
+        "succeeded_items": job.succeeded_items,
+        "failed_items": job.failed_items,
+        "created_at": job.created_at,
+        "finished_at": job.finished_at,
+        "last_error": job.last_error,
+    })))
 }
 
 async fn create_download_job(
@@ -333,6 +398,7 @@ enum ApiError {
     BadRequest { code: &'static str, message: String },
     Unauthorized { code: &'static str, message: String },
     Forbidden { code: &'static str, message: String },
+    NotFound { code: &'static str, message: String },
     NotImplemented { message: String },
     Internal(anyhow::Error),
 }
@@ -355,6 +421,13 @@ impl ApiError {
     fn forbidden(code: &'static str, message: impl Into<String>) -> Self {
         Self::Forbidden {
             code,
+            message: message.into(),
+        }
+    }
+
+    fn not_found(message: impl Into<String>) -> Self {
+        Self::NotFound {
+            code: "not_found",
             message: message.into(),
         }
     }
@@ -385,6 +458,11 @@ impl IntoResponse for ApiError {
                 .into_response(),
             Self::Forbidden { code, message } => (
                 StatusCode::FORBIDDEN,
+                Json(json!({ "error": code, "message": message })),
+            )
+                .into_response(),
+            Self::NotFound { code, message } => (
+                StatusCode::NOT_FOUND,
                 Json(json!({ "error": code, "message": message })),
             )
                 .into_response(),

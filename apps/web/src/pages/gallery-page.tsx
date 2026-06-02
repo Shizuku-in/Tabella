@@ -57,6 +57,7 @@ export function GalleryPage() {
           tags: item.tags,
           favorite: item.is_favorite,
           importedAt: '', // We don't have importedAt in ImageListItem right now
+          fileSize: item.file_size,
         }) as GalleryItem),
         nextCursor: response.next_cursor,
       }
