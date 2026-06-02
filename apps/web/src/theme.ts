@@ -63,6 +63,7 @@ export function buildTheme(mode: PaletteMode) {
         styleOverrides: {
           body: {
             backgroundColor: defaultBackground,
+            transition: 'background-color 150ms ease, color 150ms ease',
           },
         },
       },
@@ -73,6 +74,7 @@ export function buildTheme(mode: PaletteMode) {
             borderBottom: `1px solid ${borderColor}`,
             boxShadow: 'none',
             backdropFilter: 'blur(16px)',
+            transition: 'background-color 150ms ease, border-color 150ms ease, color 150ms ease',
           },
         },
       },
@@ -84,6 +86,8 @@ export function buildTheme(mode: PaletteMode) {
           root: {
             backgroundImage: 'none',
             border: `1px solid ${borderColor}`,
+            transition:
+              'background-color 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 300ms cubic-bezier(0.4, 0, 0.2, 1) 0ms',
           },
         },
       },
