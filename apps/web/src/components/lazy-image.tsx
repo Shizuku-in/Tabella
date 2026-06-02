@@ -42,7 +42,18 @@ export function LazyImage({ src, alt, aspectRatio, className }: LazyImageProps) 
       )}
       
       {status === 'error' && (
-        <BrokenImage sx={{ color: 'text.disabled', fontSize: 40, position: 'absolute' }} />
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'action.disabledBackground',
+          }}
+        >
+          <BrokenImage sx={{ color: 'text.disabled', fontSize: 48 }} />
+        </Box>
       )}
 
       {src && status !== 'error' && (
