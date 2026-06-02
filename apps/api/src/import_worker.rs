@@ -387,6 +387,13 @@ async fn process_single_file(
         .unwrap_or("unknown")
         .to_string();
 
+    let mime_type = match ext.to_lowercase().as_str() {
+        "png" => "image/png",
+        "gif" => "image/gif",
+        "webp" => "image/webp",
+        _ => "image/jpeg",
+    };
+
     // 5. Insert into DB
     let original_relative_path = format!("originals/{}", original_filename);
 
@@ -406,7 +413,7 @@ async fn process_single_file(
     .bind(&metadata.sample_path)
     .bind(&metadata.thumbnail_path)
     .bind(&original_filename_str)
-    .bind("image/jpeg") // TODO: determine mime type
+    .bind(mime_type)
     .bind(metadata.width as i32)
     .bind(metadata.height as i32)
     .bind(file_size)
