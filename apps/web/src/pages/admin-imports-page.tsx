@@ -1,4 +1,4 @@
-import { CloudOutlined, UploadOutlined, FolderOutlined, InsertDriveFileOutlined, PlayArrowOutlined } from '@mui/icons-material'
+import { CloudOutlined, UploadOutlined, FolderOutlined, InsertDriveFileOutlined, PlayArrowOutlined, Done, Error as ErrorIcon } from '@mui/icons-material'
 import {
   Button,
   Paper,
@@ -15,15 +15,28 @@ import {
   TableHead,
   TableRow,
   Chip,
+  CircularProgress,
+  LinearProgress,
 } from '@mui/material'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
-import { request } from '../lib/api.ts'
+import { request, uploadWithProgress } from '../lib/api.ts'
 import type { ImportJobRow } from '../lib/api.ts'
+
+interface LocalUploadJob {
+  id: string
+  status: string
+  sourceType: string
+  progress: number
+  totalItems: number
+  processedItems: number
+  createdAt: string
+}
 
 export function AdminImportsPage() {
   const [serverDialogOpen, setServerDialogOpen] = useState(false)
   const [serverPath, setServerPath] = useState('d:/Tabella/demopic')
+  const [activeUploads, setActiveUploads] = useState<Record<string, LocalUploadJob>>({})
   const packageInputRef = useRef<HTMLInputElement>(null)
   const folderInputRef = useRef<HTMLInputElement>(null)
 
@@ -54,21 +67,55 @@ export function AdminImportsPage() {
   })
 
   const uploadMutation = useMutation({
-    mutationFn: async (files: FileList) => {
+    mutationFn: async ({ files, sourceType }: { files: File[], sourceType: string }) => {
       const formData = new FormData()
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
-        // Use webkitRelativePath to preserve directory structure, fallback to file.name
         const path = file.webkitRelativePath || file.name
         formData.append('files', file, path)
       }
-      return request<{ id: string; status: string }>('/api/admin/imports/upload', {
-        method: 'POST',
-        body: formData,
-      })
+      
+      const tempId = 'upload_' + Date.now() + Math.floor(Math.random() * 1000)
+      setActiveUploads(prev => ({
+        ...prev,
+        [tempId]: {
+          id: tempId,
+          status: 'uploading',
+          sourceType,
+          progress: 0,
+          totalItems: files.length,
+          processedItems: 0,
+          createdAt: new Date().toISOString()
+        }
+      }))
+
+      try {
+        const result = await uploadWithProgress<{ id: string; status: string }>(
+          `/api/admin/imports/upload?type=${sourceType}`,
+          formData,
+          (percent) => {
+            setActiveUploads(prev => ({
+              ...prev,
+              [tempId]: { ...prev[tempId], progress: percent }
+            }))
+          }
+        )
+        return { tempId, data: result }
+      } catch (err) {
+        setActiveUploads(prev => {
+          const newState = { ...prev }
+          delete newState[tempId]
+          return newState
+        })
+        throw err
+      }
     },
-    onSuccess: (data) => {
-      alert('Upload successful. Job ID: ' + data.id)
+    onSuccess: (res) => {
+      setActiveUploads(prev => {
+        const newState = { ...prev }
+        delete newState[res.tempId]
+        return newState
+      })
       jobsQuery.refetch()
     },
     onError: (err) => {
@@ -78,14 +125,16 @@ export function AdminImportsPage() {
 
   const handlePackageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      uploadMutation.mutate(e.target.files)
+      const fileArray = Array.from(e.target.files)
+      uploadMutation.mutate({ files: fileArray, sourceType: 'package' })
     }
     e.target.value = ''
   }
 
   const handleFolderSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      uploadMutation.mutate(e.target.files)
+      const fileArray = Array.from(e.target.files)
+      uploadMutation.mutate({ files: fileArray, sourceType: 'folder' })
     }
     e.target.value = ''
   }
@@ -143,33 +192,93 @@ export function AdminImportsPage() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Job ID</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Progress</TableCell>
-              <TableCell>Created At</TableCell>
+              <TableCell sx={{ width: '100px' }}>Job ID</TableCell>
+              <TableCell sx={{ width: '180px' }}>Date</TableCell>
+              <TableCell>Status & Progress</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {jobsQuery.data?.items.map((job) => (
+            {Object.values(activeUploads).reverse().map((job) => (
               <TableRow key={job.id}>
-                <TableCell sx={{ fontFamily: 'monospace' }}>{job.id.substring(0, 8)}</TableCell>
-                <TableCell>
-                  <Chip 
-                    label={job.status} 
-                    size="small" 
-                    color={job.status === 'completed' ? 'success' : job.status === 'failed' ? 'error' : 'primary'}
-                  />
-                </TableCell>
-                <TableCell>
-                  {job.processedItems} / {job.totalItems} 
-                  {job.totalItems > 0 && ` (${Math.round((job.processedItems / job.totalItems) * 100)}%)`}
-                </TableCell>
+                <TableCell sx={{ fontFamily: 'monospace' }}>Uploading...</TableCell>
                 <TableCell>{new Date(job.createdAt).toLocaleString()}</TableCell>
+                <TableCell>
+                  <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%', maxWidth: 500 }}>
+                    <CircularProgress variant="determinate" value={job.progress} size={24} color="info" />
+                    <Stack sx={{ flex: 1 }}>
+                      <Stack direction="row" justifyContent="space-between" flexWrap="wrap" columnGap={1} sx={{ mb: 0.5 }}>
+                        <Typography variant="body2" sx={{ color: 'info.main', fontWeight: 500 }}>
+                          Uploading ({job.progress}%)
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                          {job.sourceType === 'package' ? 'Archive file' : `${job.totalItems} files`}
+                        </Typography>
+                      </Stack>
+                      <LinearProgress variant="determinate" value={job.progress} color="info" />
+                    </Stack>
+                  </Stack>
+                </TableCell>
               </TableRow>
             ))}
-            {jobsQuery.data?.items.length === 0 && (
+            {jobsQuery.data?.items.map((job) => {
+              let icon = <CircularProgress size={24} color="secondary" />
+              let color = 'secondary.main'
+              let label = job.status
+
+              if (job.status === 'completed') {
+                icon = <Done color="success" />
+                color = 'success.main'
+              } else if (job.status === 'failed') {
+                icon = <ErrorIcon color="error" />
+                color = 'error.main'
+              }
+              
+              let progressPercent = 0
+              if (job.status === 'completed') {
+                progressPercent = 100
+              } else if (job.totalItems > 0) {
+                progressPercent = Math.round((job.processedItems / job.totalItems) * 100)
+              }
+              const showProgressBar = job.status === 'processing' || job.status === 'extracting' || job.status === 'completed'
+
+              return (
+                <TableRow key={job.id}>
+                  <TableCell sx={{ fontFamily: 'monospace' }}>{job.id.substring(0, 8)}</TableCell>
+                  <TableCell>{new Date(job.createdAt).toLocaleString()}</TableCell>
+                  <TableCell>
+                    <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%', maxWidth: 500 }}>
+                      {icon}
+                      <Stack sx={{ flex: 1 }}>
+                        <Stack direction="row" justifyContent="space-between" flexWrap="wrap" columnGap={1} sx={{ mb: 0.5 }}>
+                          <Typography variant="body2" sx={{ color, textTransform: 'capitalize', fontWeight: 500 }}>
+                            {label}
+                          </Typography>
+                          {job.totalItems > 0 && (
+                            <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                              {job.status === 'extracting' && job.sourceType === 'package' ? (
+                                `Extracted ${job.processedItems} / ${job.totalItems}`
+                              ) : (
+                                `${job.processedItems} / ${job.totalItems} (${progressPercent}%)`
+                              )}
+                            </Typography>
+                          )}
+                        </Stack>
+                        {showProgressBar && (
+                          <LinearProgress 
+                            variant={job.status === 'completed' || job.totalItems > 0 ? "determinate" : "indeterminate"} 
+                            value={progressPercent} 
+                            color={color === 'secondary.main' ? 'secondary' : (color === 'success.main' ? 'success' : 'inherit')} 
+                          />
+                        )}
+                      </Stack>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+            {Object.keys(activeUploads).length === 0 && jobsQuery.data?.items.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                <TableCell colSpan={3} align="center" sx={{ py: 3, color: 'text.secondary' }}>
                   No import jobs found.
                 </TableCell>
               </TableRow>

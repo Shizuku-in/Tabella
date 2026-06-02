@@ -491,9 +491,16 @@ impl IntoResponse for ApiError {
 
 use axum::extract::Multipart;
 
+#[derive(serde::Deserialize)]
+pub(crate) struct UploadQuery {
+    #[serde(rename = "type")]
+    source_type: Option<String>,
+}
+
 async fn upload_import_files(
     State(state): State<AppState>,
     jar: CookieJar,
+    Query(query): Query<UploadQuery>,
     mut multipart: Multipart,
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let user = require_admin(&state, &jar).await?;
@@ -503,9 +510,13 @@ async fn upload_import_files(
     let temp_dir = state.config.media_root.join("temp").join(batch_id.to_string());
     tokio::fs::create_dir_all(&temp_dir).await.map_err(|e| ApiError::internal(e.into()))?;
     
+    let mut has_files = false;
     while let Some(field) = multipart.next_field().await.map_err(|e| ApiError::internal(e.into()))? {
-        if let Some(file_name) = field.file_name() {
-            let file_name = file_name.to_string(); // we must clone since field is consumed
+        let name = field.name().unwrap_or("unknown_name").to_string();
+        let file_name_opt = field.file_name().map(|s| s.to_string());
+        tracing::info!("Received field: name={}, file_name={:?}", name, file_name_opt);
+        
+        if let Some(file_name) = file_name_opt {
             // Create subdirectories if necessary (for webkitdirectory)
             let file_path = temp_dir.join(&file_name);
             if let Some(parent) = file_path.parent() {
@@ -514,26 +525,34 @@ async fn upload_import_files(
             
             let data = field.bytes().await.map_err(|e| ApiError::internal(e.into()))?;
             tokio::fs::write(&file_path, data).await.map_err(|e| ApiError::internal(e.into()))?;
+            has_files = true;
         }
     }
+
+    if !has_files {
+        return Err(ApiError::bad_request("no_files", "No files uploaded"));
+    }
+
+    let source_type = query.source_type.unwrap_or_else(|| "folder".to_string());
     
     // Create an import job for this temp directory
-    let job_id = uuid::Uuid::new_v4();
-    let source_path_str = temp_dir.to_string_lossy().to_string();
-    
     sqlx::query(
-        "INSERT INTO import_jobs (id, created_by_user_id, source_filename, source_archive_path, status) VALUES ($1, $2, $3, $4, 'queued')"
+        r#"
+        INSERT INTO import_jobs (id, created_by_user_id, source_filename, source_archive_path, status, source_type)
+        VALUES ($1, $2, $3, $4, 'queued', $5)
+        "#
     )
-    .bind(job_id)
+    .bind(batch_id)
     .bind(user.id)
-    .bind("Web Upload")
-    .bind(source_path_str)
+    .bind("Browser Upload")
+    .bind(temp_dir.to_string_lossy().to_string())
+    .bind(source_type)
     .execute(&state.pool)
     .await
     .map_err(|e| ApiError::internal(e.into()))?;
 
     Ok(Json(json!({
-        "id": job_id,
+        "id": batch_id,
         "status": "queued"
     })))
 }
@@ -547,7 +566,7 @@ async fn list_import_jobs(
     let limit = 50i64;
     let rows = sqlx::query(
         r#"
-        SELECT id, status, total_items, processed_items, succeeded_items, failed_items, created_at
+        SELECT id, status, source_type, total_items, processed_items, succeeded_items, failed_items, created_at
         FROM import_jobs
         ORDER BY created_at DESC
         LIMIT $1
@@ -564,11 +583,12 @@ async fn list_import_jobs(
         items.push(json!({
             "id": row.try_get::<uuid::Uuid, _>("id").unwrap_or_default(),
             "status": row.try_get::<String, _>("status").unwrap_or_default(),
+            "sourceType": row.try_get::<String, _>("source_type").unwrap_or_else(|_| "server".to_string()),
             "totalItems": row.try_get::<i32, _>("total_items").unwrap_or_default(),
             "processedItems": row.try_get::<i32, _>("processed_items").unwrap_or_default(),
             "succeededItems": row.try_get::<i32, _>("succeeded_items").unwrap_or_default(),
             "failedItems": row.try_get::<i32, _>("failed_items").unwrap_or_default(),
-            "createdAt": row.try_get::<time::OffsetDateTime, _>("created_at").unwrap_or_else(|_| time::OffsetDateTime::now_utc()),
+            "createdAt": row.try_get::<time::OffsetDateTime, _>("created_at").unwrap_or_else(|_| time::OffsetDateTime::now_utc()).format(&time::format_description::well_known::Rfc3339).unwrap_or_default(),
         }));
     }
 

@@ -64,6 +64,56 @@ export async function login(credentials: {
   })
 }
 
+export async function uploadWithProgress<T>(
+  url: string,
+  formData: FormData,
+  onProgress: (percent: number) => void
+): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    
+    xhr.upload.addEventListener('progress', (event) => {
+      if (event.lengthComputable) {
+        const percent = Math.round((event.loaded / event.total) * 100)
+        onProgress(percent)
+      }
+    })
+
+    xhr.addEventListener('load', () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const response = JSON.parse(xhr.responseText)
+          resolve(response)
+        } catch (e) {
+          resolve(xhr.responseText as unknown as T)
+        }
+      } else {
+        let errorMsg = 'Upload failed'
+        try {
+          const errRes = JSON.parse(xhr.responseText)
+          errorMsg = errRes.message || errorMsg
+        } catch (e) {
+          // ignore
+        }
+        reject(new ApiError(xhr.status, errorMsg))
+      }
+    })
+
+    xhr.addEventListener('error', () => {
+      reject(new ApiError(0, 'Network error during upload'))
+    })
+    
+    xhr.addEventListener('abort', () => {
+      reject(new ApiError(0, 'Upload aborted'))
+    })
+
+    xhr.open('POST', url)
+    xhr.withCredentials = true
+    // Do not set Content-Type, let the browser set it to multipart/form-data with boundary
+    xhr.send(formData)
+  })
+}
+
 export async function logout(): Promise<void> {
   await request<void>('/api/auth/logout', {
     method: 'POST',
@@ -88,6 +138,7 @@ export interface ImageDetails {
 export interface ImportJobRow {
   id: string
   status: string
+  sourceType: string
   totalItems: number
   processedItems: number
   succeededItems: number
