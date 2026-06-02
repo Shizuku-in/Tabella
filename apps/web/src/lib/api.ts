@@ -1,4 +1,4 @@
-import type { AuthUserResponse } from '../types.ts'
+import type { AuthUserResponse, GallerySort, Rating } from '../types.ts'
 
 export class ApiError extends Error {
   readonly status: number
@@ -14,12 +14,10 @@ export class ApiError extends Error {
 
 export async function request<T>(input: string, init?: RequestInit): Promise<T> {
   const isFormData = init?.body instanceof FormData
-  const headers: HeadersInit = {
-    ...(init?.headers ?? {}),
-  }
+  const headers = new Headers(init?.headers)
   
-  if (!isFormData) {
-    headers['Content-Type'] = 'application/json'
+  if (!isFormData && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json')
   }
 
   const response = await fetch(input, {
@@ -135,17 +133,6 @@ export interface ImageDetails {
   rating: 'safe' | 'suggestive' | 'explicit'
 }
 
-export interface ImportJobRow {
-  id: string
-  status: string
-  sourceType: string
-  totalItems: number
-  processedItems: number
-  succeededItems: number
-  failedItems: number
-  createdAt: string
-}
-
 export interface BackendImageListItem {
   id: number
   original_filename: string
@@ -168,9 +155,10 @@ export interface BackendListImagesResponse {
 export async function listImages(query: {
   cursor?: string | null
   limit?: number
-  sort?: string
-  rating?: string[]
+  sort?: GallerySort
+  rating?: Rating[]
   include_tags?: string[]
+  exclude_tags?: string[]
   favorites_only?: boolean
 }): Promise<BackendListImagesResponse> {
   const params = new URLSearchParams()
@@ -183,6 +171,9 @@ export async function listImages(query: {
   }
   if (query.include_tags && query.include_tags.length > 0) {
     params.set('include_tags', query.include_tags.join(','))
+  }
+  if (query.exclude_tags && query.exclude_tags.length > 0) {
+    params.set('exclude_tags', query.exclude_tags.join(','))
   }
 
   return request<BackendListImagesResponse>(`/api/images?${params.toString()}`)

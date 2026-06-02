@@ -1,6 +1,7 @@
-import { CloudUploadOutlined, Done, Error as ErrorIcon } from '@mui/icons-material'
+import { CloudUploadOutlined, Done, Error as ErrorIcon, PlayArrowOutlined, WarningAmberOutlined } from '@mui/icons-material'
 import {
   Button,
+  type LinearProgressProps,
   Paper,
   Stack,
   Typography,
@@ -20,7 +21,7 @@ import {
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 import { request, uploadWithProgress } from '../lib/api.ts'
-import type { ImportJobRow } from '../lib/api.ts'
+import type { ImportJobRow, ImportJobStatus } from '../types.ts'
 
 interface LocalUploadJob {
   id: string
@@ -223,23 +224,32 @@ export function AdminImportsPage() {
             {jobsQuery.data?.items.map((job) => {
               let icon = <CircularProgress size={24} color="secondary" />
               let color = 'secondary.main'
-              const label = job.status
+              let progressColor: LinearProgressProps['color'] = 'secondary'
+              const isCompleted = job.status === 'completed' || job.status === 'completed_with_errors'
+              const label = formatImportJobStatus(job.status)
 
               if (job.status === 'completed') {
                 icon = <Done color="success" />
                 color = 'success.main'
+                progressColor = 'success'
+              } else if (job.status === 'completed_with_errors') {
+                icon = <WarningAmberOutlined color="warning" />
+                color = 'warning.main'
+                progressColor = 'warning'
               } else if (job.status === 'failed') {
                 icon = <ErrorIcon color="error" />
                 color = 'error.main'
+                progressColor = 'error'
               }
-              
+               
               let progressPercent = 0
-              if (job.status === 'completed') {
+              if (isCompleted) {
                 progressPercent = 100
               } else if (job.totalItems > 0) {
                 progressPercent = Math.round((job.processedItems / job.totalItems) * 100)
               }
-              const showProgressBar = job.status === 'processing' || job.status === 'extracting' || job.status === 'completed'
+              const showProgressBar = job.status !== 'queued' && job.status !== 'failed'
+              const progressVariant = isCompleted || job.totalItems > 0 ? 'determinate' : 'indeterminate'
 
               return (
                 <TableRow key={job.id}>
@@ -265,9 +275,9 @@ export function AdminImportsPage() {
                         </Stack>
                         {showProgressBar && (
                           <LinearProgress 
-                            variant={job.status === 'completed' || job.totalItems > 0 ? "determinate" : "indeterminate"} 
+                            variant={progressVariant}
                             value={progressPercent} 
-                            color={color === 'secondary.main' ? 'secondary' : (color === 'success.main' ? 'success' : 'inherit')} 
+                            color={progressColor}
                           />
                         )}
                       </Stack>
@@ -317,4 +327,8 @@ export function AdminImportsPage() {
       </Dialog>
     </Stack>
   )
+}
+
+function formatImportJobStatus(status: ImportJobStatus) {
+  return status.replaceAll('_', ' ')
 }

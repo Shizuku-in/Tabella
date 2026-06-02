@@ -5,6 +5,15 @@ export type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
 export type Rating = 'safe' | 'suggestive' | 'explicit'
 export type RatingFilter = 'all' | Rating
 export type UserRole = 'admin' | 'viewer'
+export type ImportJobStatus =
+  | 'queued'
+  | 'running'
+  | 'extracting'
+  | 'processing'
+  | 'completed'
+  | 'completed_with_errors'
+  | 'failed'
+export type ImportSourceType = 'server' | 'folder' | 'package'
 
 export interface GalleryItem {
   id: number
@@ -46,7 +55,8 @@ export interface AuthUserResponse {
 
 export interface ImportJobRow {
   id: string
-  status: 'queued' | 'running' | 'completed' | 'completed_with_errors'
+  status: ImportJobStatus
+  sourceType: ImportSourceType
   totalItems: number
   processedItems: number
   succeededItems: number

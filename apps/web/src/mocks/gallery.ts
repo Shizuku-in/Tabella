@@ -459,6 +459,7 @@ export const importJobRows: ImportJobRow[] = [
   {
     id: '0f501728-ff99-4c29-a799-11b6d4e6250f',
     status: 'completed',
+    sourceType: 'server',
     totalItems: 264,
     processedItems: 264,
     succeededItems: 262,
@@ -468,6 +469,7 @@ export const importJobRows: ImportJobRow[] = [
   {
     id: '68a87536-b06d-4a22-a570-4cfabd7dd777',
     status: 'running',
+    sourceType: 'package',
     totalItems: 481,
     processedItems: 129,
     succeededItems: 127,
@@ -477,6 +479,7 @@ export const importJobRows: ImportJobRow[] = [
   {
     id: '57eb84ff-3cee-4c45-b8ef-e112a13baf2c',
     status: 'queued',
+    sourceType: 'folder',
     totalItems: 96,
     processedItems: 0,
     succeededItems: 0,
