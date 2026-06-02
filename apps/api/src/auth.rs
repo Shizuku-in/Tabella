@@ -61,7 +61,7 @@ pub(crate) async fn authenticate(
 ) -> Result<Option<SessionUser>> {
     let row = sqlx::query(
         r#"
-        select id, username, password_hash, role
+        select id, username, password_hash, role, avatar_url
         from users
         where normalized_username = $1
         "#,
@@ -84,6 +84,7 @@ pub(crate) async fn authenticate(
         id: row.get("id"),
         username: row.get("username"),
         role: UserRole::try_from(row.get::<String, _>("role").as_str())?,
+        avatar_url: row.get("avatar_url"),
     }))
 }
 
@@ -123,7 +124,7 @@ pub(crate) async fn current_user_from_jar(
 
     let row = sqlx::query(
         r#"
-        select u.id, u.username, u.role
+        select u.id, u.username, u.role, u.avatar_url
         from sessions s
         join users u on u.id = s.user_id
         where s.id = $1
@@ -149,6 +150,7 @@ pub(crate) async fn current_user_from_jar(
         id: row.get("id"),
         username: row.get("username"),
         role: UserRole::try_from(row.get::<String, _>("role").as_str())?,
+        avatar_url: row.get("avatar_url"),
     }))
 }
 
@@ -201,7 +203,7 @@ pub(crate) fn hash_password(password: &str) -> Result<String> {
         .map_err(|error| anyhow!("failed to hash password: {error}"))
 }
 
-fn verify_password(password: &str, password_hash: &str) -> Result<bool> {
+pub(crate) fn verify_password(password: &str, password_hash: &str) -> Result<bool> {
     let parsed_hash = PasswordHash::new(password_hash)
         .map_err(|error| anyhow!("stored password hash could not be parsed: {error}"))?;
 

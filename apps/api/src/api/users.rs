@@ -22,7 +22,7 @@ pub(crate) async fn list_users(
 
     let rows = sqlx::query!(
         r#"
-        select id, username, role, created_at
+        select id, username, role, created_at, avatar_url
         from users
         order by created_at desc
         "#
@@ -44,6 +44,7 @@ pub(crate) async fn list_users(
                 username: row.username,
                 role,
                 created_at: row.created_at,
+                avatar_url: row.avatar_url,
             }
         })
         .collect();
@@ -101,6 +102,7 @@ pub(crate) async fn create_user(
             username: payload.username,
             role: payload.role,
             created_at: row.created_at,
+            avatar_url: None,
         }),
     ))
 }

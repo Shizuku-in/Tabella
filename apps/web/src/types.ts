@@ -47,6 +47,7 @@ export interface SessionUser {
   id: number
   username: string
   role: UserRole
+  avatar_url?: string
 }
 
 export interface AuthUserResponse {
@@ -69,6 +70,7 @@ export interface UserRow {
   username: string
   role: UserRole
   created_at: string
+  avatar_url?: string
 }
 
 export interface CreateUserDto {

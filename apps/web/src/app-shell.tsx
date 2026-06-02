@@ -11,6 +11,7 @@ import {
   SettingsOutlined,
   Sort,
   Star,
+  PersonOutline,
 } from '@mui/icons-material'
 import {
   AppBar,
@@ -337,16 +338,17 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
               sx={{ p: 0.25 }}
             >
               <Avatar
+                src={user?.avatar_url}
                 sx={{
                   width: 30,
                   height: 30,
-                  bgcolor: 'primary.main',
+                  bgcolor: user?.avatar_url ? 'transparent' : 'primary.main',
                   color: 'primary.contrastText',
                   fontSize: 12,
                   fontWeight: 700,
                 }}
               >
-                {user?.username?.slice(0, 1).toUpperCase() ?? 'U'}
+                {!user?.avatar_url && (user?.username?.slice(0, 1).toUpperCase() ?? 'U')}
               </Avatar>
             </IconButton>
           </Stack>
@@ -454,6 +456,16 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
             Users
           </MenuItem>
         ) : null}
+
+        <MenuItem
+          component={RouterLink}
+          to="/profile"
+          selected={location.pathname === '/profile'}
+          onClick={() => setUserAnchor(null)}
+        >
+          <PersonOutline fontSize="small" sx={{ mr: 1 }} />
+          Profile
+        </MenuItem>
 
         <MenuItem onClick={handleLogout}>
           <LogoutOutlined fontSize="small" sx={{ mr: 1 }} />

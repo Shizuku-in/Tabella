@@ -39,6 +39,7 @@ pub(crate) struct SessionUser {
     pub(crate) id: i64,
     pub(crate) username: String,
     pub(crate) role: UserRole,
+    pub(crate) avatar_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -228,6 +229,7 @@ pub(crate) struct UserResponse {
     pub(crate) role: UserRole,
     #[serde(with = "time::serde::iso8601")]
     pub(crate) created_at: time::OffsetDateTime,
+    pub(crate) avatar_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -241,6 +243,13 @@ pub(crate) struct CreateUserRequest {
 pub(crate) struct UpdateUserRequest {
     pub(crate) password: Option<String>,
     pub(crate) role: Option<UserRole>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub(crate) struct UpdateProfileRequest {
+    pub(crate) username: Option<String>,
+    pub(crate) current_password: Option<String>,
+    pub(crate) new_password: Option<String>,
 }
 
 #[cfg(test)]

@@ -11,6 +11,7 @@ import { AdminImportsPage } from './pages/admin-imports-page.tsx'
 import { GalleryPage } from './pages/gallery-page.tsx'
 import { LoginPage } from './pages/login-page.tsx'
 import { AdminUsersPage } from './pages/admin-users-page.tsx'
+import { ProfilePage } from './pages/profile-page.tsx'
 import { buildTheme } from './theme.ts'
 
 const queryClient = new QueryClient({
@@ -59,6 +60,7 @@ function App() {
                     element={<AppShell mode={mode} onToggleMode={handleToggleMode} />}
                   >
                     <Route index element={<GalleryPage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
                     <Route element={<RequireRole role="admin" />}>
                       <Route path="/admin/imports" element={<AdminImportsPage />} />
                       <Route path="/admin/users" element={<AdminUsersPage />} />

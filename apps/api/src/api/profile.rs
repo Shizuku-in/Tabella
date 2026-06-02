@@ -1,0 +1,221 @@
+use axum::{
+    extract::{DefaultBodyLimit, Multipart, State},
+    http::StatusCode,
+    routing::{get, post},
+    Json, Router,
+};
+use axum_extra::extract::CookieJar;
+use serde_json::json;
+use tokio::io::AsyncWriteExt;
+
+use crate::{
+    api::error::ApiError,
+    api::guards::require_user,
+    auth::{hash_password, normalize_username},
+    dto::{UpdateProfileRequest, UserResponse},
+    AppState,
+};
+
+const MAX_AVATAR_UPLOAD_BYTES: usize = 5 * 1024 * 1024; // 5 MB
+
+pub(crate) fn routes(state: AppState) -> Router {
+    Router::new()
+        .route("/api/profile", get(get_profile).put(update_profile))
+        .route(
+            "/api/profile/avatar",
+            post(upload_avatar).layer(DefaultBodyLimit::max(MAX_AVATAR_UPLOAD_BYTES)),
+        )
+        .with_state(state)
+}
+
+async fn get_profile(
+    State(state): State<AppState>,
+    jar: CookieJar,
+) -> Result<Json<UserResponse>, ApiError> {
+    let user = require_user(&state, &jar).await?;
+
+    let row = sqlx::query!(
+        r#"
+        select id, username, role, created_at, avatar_url
+        from users
+        where id = $1
+        "#,
+        user.id
+    )
+    .fetch_one(&state.pool)
+    .await
+    .map_err(|e| ApiError::internal(e.into()))?;
+
+    use crate::dto::UserRole;
+    let role = match row.role.as_str() {
+        "admin" => UserRole::Admin,
+        "editor" => UserRole::Editor,
+        _ => UserRole::Viewer,
+    };
+
+    Ok(Json(UserResponse {
+        id: row.id,
+        username: row.username,
+        role,
+        created_at: row.created_at,
+        avatar_url: row.avatar_url,
+    }))
+}
+
+async fn update_profile(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    Json(payload): Json<UpdateProfileRequest>,
+) -> Result<Json<UserResponse>, ApiError> {
+    let user = require_user(&state, &jar).await?;
+
+    let mut query_builder = sqlx::QueryBuilder::new("update users set updated_at = now()");
+    let mut has_updates = false;
+
+    if let Some(username) = payload.username {
+        let normalized = normalize_username(&username);
+        if normalized.is_empty() {
+            return Err(ApiError::bad_request("invalid_username", "Username cannot be empty"));
+        }
+        query_builder.push(", username = ");
+        query_builder.push_bind(username);
+        query_builder.push(", normalized_username = ");
+        query_builder.push_bind(normalized);
+        has_updates = true;
+    }
+
+    if let Some(new_password) = payload.new_password {
+        if let Some(current_password) = payload.current_password {
+            let current_hash: String = sqlx::query_scalar("select password_hash from users where id = $1")
+                .bind(user.id)
+                .fetch_one(&state.pool)
+                .await
+                .map_err(|e| ApiError::internal(e.into()))?;
+
+            if !crate::auth::verify_password(&current_password, &current_hash)
+                .map_err(|e| ApiError::internal(e.into()))? {
+                return Err(ApiError::bad_request("invalid_password", "Current password is incorrect"));
+            }
+
+            let new_hash = hash_password(&new_password)
+                .map_err(|e| ApiError::internal(e.into()))?;
+
+            query_builder.push(", password_hash = ");
+            query_builder.push_bind(new_hash);
+            has_updates = true;
+        } else {
+            return Err(ApiError::bad_request("missing_current_password", "Current password is required to change password"));
+        }
+    }
+
+    if !has_updates {
+        return get_profile(State(state), jar).await;
+    }
+
+    query_builder.push(" where id = ");
+    query_builder.push_bind(user.id);
+    query_builder.push(" returning id, username, role, created_at, avatar_url");
+
+    let row = query_builder
+        .build()
+        .fetch_one(&state.pool)
+        .await
+        .map_err(|err| {
+            if let sqlx::Error::Database(ref db_err) = err {
+                if db_err.constraint() == Some("users_normalized_username_key") {
+                    return ApiError::bad_request("duplicate_username", "Username is already taken");
+                }
+            }
+            ApiError::internal(err.into())
+        })?;
+
+    use sqlx::Row;
+    use crate::dto::UserRole;
+    let role_str: String = row.get("role");
+    let role = match role_str.as_str() {
+        "admin" => UserRole::Admin,
+        "editor" => UserRole::Editor,
+        _ => UserRole::Viewer,
+    };
+
+    Ok(Json(UserResponse {
+        id: row.get("id"),
+        username: row.get("username"),
+        role,
+        created_at: row.get("created_at"),
+        avatar_url: row.get("avatar_url"),
+    }))
+}
+
+async fn upload_avatar(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    mut multipart: Multipart,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let user = require_user(&state, &jar).await?;
+
+    let avatars_dir = state.config.media_root.join("avatars");
+    tokio::fs::create_dir_all(&avatars_dir)
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
+
+    let mut avatar_url = None;
+
+    while let Some(mut field) = multipart
+        .next_field()
+        .await
+        .map_err(api_error_from_multipart)?
+    {
+        if field.name() == Some("file") {
+            let content_type = field.content_type().unwrap_or("image/jpeg").to_string();
+            let ext = if content_type.contains("png") {
+                "png"
+            } else if content_type.contains("gif") {
+                "gif"
+            } else {
+                "jpg"
+            };
+
+            let file_name = format!("{}.{}", user.id, ext);
+            let file_path = avatars_dir.join(&file_name);
+
+            let mut output = tokio::fs::File::create(&file_path)
+                .await
+                .map_err(|e| ApiError::internal(e.into()))?;
+
+            while let Some(chunk) = field.chunk().await.map_err(api_error_from_multipart)? {
+                output
+                    .write_all(&chunk)
+                    .await
+                    .map_err(|e| ApiError::internal(e.into()))?;
+            }
+            output
+                .flush()
+                .await
+                .map_err(|e| ApiError::internal(e.into()))?;
+
+            let timestamp = time::OffsetDateTime::now_utc().unix_timestamp();
+            avatar_url = Some(format!("/media/avatars/{}?v={}", file_name, timestamp));
+            break;
+        }
+    }
+
+    let url = avatar_url.ok_or_else(|| ApiError::bad_request("no_file", "No avatar file provided"))?;
+
+    sqlx::query!("update users set avatar_url = $1, updated_at = now() where id = $2", url, user.id)
+        .execute(&state.pool)
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
+
+    Ok(Json(json!({
+        "avatar_url": url
+    })))
+}
+
+fn api_error_from_multipart(error: axum::extract::multipart::MultipartError) -> ApiError {
+    match error.status() {
+        StatusCode::PAYLOAD_TOO_LARGE => ApiError::payload_too_large(error.body_text()),
+        StatusCode::BAD_REQUEST => ApiError::bad_request("invalid_multipart", error.body_text()),
+        _ => ApiError::internal(error.into()),
+    }
+}

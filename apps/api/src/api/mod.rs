@@ -5,6 +5,7 @@ mod guards;
 mod health;
 mod images;
 mod imports;
+mod profile;
 mod users;
 
 use axum::Router;
@@ -18,5 +19,6 @@ pub(crate) fn router(state: AppState) -> Router {
         .merge(images::routes(state.clone()))
         .merge(imports::routes(state.clone()))
         .merge(downloads::routes(state.clone()))
+        .merge(profile::routes(state.clone()))
         .merge(users::routes(state))
 }
