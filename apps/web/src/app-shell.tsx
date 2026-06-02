@@ -83,11 +83,12 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
   const isGalleryRoute = location.pathname === '/'
   const isAdminImportsRoute = location.pathname.startsWith('/admin/imports')
   const isAdminUsersRoute = location.pathname.startsWith('/admin/users')
+  const isProfileRoute = location.pathname.startsWith('/profile')
   const isAdmin = user?.role === 'admin'
-  const userSummary = useMemo(
-    () => `${user?.username ?? 'User'} · ${user?.role === 'admin' ? 'Admin' : 'Viewer'}`,
-    [user?.role, user?.username],
-  )
+  const userRoleDisplay = useMemo(() => {
+    if (!user?.role) return 'Viewer'
+    return user.role.charAt(0).toUpperCase() + user.role.slice(1)
+  }, [user?.role])
 
   useEffect(() => {
     if (searchVisible) {
@@ -196,6 +197,22 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                 }}
               >
                 / Users
+              </Typography>
+            )}
+
+            {isProfileRoute && (
+              <Typography
+                sx={{
+                  color: 'text.secondary',
+                  fontFamily: '"Google Sans Code", monospace',
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                  ml: 0.5,
+                  mr: 1,
+                  fontStyle: 'italic',
+                }}
+              >
+                / Profile
               </Typography>
             )}
 
@@ -422,28 +439,26 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         transformOrigin={{ vertical: 'top', horizontal: 'right' }}
       >
-        <MenuItem disabled>
-          <Stack spacing={0.25}>
-            <Typography variant="body2" sx={{ fontWeight: 700 }}>
+        <MenuItem disabled sx={{ opacity: '1 !important', pb: 1.5, pt: 1 }}>
+          <Stack spacing={0}>
+            <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
               {user?.username ?? 'Guest'}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {userSummary}
+              {userRoleDisplay}
             </Typography>
           </Stack>
         </MenuItem>
 
-        {isAdmin ? (
-          <MenuItem
-            component={RouterLink}
-            to="/admin/imports"
-            selected={isAdminImportsRoute}
-            onClick={() => setUserAnchor(null)}
-          >
-            <PlaylistAdd fontSize="small" sx={{ mr: 1 }} />
-            Import Jobs
-          </MenuItem>
-        ) : null}
+        <MenuItem
+          component={RouterLink}
+          to="/profile"
+          selected={location.pathname === '/profile'}
+          onClick={() => setUserAnchor(null)}
+        >
+          <PersonOutline fontSize="small" sx={{ mr: 1 }} />
+          Profile
+        </MenuItem>
 
         {isAdmin ? (
           <MenuItem
@@ -457,15 +472,17 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
           </MenuItem>
         ) : null}
 
-        <MenuItem
-          component={RouterLink}
-          to="/profile"
-          selected={location.pathname === '/profile'}
-          onClick={() => setUserAnchor(null)}
-        >
-          <PersonOutline fontSize="small" sx={{ mr: 1 }} />
-          Profile
-        </MenuItem>
+        {isAdmin ? (
+          <MenuItem
+            component={RouterLink}
+            to="/admin/imports"
+            selected={isAdminImportsRoute}
+            onClick={() => setUserAnchor(null)}
+          >
+            <PlaylistAdd fontSize="small" sx={{ mr: 1 }} />
+            Import Jobs
+          </MenuItem>
+        ) : null}
 
         <MenuItem onClick={handleLogout}>
           <LogoutOutlined fontSize="small" sx={{ mr: 1 }} />

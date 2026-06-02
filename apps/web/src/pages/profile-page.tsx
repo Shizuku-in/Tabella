@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { CloudUploadOutlined } from '@mui/icons-material'
+import { Edit, Save } from '@mui/icons-material'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../auth/auth-provider.tsx'
 import { request, uploadWithProgress } from '../lib/api.ts'
@@ -128,18 +128,57 @@ export function ProfilePage() {
       <Paper sx={{ p: 4 }}>
         <Stack spacing={4}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-            <Box position="relative">
+            <Box
+              position="relative"
+              onClick={() => {
+                if (!avatarMutation.isPending && !profileMutation.isPending) {
+                  fileInputRef.current?.click()
+                }
+              }}
+              sx={{
+                cursor: (avatarMutation.isPending || profileMutation.isPending) ? 'default' : 'pointer',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                width: 100,
+                height: 100,
+                flexShrink: 0,
+                '&:hover .avatar-overlay': {
+                  opacity: (avatarMutation.isPending || profileMutation.isPending) ? 0 : 1,
+                }
+              }}
+            >
               <Avatar
                 src={avatarPreview || user?.avatar_url}
                 sx={{
-                  width: 100,
-                  height: 100,
+                  width: '100%',
+                  height: '100%',
                   bgcolor: (avatarPreview || user?.avatar_url) ? 'transparent' : 'primary.main',
                   fontSize: '2.5rem'
                 }}
               >
                 {!(avatarPreview || user?.avatar_url) && user?.username?.charAt(0).toUpperCase()}
               </Avatar>
+              
+              <Box
+                className="avatar-overlay"
+                sx={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  bgcolor: 'rgba(0, 0, 0, 0.4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  opacity: 0,
+                  transition: 'opacity 0.2s',
+                }}
+              >
+                <Edit />
+              </Box>
+
               {(avatarMutation.isPending || profileMutation.isPending) && (
                 <CircularProgress
                   size={100}
@@ -148,21 +187,11 @@ export function ProfilePage() {
               )}
             </Box>
             
-            <Stack spacing={1}>
-              <Typography variant="h6">{user?.username}</Typography>
+            <Stack spacing={0.5} justifyContent="center">
+              <Typography variant="h6" sx={{ lineHeight: 1.2 }}>{user?.username}</Typography>
               <Typography variant="body2" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
                 Role: {user?.role}
               </Typography>
-              <Button
-                variant="outlined"
-                startIcon={<CloudUploadOutlined />}
-                size="small"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={avatarMutation.isPending}
-                sx={{ mt: 1, alignSelf: 'flex-start' }}
-              >
-                Change Avatar
-              </Button>
               <input
                 type="file"
                 ref={fileInputRef}
@@ -211,10 +240,11 @@ export function ProfilePage() {
               <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 2 }}>
                 <Button
                   type="submit"
-                  variant="contained"
+                  variant="outlined"
+                  startIcon={<Save />}
                   disabled={profileMutation.isPending || avatarMutation.isPending || (!!newPassword && !currentPassword)}
                 >
-                  Save Changes
+                  Save
                 </Button>
               </Box>
             </Stack>

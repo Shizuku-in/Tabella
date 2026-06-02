@@ -120,7 +120,7 @@ export function AdminUsersPage() {
       <Stack direction="row" justifyContent="space-between" alignItems="center">
         <Typography variant="h6" sx={{ display: 'none' }}>Users</Typography>
         <Button
-          variant="contained"
+          variant="outlined"
           startIcon={<AddOutlined />}
           onClick={handleCreateClick}
         >
