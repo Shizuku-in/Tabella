@@ -17,6 +17,7 @@ pub(crate) struct HealthResponse {
 #[serde(rename_all = "snake_case")]
 pub(crate) enum UserRole {
     Admin,
+    Editor,
     Viewer,
 }
 
@@ -26,6 +27,7 @@ impl TryFrom<&str> for UserRole {
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
             "admin" => Ok(Self::Admin),
+            "editor" => Ok(Self::Editor),
             "viewer" => Ok(Self::Viewer),
             other => Err(anyhow::anyhow!("unknown user role: {other}")),
         }
@@ -217,6 +219,28 @@ where
         .filter(|part| !part.is_empty())
         .map(|part| T::from_str(part).map_err(E::custom))
         .collect()
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct UserResponse {
+    pub(crate) id: i64,
+    pub(crate) username: String,
+    pub(crate) role: UserRole,
+    #[serde(with = "time::serde::iso8601")]
+    pub(crate) created_at: time::OffsetDateTime,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub(crate) struct CreateUserRequest {
+    pub(crate) username: String,
+    pub(crate) password: String,
+    pub(crate) role: UserRole,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub(crate) struct UpdateUserRequest {
+    pub(crate) password: Option<String>,
+    pub(crate) role: Option<UserRole>,
 }
 
 #[cfg(test)]

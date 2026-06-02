@@ -4,7 +4,7 @@ export type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
 
 export type Rating = 'safe' | 'suggestive' | 'explicit'
 export type RatingFilter = 'all' | Rating
-export type UserRole = 'admin' | 'viewer'
+export type UserRole = 'admin' | 'editor' | 'viewer'
 export type ImportJobStatus =
   | 'queued'
   | 'running'
@@ -62,4 +62,22 @@ export interface ImportJobRow {
   succeededItems: number
   failedItems: number
   createdAt: string
+}
+
+export interface UserRow {
+  id: number
+  username: string
+  role: UserRole
+  created_at: string
+}
+
+export interface CreateUserDto {
+  username: string
+  password?: string
+  role: UserRole
+}
+
+export interface UpdateUserDto {
+  password?: string
+  role?: UserRole
 }

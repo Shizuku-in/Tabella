@@ -191,7 +191,7 @@ pub(crate) fn session_id_from_jar(jar: &CookieJar, cookie_name: &str) -> Option<
         .and_then(|cookie| Uuid::parse_str(cookie.value()).ok())
 }
 
-fn hash_password(password: &str) -> Result<String> {
+pub(crate) fn hash_password(password: &str) -> Result<String> {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
 
@@ -210,6 +210,6 @@ fn verify_password(password: &str, password_hash: &str) -> Result<bool> {
         .is_ok())
 }
 
-fn normalize_username(username: &str) -> String {
+pub(crate) fn normalize_username(username: &str) -> String {
     username.trim().to_ascii_lowercase()
 }

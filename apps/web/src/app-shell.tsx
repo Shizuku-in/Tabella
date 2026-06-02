@@ -2,6 +2,7 @@
 import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 import {
   PlaylistAdd,
+  GroupOutlined,
   ArtTrack,
   DarkModeOutlined,
   LightModeOutlined,
@@ -79,7 +80,8 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
   const [settingsOpen, setSettingsOpen] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const isGalleryRoute = location.pathname === '/'
-  const isAdminRoute = location.pathname.startsWith('/admin/imports')
+  const isAdminImportsRoute = location.pathname.startsWith('/admin/imports')
+  const isAdminUsersRoute = location.pathname.startsWith('/admin/users')
   const isAdmin = user?.role === 'admin'
   const userSummary = useMemo(
     () => `${user?.username ?? 'User'} · ${user?.role === 'admin' ? 'Admin' : 'Viewer'}`,
@@ -164,7 +166,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
               Tabella
             </Typography>
 
-            {isAdminRoute && (
+            {isAdminImportsRoute && (
               <Typography
                 sx={{
                   color: 'text.secondary',
@@ -177,6 +179,22 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                 }}
               >
                 / Imports
+              </Typography>
+            )}
+
+            {isAdminUsersRoute && (
+              <Typography
+                sx={{
+                  color: 'text.secondary',
+                  fontFamily: '"Google Sans Code", monospace',
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                  ml: 0.5,
+                  mr: 1,
+                  fontStyle: 'italic',
+                }}
+              >
+                / Users
               </Typography>
             )}
 
@@ -417,11 +435,23 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
           <MenuItem
             component={RouterLink}
             to="/admin/imports"
-            selected={isAdminRoute}
+            selected={isAdminImportsRoute}
             onClick={() => setUserAnchor(null)}
           >
             <PlaylistAdd fontSize="small" sx={{ mr: 1 }} />
             Import Jobs
+          </MenuItem>
+        ) : null}
+
+        {isAdmin ? (
+          <MenuItem
+            component={RouterLink}
+            to="/admin/users"
+            selected={isAdminUsersRoute}
+            onClick={() => setUserAnchor(null)}
+          >
+            <GroupOutlined fontSize="small" sx={{ mr: 1 }} />
+            Users
           </MenuItem>
         ) : null}
 

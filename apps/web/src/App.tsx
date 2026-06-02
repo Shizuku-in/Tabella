@@ -10,6 +10,7 @@ import { GalleryUiProvider } from './gallery/gallery-ui-provider.tsx'
 import { AdminImportsPage } from './pages/admin-imports-page.tsx'
 import { GalleryPage } from './pages/gallery-page.tsx'
 import { LoginPage } from './pages/login-page.tsx'
+import { AdminUsersPage } from './pages/admin-users-page.tsx'
 import { buildTheme } from './theme.ts'
 
 const queryClient = new QueryClient({
@@ -60,6 +61,7 @@ function App() {
                     <Route index element={<GalleryPage />} />
                     <Route element={<RequireRole role="admin" />}>
                       <Route path="/admin/imports" element={<AdminImportsPage />} />
+                      <Route path="/admin/users" element={<AdminUsersPage />} />
                     </Route>
                   </Route>
                 </Route>
