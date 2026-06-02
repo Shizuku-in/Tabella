@@ -3,7 +3,9 @@ import { Favorite, FavoriteBorder } from '@mui/icons-material'
 import { Box, CircularProgress, IconButton, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { Masonry } from '@mui/lab'
 import { useGalleryUi } from '../gallery/gallery-ui-provider.tsx'
+import { LazyImage } from '../components/lazy-image.tsx'
 import { queryGalleryPage } from '../mocks/gallery.ts'
 import type { GalleryItem, LayoutMode, Rating } from '../types.ts'
 
@@ -191,17 +193,31 @@ export function GalleryPage() {
         </Box>
       ) : (
         <>
-          <Box sx={galleryLayoutStyles[layoutMode]}>
-            {items.map((item) => (
-              <GalleryCard
-                key={item.id}
-                item={item}
-                layoutMode={layoutMode}
-                isFavorite={favoriteOverrides[item.id] ?? item.favorite}
-                onToggleFavorite={() => handleToggleFavorite(item.id)}
-              />
-            ))}
-          </Box>
+          {layoutMode === 'masonry' ? (
+            <Masonry columns={{ xs: 2, sm: 3, lg: 4, xl: 5 }} spacing={1}>
+              {items.map((item) => (
+                <GalleryCard
+                  key={item.id}
+                  item={item}
+                  layoutMode={layoutMode}
+                  isFavorite={favoriteOverrides[item.id] ?? item.favorite}
+                  onToggleFavorite={() => handleToggleFavorite(item.id)}
+                />
+              ))}
+            </Masonry>
+          ) : (
+            <Box sx={galleryLayoutStyles[layoutMode]}>
+              {items.map((item) => (
+                <GalleryCard
+                  key={item.id}
+                  item={item}
+                  layoutMode={layoutMode}
+                  isFavorite={favoriteOverrides[item.id] ?? item.favorite}
+                  onToggleFavorite={() => handleToggleFavorite(item.id)}
+                />
+              ))}
+            </Box>
+          )}
 
           <Box
             ref={loadMoreRef}
@@ -238,6 +254,7 @@ function GalleryCard({
   onToggleFavorite: () => void
 }) {
   const isJustified = layoutMode === 'justified'
+  const isGrid = layoutMode === 'grid'
 
   return (
     <Box
@@ -248,6 +265,7 @@ function GalleryCard({
         width: '100%',
         overflow: 'hidden',
         borderRadius: 2,
+        maxHeight: isGrid ? 'none' : '60vh',
         breakInside: layoutMode === 'masonry' ? 'avoid' : 'auto',
         bgcolor: 'rgba(17, 20, 29, 0.04)',
         ...(isJustified
@@ -259,18 +277,10 @@ function GalleryCard({
           : null),
       }}
     >
-      <Box
-        component="img"
+      <LazyImage
         src={item.thumbnailSrc}
         alt={item.filename}
-        loading="lazy"
-        sx={{
-          display: 'block',
-          width: '100%',
-          aspectRatio: `${item.width} / ${item.height}`,
-          objectFit: 'cover',
-          backgroundColor: 'rgba(17, 20, 29, 0.06)',
-        }}
+        aspectRatio={isGrid ? '1' : `${item.width} / ${item.height}`}
       />
 
       <Stack
@@ -398,18 +408,16 @@ const galleryLayoutStyles: Record<LayoutMode, object> = {
     },
     gap: 1,
   },
-  masonry: {
-    columnCount: { xs: 2, sm: 3, lg: 4, xl: 5 },
-    columnGap: 10,
-    '& > *': {
-      mb: 1.25,
-      width: '100%',
-    },
-  },
+  masonry: {},
   justified: {
     display: 'flex',
     flexWrap: 'wrap',
     gap: 1,
     alignItems: 'flex-start',
+    '&::after': {
+      content: '""',
+      flexGrow: 99999,
+      minWidth: '220px',
+    },
   },
 }
