@@ -1,0 +1,23 @@
+[Unit]
+Description=Tabella API
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tabella
+Group=tabella
+WorkingDirectory=/srv/tabella/app
+EnvironmentFile=/etc/tabella/tabella-api.env
+ExecStart=/srv/tabella/bin/tabella-api
+Restart=always
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/tabella/data
+
+[Install]
+WantedBy=multi-user.target
+

@@ -1,0 +1,15 @@
+node_modules/
+apps/web/node_modules/
+apps/web/dist/
+target/
+apps/api/target/
+.env
+.env.*
+!.env.example
+npm-debug.log*
+var/
+data/
+tmp/
+
+example.js
+demopic/

@@ -1,0 +1,25 @@
+import { CircularProgress, Stack, Typography } from '@mui/material'
+
+interface FullscreenStateProps {
+  title: string
+  description?: string
+}
+
+export function FullscreenState({ title, description }: FullscreenStateProps) {
+  return (
+    <Stack
+      spacing={2}
+      alignItems="center"
+      justifyContent="center"
+      sx={{ minHeight: '100vh', px: 3, textAlign: 'center' }}
+    >
+      <CircularProgress size={28} />
+      <Typography variant="h6" sx={{ fontWeight: 700 }}>
+        {title}
+      </Typography>
+      {description ? (
+        <Typography color="text.secondary">{description}</Typography>
+      ) : null}
+    </Stack>
+  )
+}

@@ -1,0 +1,12 @@
+tabella.example.com {
+    encode zstd gzip
+
+    root * /srv/tabella/web
+
+    @api path /api/*
+    reverse_proxy @api 127.0.0.1:8787
+
+    try_files {path} /index.html
+    file_server
+}
+
