@@ -194,7 +194,7 @@ export function AdminImportsPage() {
             <TableRow>
               <TableCell sx={{ width: '100px' }}>Job ID</TableCell>
               <TableCell sx={{ width: '180px' }}>Date</TableCell>
-              <TableCell>Status & Progress</TableCell>
+              <TableCell>Status</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
