@@ -1,6 +1,26 @@
 import { alpha, createTheme } from '@mui/material/styles'
 import type { PaletteMode } from '@mui/material'
 
+declare module '@mui/material/styles' {
+  interface Palette {
+    tags: {
+      parody: string;
+      character: string;
+      artist: string;
+      general: string;
+      unprefixed: string;
+    };
+  }
+  interface PaletteOptions {
+    tags?: {
+      parody: string;
+      character: string;
+      artist: string;
+      general: string;
+      unprefixed: string;
+    };
+  }
+}
 export function buildTheme(mode: PaletteMode) {
   const isDark = mode === 'dark'
   const primaryMain = isDark ? '#8ea0ff' : '#31489f'
@@ -25,6 +45,13 @@ export function buildTheme(mode: PaletteMode) {
       text: {
         primary: isDark ? '#f4f7ff' : '#141b2d',
         secondary: mutedText,
+      },
+      tags: {
+        parody: isDark ? '#ba68c8' : '#9c27b0', // Purple
+        character: isDark ? '#81c784' : '#2e7d32', // Green
+        artist: isDark ? '#f06292' : '#c2185b', // Pinkish
+        general: isDark ? '#82b1ff' : '#1976d2', // Blue
+        unprefixed: isDark ? '#bdbdbd' : '#757575', // Grey
       },
     },
     shape: {

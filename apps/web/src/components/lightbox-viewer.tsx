@@ -31,6 +31,7 @@ import { forwardRef, useEffect, useState, useMemo } from 'react'
 import type { ReactElement, Ref } from 'react'
 import type { TransitionProps } from '@mui/material/transitions'
 import type { GalleryItem, Rating } from '../types'
+import { getTagColor } from '../lib/tags'
 import { useGalleryUi } from '../gallery/gallery-ui-provider'
 import { updateImage, deleteImage, suggestTags } from '../lib/api'
 import { LightboxViewerInfo } from './lightbox-viewer-info'
@@ -56,7 +57,7 @@ interface LightboxViewerProps {
 }
 
 export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChange, onDelete, onUpdate }: LightboxViewerProps) {
-  const { lightboxImageQuality } = useGalleryUi()
+  const { lightboxImageQuality, setSearchTags } = useGalleryUi()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const infoPanelWidth = isMobile ? '100%' : 360
@@ -516,7 +517,10 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
           sx={{
             position: 'absolute',
             right: !isMobile && showInfoPanel ? 376 : 16,
-            transition: 'right 0.3s ease',
+            transition: theme.transitions.create('right', {
+              easing: showInfoPanel ? theme.transitions.easing.easeOut : theme.transitions.easing.sharp,
+              duration: showInfoPanel ? theme.transitions.duration.enteringScreen : theme.transitions.duration.leavingScreen,
+            }),
             ...(isMobile && showInfoPanel ? { display: 'none' } : {}),
             top: '50%',
             transform: 'translateY(-50%)',
@@ -540,26 +544,49 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
             p: 2,
             pt: 6,
             backgroundImage: `linear-gradient(0deg, ${alpha(theme.palette.background.default, 0.9)} 0%, ${alpha(theme.palette.background.default, 0)} 100%)`,
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 1,
             pointerEvents: 'none',
           }}
         >
+          <Box
+            sx={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: 1,
+              maxWidth: { xs: 'calc(100vw - 80px)', md: '70%', lg: '50%' },
+              maxHeight: '40vh',
+              overflowY: 'auto',
+              pointerEvents: 'auto',
+              // Hide scrollbar but keep functionality
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none',
+              '&::-webkit-scrollbar': { display: 'none' },
+            }}
+          >
           {item.tags.map((tag) => (
             <Chip
               key={tag}
               label={tag}
               size="small"
               icon={<Tag fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation()
+                setSearchTags([tag])
+                onClose()
+              }}
               sx={{
-                bgcolor: alpha(theme.palette.text.primary, 0.1),
-                color: 'text.primary',
+                bgcolor: alpha(getTagColor(tag, theme), 0.2),
+                color: getTagColor(tag, theme),
                 pointerEvents: 'auto',
                 backdropFilter: 'blur(10px)',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  bgcolor: getTagColor(tag, theme),
+                  color: theme.palette.getContrastText(getTagColor(tag, theme)),
+                }
               }}
             />
           ))}
+          </Box>
         </Box>
       </Slide>
     </Dialog>

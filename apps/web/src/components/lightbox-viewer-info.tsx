@@ -15,6 +15,7 @@ import {
 } from '@mui/material'
 import { alpha, useTheme } from '@mui/material/styles'
 import type { GalleryItem, Rating } from '../types'
+import { getTagColor } from '../lib/tags.ts'
 
 function MetaRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
@@ -107,7 +108,7 @@ export function LightboxViewerInfo({
             <MetaRow label="Filename" value={item.filename} />
             <MetaRow label="Dimensions" value={`${item.width} × ${item.height}`} />
             <MetaRow label="File size" value={formatSizeStr(item.fileSize || 0)} />
-            {item.sha256 && <MetaRow label="SHA256" value={item.sha256} mono />}
+            {item.sha256 && <MetaRow label="SHA256" value={item.sha256} />}
             {item.importedAt && <MetaRow label="Imported" value={new Date(item.importedAt).toLocaleString()} />}
             {item.sourceUrl && <MetaRow label="Source" value={item.sourceUrl} />}
           </Stack>
@@ -175,9 +176,9 @@ export function LightboxViewerInfo({
                     label={option}
                     size="small"
                     sx={{
-                      bgcolor: alpha(theme.palette.text.primary, 0.1),
-                      color: 'text.primary',
-                      '& .MuiChip-deleteIcon': { color: alpha(theme.palette.text.primary, 0.5) },
+                      bgcolor: alpha(getTagColor(option, theme), 0.15),
+                      color: getTagColor(option, theme),
+                      '& .MuiChip-deleteIcon': { color: alpha(getTagColor(option, theme), 0.7) },
                     }}
                   />
                 )

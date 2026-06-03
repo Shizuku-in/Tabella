@@ -40,6 +40,7 @@ import { useAuth } from './auth/auth-provider.tsx'
 import { useGalleryUi } from './gallery/gallery-ui-provider.tsx'
 import type { GallerySort, LayoutMode, RatingFilter } from './types.ts'
 import { suggestTags } from './lib/api.ts'
+import { getTagColor } from './lib/tags.ts'
 
 interface AppShellProps {
   mode: PaletteMode
@@ -324,7 +325,12 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                             key={key}
                             label={option}
                             size="small"
-                            sx={{ height: 20, fontSize: '0.75rem', bgcolor: 'action.hover' }}
+                            sx={{
+                              height: 20,
+                              fontSize: '0.75rem',
+                              bgcolor: (theme) => alpha(getTagColor(option, theme), 0.15),
+                              color: (theme) => getTagColor(option, theme),
+                            }}
                           />
                         )
                       })
