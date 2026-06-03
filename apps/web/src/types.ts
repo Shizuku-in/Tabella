@@ -28,6 +28,9 @@ export interface GalleryItem {
   favorite: boolean
   importedAt: string
   fileSize?: number
+  sha256?: string
+  sourceUrl?: string
+  note?: string
 }
 
 export interface GalleryQueryInput {

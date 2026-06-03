@@ -4,7 +4,7 @@ import { useInfiniteQuery } from '@tanstack/react-query'
 import { Masonry } from '@mui/lab'
 import { useGalleryUi } from '../gallery/gallery-ui-provider.tsx'
 import { LightboxViewer } from '../components/lightbox-viewer.tsx'
-import { listImages, toggleFavorite } from '../lib/api.ts'
+import { listImages, toggleFavorite, deleteImage } from '../lib/api.ts'
 import type { GalleryItem, LayoutMode } from '../types.ts'
 import { GalleryCard, ratingLabel } from '../components/gallery-card.tsx'
 
@@ -43,8 +43,11 @@ export function GalleryPage() {
           rating: item.rating,
           tags: item.tags,
           favorite: item.is_favorite,
-          importedAt: '', // We don't have importedAt in ImageListItem right now
+          importedAt: item.imported_at,
           fileSize: item.file_size,
+          sha256: item.sha256,
+          sourceUrl: item.source_url || undefined,
+          note: item.note || undefined,
         }) as GalleryItem),
         nextCursor: response.next_cursor,
       }
@@ -122,6 +125,15 @@ export function GalleryPage() {
         [id]: currentValue,
       }))
     })
+  }
+
+  const handleDelete = (imageId: number) => {
+    // Invalidate the gallery query to refetch
+    galleryQuery.refetch()
+  }
+
+  const handleUpdate = () => {
+    galleryQuery.refetch()
   }
 
   if (galleryQuery.status === 'error') {
@@ -290,6 +302,8 @@ export function GalleryPage() {
               galleryQuery.fetchNextPage()
             }
           }}
+          onDelete={handleDelete}
+          onUpdate={handleUpdate}
         />
       )}
     </Stack>

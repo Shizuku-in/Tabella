@@ -3,7 +3,7 @@ use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Response},
-    routing::{get, post},
+    routing::{get, patch, post},
 };
 use axum_extra::extract::CookieJar;
 use serde_json::json;
@@ -12,14 +12,22 @@ use crate::{
     AppState,
     dto::{
         ImageListItem, ImageSort, ListImagesQuery, ListImagesResponse, Rating, TagSuggestQuery,
+        UpdateImageRequest,
     },
 };
 
-use super::{error::ApiError, guards::require_user};
+use super::{
+    error::ApiError,
+    guards::{require_editor, require_user},
+};
 
 pub(crate) fn routes(state: AppState) -> Router {
     Router::new()
         .route("/api/images", get(list_images))
+        .route(
+            "/api/images/{image_id}",
+            patch(update_image).delete(delete_image),
+        )
         .route("/api/tags/suggest", get(suggest_tags))
         .route(
             "/api/favorites/{image_id}",
@@ -37,6 +45,9 @@ struct ImageListRow {
     original_path: String,
     width: i32,
     height: i32,
+    sha256: String,
+    source_url: Option<String>,
+    note: Option<String>,
     rating: String,
     file_size: i64,
     is_favorite: bool,
@@ -77,18 +88,18 @@ async fn list_images(
     let limit = query.limit.unwrap_or(50).clamp(1, 100) as i64;
     let mut builder = sqlx::QueryBuilder::new(
         "SELECT i.id, i.original_filename, i.thumbnail_path, i.preview_path, i.original_path, \
-         i.width, i.height, i.rating, i.file_size, i.imported_at, lower(i.original_filename) AS sort_filename, \
+         i.width, i.height, i.sha256, i.source_url, i.note, i.rating, i.file_size, i.imported_at, lower(i.original_filename) AS sort_filename, \
          EXISTS (SELECT 1 FROM favorites f WHERE f.image_id = i.id AND f.user_id = ",
     );
     builder.push_bind(user.id);
     builder.push(
         ") AS is_favorite, \
          COALESCE(ARRAY( \
-             SELECT t.name \
+             SELECT CASE WHEN t.namespace = '' THEN t.name ELSE t.namespace || ':' || t.name END \
              FROM image_tags it \
              JOIN tags t ON t.id = it.tag_id \
              WHERE it.image_id = i.id \
-             ORDER BY t.name \
+             ORDER BY t.namespace, t.name \
          ), '{}') AS tags \
          FROM images i \
          WHERE 1=1 ",
@@ -173,6 +184,10 @@ async fn list_images(
                 .then(|| format!("/media/{}", row.original_path)),
             width: row.width as u32,
             height: row.height as u32,
+            sha256: row.sha256,
+            source_url: row.source_url,
+            note: row.note,
+            imported_at: row.imported_at,
             rating,
             is_favorite: row.is_favorite,
             tags: row.tags,
@@ -289,16 +304,149 @@ fn encode_image_cursor(sort: ImageSort, row: &ImageListRow) -> Result<String, Ap
     serde_json::to_string(&cursor).map_err(|error| ApiError::internal(error.into()))
 }
 
+async fn update_image(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    Path(image_id): Path<i64>,
+    Json(body): Json<UpdateImageRequest>,
+) -> Result<Response, ApiError> {
+    let _user = require_editor(&state, &jar).await?;
+
+    if let Some(rating) = &body.rating {
+        sqlx::query("UPDATE images SET rating = $1, updated_at = now() WHERE id = $2")
+            .bind(rating.as_str())
+            .bind(image_id)
+            .execute(&state.pool)
+            .await
+            .map_err(|e| ApiError::internal(e.into()))?;
+    }
+
+    if let Some(tags) = &body.tags {
+        sqlx::query("DELETE FROM image_tags WHERE image_id = $1")
+            .bind(image_id)
+            .execute(&state.pool)
+            .await
+            .map_err(|e| ApiError::internal(e.into()))?;
+
+        for tag_str in tags {
+            let (namespace, name) = match tag_str.find(':') {
+                Some(pos) => (
+                    tag_str[..pos].to_string(),
+                    tag_str[pos + 1..].to_string(),
+                ),
+                None => (String::new(), tag_str.clone()),
+            };
+
+            let tag_id: i64 = sqlx::query_scalar(
+                r#"
+                WITH new_tag AS (
+                    INSERT INTO tags (namespace, name, normalized_namespace, normalized_name)
+                    VALUES ($1, $2, $3, $4)
+                    ON CONFLICT (normalized_namespace, normalized_name) DO NOTHING
+                    RETURNING id
+                )
+                SELECT id FROM new_tag
+                UNION ALL
+                SELECT id FROM tags WHERE normalized_namespace = $3 AND normalized_name = $4
+                LIMIT 1
+                "#,
+            )
+            .bind(&namespace)
+            .bind(&name)
+            .bind(&namespace.to_lowercase())
+            .bind(&name.to_lowercase())
+            .fetch_one(&state.pool)
+            .await
+            .map_err(|e| ApiError::internal(e.into()))?;
+
+            sqlx::query(
+                "INSERT INTO image_tags (image_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
+            )
+            .bind(image_id)
+            .bind(tag_id)
+            .execute(&state.pool)
+            .await
+            .map_err(|e| ApiError::internal(e.into()))?;
+        }
+    }
+
+    Ok(StatusCode::NO_CONTENT.into_response())
+}
+
+#[derive(Debug, Clone, sqlx::FromRow)]
+struct ImageFileRow {
+    original_path: String,
+    preview_path: String,
+    thumbnail_path: String,
+}
+
+async fn delete_image(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    Path(image_id): Path<i64>,
+) -> Result<Response, ApiError> {
+    let _user = require_editor(&state, &jar).await?;
+
+    let row: ImageFileRow = sqlx::query_as(
+        "SELECT original_path, preview_path, thumbnail_path FROM images WHERE id = $1",
+    )
+    .bind(image_id)
+    .fetch_optional(&state.pool)
+    .await
+    .map_err(|e| ApiError::internal(e.into()))?
+    .ok_or_else(|| ApiError::not_found("Image not found."))?;
+
+    sqlx::query("DELETE FROM images WHERE id = $1")
+        .bind(image_id)
+        .execute(&state.pool)
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
+
+    let paths = [
+        state.config.media_root.join(&row.original_path),
+        state.config.media_root.join(&row.preview_path),
+        state.config.media_root.join(&row.thumbnail_path),
+    ];
+
+    for path in &paths {
+        if let Err(e) = tokio::fs::remove_file(path).await {
+            if e.kind() != std::io::ErrorKind::NotFound {
+                tracing::warn!(path = ?path, error = ?e, "failed to delete image file");
+            }
+        }
+    }
+
+    Ok(StatusCode::NO_CONTENT.into_response())
+}
+
 async fn suggest_tags(
     State(state): State<AppState>,
     jar: CookieJar,
     Query(query): Query<TagSuggestQuery>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let _user = require_user(&state, &jar).await?;
-    let _ = query;
+
+    let limit = query.limit.unwrap_or(20).clamp(1, 50) as i64;
+    let search = query.q.to_lowercase();
+
+    let items: Vec<String> = sqlx::query_scalar(
+        r#"
+        SELECT CASE WHEN namespace = '' THEN name ELSE namespace || ':' || name END AS tag_display
+        FROM tags
+        WHERE normalized_name LIKE $1 || '%'
+           OR (normalized_namespace || ':' || normalized_name) LIKE $1 || '%'
+        ORDER BY namespace, name
+        LIMIT $2
+        "#,
+    )
+    .bind(&search)
+    .bind(limit)
+    .fetch_all(&state.pool)
+    .await
+    .map_err(|e| ApiError::internal(e.into()))?;
 
     Ok(Json(json!({
-        "items": []
+        "items": items
     })))
 }
 
@@ -353,6 +501,9 @@ mod tests {
             original_path: String::from("originals/cover.jpg"),
             width: 1200,
             height: 800,
+            sha256: String::from("abc123"),
+            source_url: None,
+            note: None,
             rating: String::from("safe"),
             file_size: 1024,
             is_favorite: false,

@@ -31,3 +31,16 @@ pub(crate) async fn require_admin(
 
     Ok(user)
 }
+
+pub(crate) async fn require_editor(
+    state: &AppState,
+    jar: &CookieJar,
+) -> Result<SessionUser, ApiError> {
+    let user = require_user(state, jar).await?;
+
+    if user.role == UserRole::Viewer {
+        return Err(ApiError::forbidden("forbidden", "需要编辑者或管理员权限。"));
+    }
+
+    Ok(user)
+}

@@ -145,6 +145,10 @@ export interface BackendImageListItem {
   is_favorite: boolean
   tags: string[]
   file_size: number
+  sha256: string
+  source_url: string | null
+  note: string | null
+  imported_at: string
 }
 
 export interface BackendListImagesResponse {
@@ -183,4 +187,30 @@ export async function toggleFavorite(imageId: number, isFavorite: boolean): Prom
   await request<void>(`/api/favorites/${imageId}`, {
     method: isFavorite ? 'POST' : 'DELETE',
   })
+}
+
+// Update image rating and tags
+export async function updateImage(imageId: number, data: {
+  rating?: Rating
+  tags?: string[]
+}): Promise<void> {
+  await request<void>(`/api/images/${imageId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  })
+}
+
+// Delete an image
+export async function deleteImage(imageId: number): Promise<void> {
+  await request<void>(`/api/images/${imageId}`, {
+    method: 'DELETE',
+  })
+}
+
+// Suggest tags for autocomplete
+export async function suggestTags(query: string, limit?: number): Promise<string[]> {
+  const params = new URLSearchParams({ q: query })
+  if (limit) params.set('limit', limit.toString())
+  const res = await request<{ items: string[] }>(`/api/tags/suggest?${params}`)
+  return res.items
 }

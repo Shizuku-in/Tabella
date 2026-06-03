@@ -118,6 +118,12 @@ pub(crate) struct TagSuggestQuery {
     pub(crate) limit: Option<u32>,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub(crate) struct UpdateImageRequest {
+    pub(crate) rating: Option<Rating>,
+    pub(crate) tags: Option<Vec<String>>,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ImageListItem {
     pub(crate) id: i64,
@@ -127,6 +133,11 @@ pub(crate) struct ImageListItem {
     pub(crate) original_url: Option<String>,
     pub(crate) width: u32,
     pub(crate) height: u32,
+    pub(crate) sha256: String,
+    pub(crate) source_url: Option<String>,
+    pub(crate) note: Option<String>,
+    #[serde(with = "time::serde::iso8601")]
+    pub(crate) imported_at: time::OffsetDateTime,
     pub(crate) rating: Rating,
     pub(crate) is_favorite: bool,
     pub(crate) tags: Vec<String>,
