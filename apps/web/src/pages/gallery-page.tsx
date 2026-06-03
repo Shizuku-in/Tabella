@@ -12,17 +12,17 @@ import { ratingLabel } from '../lib/constants.ts'
 const PAGE_SIZE = 50
 
 export function GalleryPage() {
-  const { layoutMode, searchText, sort, ratingFilter, favoritesOnly, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality } = useGalleryUi()
+  const { layoutMode, searchTags, sort, ratingFilter, favoritesOnly, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality } = useGalleryUi()
   const queryClient = useQueryClient()
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<number, boolean>>({})
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   const galleryQuery = useInfiniteQuery({
-    queryKey: ['gallery', searchText, sort, ratingFilter, favoritesOnly],
+    queryKey: ['gallery', searchTags, sort, ratingFilter, favoritesOnly],
     queryFn: async ({ pageParam }) => {
-      // Split search text by spaces into tags
-      const tags = searchText.trim() ? searchText.trim().split(/\s+/) : []
+      // Use searchTags directly
+      const tags = searchTags
 
       const response = await listImages({
         cursor: pageParam,
@@ -94,8 +94,8 @@ export function GalleryPage() {
   const activeFilterLabels = useMemo(() => {
     const labels: string[] = []
 
-    if (searchText.trim()) {
-      labels.push(`Search: ${searchText.trim()}`)
+    if (searchTags.length > 0) {
+      labels.push(`Search: ${searchTags.join(', ')}`)
     }
 
     if (ratingFilter !== 'all') {
@@ -105,7 +105,7 @@ export function GalleryPage() {
     labels.push(`Sort: ${sortLabel(sort)}`)
 
     return labels
-  }, [ratingFilter, searchText, sort])
+  }, [ratingFilter, searchTags, sort])
 
   const handleToggleFavorite = async (id: number) => {
     const item = items.find((entry) => entry.id === id)

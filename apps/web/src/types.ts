@@ -33,13 +33,6 @@ export interface GalleryItem {
   note?: string
 }
 
-export interface GalleryQueryInput {
-  searchText: string
-  sort: GallerySort
-  ratingFilter: RatingFilter
-  cursor: string | null
-  limit: number
-}
 
 export interface GalleryPageResult {
   items: GalleryItem[]
@@ -78,7 +71,7 @@ export interface UserRow {
 
 export interface CreateUserDto {
   username: string
-  password?: string
+  password: string
   role: UserRole
 }
 

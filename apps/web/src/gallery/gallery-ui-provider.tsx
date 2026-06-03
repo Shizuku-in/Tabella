@@ -8,8 +8,8 @@ const LAYOUT_STORAGE_KEY = 'tabella.gallery.layout'
 interface GalleryUiContextValue {
   layoutMode: LayoutMode
   setLayoutMode: (value: LayoutMode) => void
-  searchText: string
-  setSearchText: (value: string) => void
+  searchTags: string[]
+  setSearchTags: (value: string[]) => void
   sort: GallerySort
   setSort: (value: GallerySort) => void
   ratingFilter: RatingFilter
@@ -91,7 +91,7 @@ function readInitialLightboxQuality(): 'thumbnail' | 'sample' | 'original' {
 
 export function GalleryUiProvider({ children }: { children: ReactNode }) {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>(readInitialLayout)
-  const [searchText, setSearchText] = useState('')
+  const [searchTags, setSearchTags] = useState<string[]>([])
   const [sort, setSort] = useState<GallerySort>('newest')
   const [ratingFilter, setRatingFilter] = useState<RatingFilter>('all')
   const [favoritesOnly, setFavoritesOnly] = useState<boolean>(false)
@@ -140,8 +140,8 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
       value={{
         layoutMode,
         setLayoutMode,
-        searchText,
-        setSearchText,
+        searchTags,
+        setSearchTags,
         sort,
         setSort,
         ratingFilter,

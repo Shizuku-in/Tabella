@@ -121,6 +121,11 @@ async fn list_images(
     }
 
     for tag in &include_tags {
+        let (namespace, name) = match tag.find(':') {
+            Some(pos) => (Some(&tag[..pos]), &tag[pos + 1..]),
+            None => (None, tag.as_str()),
+        };
+
         builder.push(
             " AND EXISTS ( \
                 SELECT 1 \
@@ -128,11 +133,20 @@ async fn list_images(
                 JOIN tags t ON t.id = it.tag_id \
                 WHERE it.image_id = i.id AND t.normalized_name = ",
         );
-        builder.push_bind(tag);
+        builder.push_bind(name);
+        if let Some(ns) = namespace {
+            builder.push(" AND t.normalized_namespace = ");
+            builder.push_bind(ns);
+        }
         builder.push(") ");
     }
 
     for tag in &exclude_tags {
+        let (namespace, name) = match tag.find(':') {
+            Some(pos) => (Some(&tag[..pos]), &tag[pos + 1..]),
+            None => (None, tag.as_str()),
+        };
+
         builder.push(
             " AND NOT EXISTS ( \
                 SELECT 1 \
@@ -140,7 +154,11 @@ async fn list_images(
                 JOIN tags t ON t.id = it.tag_id \
                 WHERE it.image_id = i.id AND t.normalized_name = ",
         );
-        builder.push_bind(tag);
+        builder.push_bind(name);
+        if let Some(ns) = namespace {
+            builder.push(" AND t.normalized_namespace = ");
+            builder.push_bind(ns);
+        }
         builder.push(") ");
     }
 

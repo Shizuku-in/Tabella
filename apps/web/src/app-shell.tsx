@@ -18,8 +18,10 @@ import {
 } from '@mui/icons-material'
 import {
   AppBar,
+  Autocomplete,
   Avatar,
   Box,
+  Chip,
   Container,
   IconButton,
   Menu,
@@ -37,6 +39,7 @@ import { SettingsDialog } from './components/settings-dialog.tsx'
 import { useAuth } from './auth/auth-provider.tsx'
 import { useGalleryUi } from './gallery/gallery-ui-provider.tsx'
 import type { GallerySort, LayoutMode, RatingFilter } from './types.ts'
+import { suggestTags } from './lib/api.ts'
 
 interface AppShellProps {
   mode: PaletteMode
@@ -69,8 +72,8 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
   const {
     layoutMode,
     setLayoutMode,
-    searchText,
-    setSearchText,
+    searchTags,
+    setSearchTags,
     sort,
     setSort,
     ratingFilter,
@@ -78,7 +81,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     favoritesOnly,
     setFavoritesOnly,
   } = useGalleryUi()
-  const [searchVisible, setSearchVisible] = useState(() => searchText.length > 0)
+  const [searchVisible, setSearchVisible] = useState(() => searchTags.length > 0)
   const [sortAnchor, setSortAnchor] = useState<HTMLElement | null>(null)
   const [layoutAnchor, setLayoutAnchor] = useState<HTMLElement | null>(null)
   const [ratingAnchor, setRatingAnchor] = useState<HTMLElement | null>(null)
@@ -94,6 +97,26 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     ? 'Viewer'
     : user.role.charAt(0).toUpperCase() + user.role.slice(1)
 
+  const [tagInput, setTagInput] = useState('')
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
+
+  useEffect(() => {
+    if (!tagInput.trim()) {
+      setTagSuggestions([])
+      return
+    }
+    const timer = setTimeout(async () => {
+      try {
+        const suggestions = await suggestTags(tagInput.trim(), 20)
+        const currentTags = searchTags
+        setTagSuggestions(suggestions.filter(s => !currentTags.includes(s)))
+      } catch {
+        setTagSuggestions([])
+      }
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [tagInput, searchTags])
+
   useEffect(() => {
     if (searchVisible) {
       searchInputRef.current?.focus()
@@ -101,10 +124,10 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
   }, [searchVisible])
 
   useEffect(() => {
-    if (searchText.length > 0) {
+    if (searchTags.length > 0) {
       setSearchVisible(true)
     }
-  }, [searchText])
+  }, [searchTags])
 
   const handleLayoutSelect = (next: LayoutMode) => {
     setLayoutAnchor(null)
@@ -113,12 +136,10 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     })
   }
 
-  const handleSearchToggle = () => {
-    setSearchVisible((current) => !current)
-  }
+
 
   const handleSearchBlur = () => {
-    if (searchText.trim().length === 0) {
+    if (searchTags.length === 0) {
       setSearchVisible(false)
     }
   }
@@ -280,54 +301,83 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                     mr: searchVisible ? 0.25 : 0,
                   }}
                 >
-                  <TextField
-                    inputRef={searchInputRef}
-                    variant="standard"
-                    size="small"
-                    value={searchText}
-                    onChange={(event) => setSearchText(event.target.value)}
+                  <Autocomplete
+                    multiple
+                    freeSolo
+                    options={tagSuggestions}
+                    filterOptions={(x) => x}
+                    value={searchTags}
+                    inputValue={tagInput}
+                    onInputChange={(_, newValue) => setTagInput(newValue)}
+                    onChange={(_, newValue) => {
+                      const uniqueTags = Array.from(new Set(newValue as string[]))
+                      setSearchTags(uniqueTags)
+                    }}
                     onBlur={handleSearchBlur}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Escape' && searchText.trim().length === 0) {
-                        setSearchVisible(false)
-                      }
-                    }}
-                    placeholder="Search"
-                    fullWidth
-                    InputProps={{
-                      disableUnderline: false,
-                    }}
-                    sx={{
-                      '& .MuiInput-root': {
-                        height: 30,
-                        fontSize: '0.9rem',
-                        color: 'text.primary',
-                        '&:before': {
-                          borderBottomColor: 'divider',
-                        },
-                        '&:after': {
-                          borderBottomWidth: '2px',
-                        },
-                        '&:hover:not(.Mui-disabled, .Mui-error):before': {
-                          borderBottomColor: 'text.secondary',
-                        },
-                      },
-                      '& .MuiInput-input': {
-                        py: 0.25,
-                        px: 0,
-                        '&::placeholder': {
-                          opacity: 0.66,
-                        },
-                      },
-                    }}
+                    size="small"
+                    renderTags={(value, getTagProps) =>
+                      value.map((option, index) => {
+                        const { key, ...chipProps } = getTagProps({ index })
+                        return (
+                          <Chip
+                            {...chipProps}
+                            key={key}
+                            label={option}
+                            size="small"
+                            sx={{ height: 20, fontSize: '0.75rem', bgcolor: 'action.hover' }}
+                          />
+                        )
+                      })
+                    }
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        inputRef={searchInputRef}
+                        variant="standard"
+                        placeholder={searchTags.length === 0 ? "Search" : ""}
+                        fullWidth
+                        onKeyDown={(event) => {
+                          if (event.key === 'Escape' && searchTags.length === 0) {
+                            setSearchVisible(false)
+                          }
+                        }}
+                        sx={{
+                          '& .MuiInput-root': {
+                            minHeight: 30,
+                            fontSize: '0.9rem',
+                            color: 'text.primary',
+                            '&:before': { borderBottomColor: 'divider' },
+                            '&:after': { borderBottomWidth: '2px' },
+                            '&:hover:not(.Mui-disabled, .Mui-error):before': { borderBottomColor: 'text.secondary' },
+                            pt: 0,
+                            pb: 0.5,
+                            flexWrap: 'nowrap',
+                            overflowX: 'auto',
+                            scrollbarWidth: 'none',
+                            '&::-webkit-scrollbar': { display: 'none' },
+                          },
+                          '& .MuiInputBase-input': {
+                            py: 0.25,
+                            px: 0,
+                          },
+                        }}
+                      />
+                    )}
                   />
                 </Box>
 
                 <Tooltip title="Search">
                   <IconButton
-                    color={searchVisible || searchText ? 'primary' : 'default'}
+                    color={searchVisible || searchTags.length > 0 ? 'primary' : 'default'}
                     aria-label="toggle search"
-                    onClick={handleSearchToggle}
+                    onClick={() => {
+                      if (searchVisible && searchTags.length === 0) {
+                        setSearchVisible(false)
+                      } else {
+                        setSearchVisible(true)
+                        setTimeout(() => searchInputRef.current?.focus(), 100)
+                      }
+                    }}
                     sx={{ p: 0.75, borderRadius: '50%' }}
                   >
                     <Search fontSize="small" />
