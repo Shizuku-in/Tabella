@@ -468,18 +468,13 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
         open={showDeleteDialog}
         onClose={() => setShowDeleteDialog(false)}
         onClick={(e) => e.stopPropagation()}
-        PaperProps={{
-          sx: {
-            bgcolor: alpha(theme.palette.background.paper, 0.95),
-            backdropFilter: 'blur(20px)',
-            color: 'text.primary',
-          },
-        }}
       >
         <Box sx={{ p: 3 }}>
           <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Delete Image</Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            This action cannot be undone. The image and all associated data will be permanently deleted.
+            This action cannot be undone.
+            <br />
+            The image and all associated data will be permanently deleted.
           </Typography>
           <Stack direction="row" spacing={1} justifyContent="flex-end">
             <Button onClick={() => setShowDeleteDialog(false)} sx={{ color: 'text.primary' }}>
