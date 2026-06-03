@@ -341,7 +341,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
           <Tooltip title="Download" placement="bottom">
             <IconButton
               sx={{
-                color: 'text.primary',
+                color: 'action.active',
                 bgcolor: 'background.paper',
                 '&:hover': { bgcolor: 'background.default' },
               }}
@@ -354,7 +354,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
           <Tooltip title="Info" placement="bottom">
             <IconButton
               sx={{
-                color: showInfoPanel ? 'primary.main' : 'text.primary',
+                color: showInfoPanel ? 'primary.main' : 'action.active',
                 bgcolor: 'background.paper',
                 '&:hover': { bgcolor: 'background.default' },
               }}
@@ -370,7 +370,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
           <Tooltip title="Delete" placement="bottom">
             <IconButton
               sx={{
-                color: 'text.primary',
+                color: 'action.active',
                 bgcolor: 'background.paper',
                 '&:hover': { bgcolor: 'error.main', color: 'error.contrastText' },
               }}
@@ -387,7 +387,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
             <IconButton
               sx={{
                 ml: 2,
-                color: 'text.primary',
+                color: 'action.active',
                 bgcolor: 'background.paper',
                 '&:hover': { bgcolor: 'background.default' },
               }}
@@ -502,7 +502,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
             left: 16,
             top: '50%',
             transform: 'translateY(-50%)',
-            color: 'text.primary',
+            color: 'action.active',
             bgcolor: 'background.paper',
             '&:hover': { bgcolor: 'background.default' },
           }}
@@ -524,7 +524,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
             ...(isMobile && showInfoPanel ? { display: 'none' } : {}),
             top: '50%',
             transform: 'translateY(-50%)',
-            color: 'text.primary',
+            color: 'action.active',
             bgcolor: 'background.paper',
             '&:hover': { bgcolor: 'background.default' },
           }}
