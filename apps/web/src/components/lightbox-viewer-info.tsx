@@ -13,16 +13,17 @@ import {
   FormControl,
   Button,
 } from '@mui/material'
+import { alpha, useTheme } from '@mui/material/styles'
 import type { GalleryItem, Rating } from '../types'
 
 function MetaRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <Box>
-      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>{label}</Typography>
+      <Typography variant="caption" color="text.secondary">{label}</Typography>
       <Typography
         variant="body2"
         sx={{
-          color: 'white',
+          color: 'text.primary',
           wordBreak: 'break-all',
           ...(mono ? { fontFamily: 'monospace', fontSize: '0.7rem' } : {}),
         }}
@@ -70,6 +71,8 @@ export function LightboxViewerInfo({
   isSaving,
   handleSave,
 }: LightboxViewerInfoProps) {
+  const theme = useTheme()
+
   return (
     <Slide direction="left" in={showInfoPanel} mountOnEnter unmountOnExit>
       <Box
@@ -80,10 +83,10 @@ export function LightboxViewerInfo({
           top: 0,
           bottom: 0,
           width: infoPanelWidth,
-          bgcolor: 'rgba(0, 0, 0, 0.92)',
+          bgcolor: alpha(theme.palette.background.paper, 0.92),
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderLeft: isMobile ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
+          borderLeft: isMobile ? 'none' : `1px solid ${theme.palette.divider}`,
           zIndex: 2,
           display: 'flex',
           flexDirection: 'column',
@@ -92,7 +95,7 @@ export function LightboxViewerInfo({
       >
         {/* Header */}
         <Box sx={{ p: 2, pt: 8 }}>
-          <Typography variant="h6" sx={{ color: 'white', fontWeight: 700 }}>
+          <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700 }}>
             Image Info
           </Typography>
         </Box>
@@ -109,10 +112,10 @@ export function LightboxViewerInfo({
             {item.sourceUrl && <MetaRow label="Source" value={item.sourceUrl} />}
           </Stack>
 
-          <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mb: 2 }} />
+          <Divider sx={{ borderColor: 'divider', mb: 2 }} />
 
           {/* Rating */}
-          <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
             Rating
           </Typography>
           <FormControl fullWidth size="small" sx={{ mb: 3 }}>
@@ -120,18 +123,18 @@ export function LightboxViewerInfo({
               value={editRating}
               onChange={(e) => handleRatingChange(e.target.value as Rating)}
               sx={{
-                color: 'white',
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.2)' },
-                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.4)' },
+                color: 'text.primary',
+                '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(theme.palette.text.primary, 0.23) },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.text.primary },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
-                '& .MuiSvgIcon-root': { color: 'white' },
+                '& .MuiSvgIcon-root': { color: 'text.primary' },
               }}
               MenuProps={{
                 PaperProps: {
                   sx: {
-                    bgcolor: 'rgba(30,30,30,0.95)',
+                    bgcolor: alpha(theme.palette.background.paper, 0.95),
                     backdropFilter: 'blur(10px)',
-                    color: 'white',
+                    color: 'text.primary',
                   },
                 },
               }}
@@ -142,10 +145,10 @@ export function LightboxViewerInfo({
             </Select>
           </FormControl>
 
-          <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mb: 2 }} />
+          <Divider sx={{ borderColor: 'divider', mb: 2 }} />
 
           {/* Tags */}
-          <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
             Tags
           </Typography>
 
@@ -153,11 +156,13 @@ export function LightboxViewerInfo({
             multiple
             freeSolo
             options={tagSuggestions}
+            filterOptions={(x) => x}
             value={editTags}
             inputValue={tagInput}
             onInputChange={(_, newValue) => setTagInput(newValue)}
             onChange={(_, newValue) => {
-              setEditTags(newValue as string[])
+              const uniqueTags = Array.from(new Set(newValue as string[]))
+              setEditTags(uniqueTags)
               setHasChanges(true)
             }}
             renderTags={(value, getTagProps) =>
@@ -170,9 +175,9 @@ export function LightboxViewerInfo({
                     label={option}
                     size="small"
                     sx={{
-                      bgcolor: 'rgba(255,255,255,0.1)',
-                      color: 'white',
-                      '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.5)' },
+                      bgcolor: alpha(theme.palette.text.primary, 0.1),
+                      color: 'text.primary',
+                      '& .MuiChip-deleteIcon': { color: alpha(theme.palette.text.primary, 0.5) },
                     }}
                   />
                 )
@@ -181,25 +186,25 @@ export function LightboxViewerInfo({
             renderInput={(params) => (
               <TextField
                 {...params}
-                placeholder="Add tag (namespace:name)"
+                placeholder={editTags.length === 0 ? "Add tag (namespace:name)" : ""}
                 size="small"
                 sx={{
                   '& .MuiOutlinedInput-root': {
-                    color: 'white',
-                    '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                    '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
+                    color: 'text.primary',
+                    '& fieldset': { borderColor: alpha(theme.palette.text.primary, 0.23) },
+                    '&:hover fieldset': { borderColor: theme.palette.text.primary },
                     '&.Mui-focused fieldset': { borderColor: 'primary.main' },
                   },
-                  '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.4)' },
+                  '& .MuiInputBase-input::placeholder': { color: alpha(theme.palette.text.primary, 0.5) },
                 }}
               />
             )}
             slotProps={{
               paper: {
                 sx: {
-                  bgcolor: 'rgba(30,30,30,0.95)',
+                  bgcolor: alpha(theme.palette.background.paper, 0.95),
                   backdropFilter: 'blur(10px)',
-                  color: 'white',
+                  color: 'text.primary',
                 },
               },
             }}
@@ -207,7 +212,7 @@ export function LightboxViewerInfo({
         </Box>
 
         {/* Save button */}
-        <Box sx={{ p: 2, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
           <Button 
             variant="contained" 
             fullWidth 

@@ -79,6 +79,14 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
   const item = items[currentIndex]
 
   useEffect(() => {
+    if (open) {
+      setCurrentIndex(initialIndex)
+      setShowOverlays(true)
+      setShowInfoPanel(false)
+      setShowDeleteDialog(false)
+    }
+  }, [open, initialIndex])
+  useEffect(() => {
     if (item) {
       setEditRating(item.rating)
       setEditTags([...item.tags])
@@ -257,7 +265,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
       TransitionComponent={Transition}
       PaperProps={{
         sx: {
-          bgcolor: 'rgba(0, 0, 0, 0.9)',
+          bgcolor: alpha(theme.palette.background.default, 0.9),
           backdropFilter: 'blur(10px)',
           WebkitBackdropFilter: 'blur(10px)',
           overflow: 'hidden',
@@ -332,11 +340,9 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
           <Tooltip title="Download" placement="bottom">
             <IconButton
               sx={{
-                color: 'white',
-                bgcolor: 'rgba(0, 0, 0, 0.25)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.4)' },
+                color: 'text.primary',
+                bgcolor: 'background.paper',
+                '&:hover': { bgcolor: 'background.default' },
               }}
               onClick={handleDownloadClick}
             >
@@ -347,11 +353,9 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
           <Tooltip title="Info" placement="bottom">
             <IconButton
               sx={{
-                color: showInfoPanel ? 'primary.main' : 'white',
-                bgcolor: 'rgba(0, 0, 0, 0.25)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.4)' },
+                color: showInfoPanel ? 'primary.main' : 'text.primary',
+                bgcolor: 'background.paper',
+                '&:hover': { bgcolor: 'background.default' },
               }}
               onClick={(e) => {
                 e.stopPropagation()
@@ -365,11 +369,9 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
           <Tooltip title="Delete" placement="bottom">
             <IconButton
               sx={{
-                color: 'white',
-                bgcolor: 'rgba(0, 0, 0, 0.25)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                '&:hover': { bgcolor: 'rgba(180, 40, 40, 0.5)' },
+                color: 'text.primary',
+                bgcolor: 'background.paper',
+                '&:hover': { bgcolor: 'error.main', color: 'error.contrastText' },
               }}
               onClick={(e) => {
                 e.stopPropagation()
@@ -384,11 +386,9 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
             <IconButton
               sx={{
                 ml: 2,
-                color: 'white',
-                bgcolor: 'rgba(0, 0, 0, 0.25)',
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.4)' },
+                color: 'text.primary',
+                bgcolor: 'background.paper',
+                '&:hover': { bgcolor: 'background.default' },
               }}
               onClick={onClose}
             >
@@ -465,19 +465,19 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
         onClick={(e) => e.stopPropagation()}
         PaperProps={{
           sx: {
-            bgcolor: 'rgba(20, 20, 20, 0.95)',
+            bgcolor: alpha(theme.palette.background.paper, 0.95),
             backdropFilter: 'blur(20px)',
-            color: 'white',
+            color: 'text.primary',
           },
         }}
       >
         <Box sx={{ p: 3 }}>
           <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Delete Image</Typography>
-          <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.7)', mb: 3 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             This action cannot be undone. The image and all associated data will be permanently deleted.
           </Typography>
           <Stack direction="row" spacing={1} justifyContent="flex-end">
-            <Button onClick={() => setShowDeleteDialog(false)} sx={{ color: 'white' }}>
+            <Button onClick={() => setShowDeleteDialog(false)} sx={{ color: 'text.primary' }}>
               Cancel
             </Button>
             <Button
@@ -501,11 +501,9 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
             left: 16,
             top: '50%',
             transform: 'translateY(-50%)',
-            color: 'white',
-            bgcolor: 'rgba(0, 0, 0, 0.25)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.4)' },
+            color: 'text.primary',
+            bgcolor: 'background.paper',
+            '&:hover': { bgcolor: 'background.default' },
           }}
         >
           <ChevronLeft fontSize="large" />
@@ -522,11 +520,9 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
             ...(isMobile && showInfoPanel ? { display: 'none' } : {}),
             top: '50%',
             transform: 'translateY(-50%)',
-            color: 'white',
-            bgcolor: 'rgba(0, 0, 0, 0.25)',
-            backdropFilter: 'blur(10px)',
-            WebkitBackdropFilter: 'blur(10px)',
-            '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.4)' },
+            color: 'text.primary',
+            bgcolor: 'background.paper',
+            '&:hover': { bgcolor: 'background.default' },
           }}
         >
           <ChevronRight fontSize="large" />
@@ -543,7 +539,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
             right: 0,
             p: 2,
             pt: 6,
-            backgroundImage: 'linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%)',
+            backgroundImage: `linear-gradient(0deg, ${alpha(theme.palette.background.default, 0.9)} 0%, ${alpha(theme.palette.background.default, 0)} 100%)`,
             display: 'flex',
             flexWrap: 'wrap',
             gap: 1,
@@ -557,8 +553,8 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
               size="small"
               icon={<Tag fontSize="small" />}
               sx={{
-                bgcolor: alpha('#ffffff', 0.15),
-                color: 'white',
+                bgcolor: alpha(theme.palette.text.primary, 0.1),
+                color: 'text.primary',
                 pointerEvents: 'auto',
                 backdropFilter: 'blur(10px)',
               }}

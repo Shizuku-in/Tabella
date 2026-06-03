@@ -295,22 +295,20 @@ export function GalleryPage() {
         </>
       )}
 
-      {selectedImageIndex !== null && (
-        <LightboxViewer
-          open={true}
-          onClose={() => setSelectedImageIndex(null)}
-          items={items}
-          initialIndex={selectedImageIndex}
-          onIndexChange={(newIndex) => {
-            // Load more if we are nearing the end (e.g. last 3 items)
-            if (newIndex >= items.length - 3 && galleryQuery.hasNextPage && !galleryQuery.isFetchingNextPage) {
-              galleryQuery.fetchNextPage()
-            }
-          }}
-          onDelete={handleDelete}
-          onUpdate={handleUpdate}
-        />
-      )}
+      <LightboxViewer
+        open={selectedImageIndex !== null}
+        onClose={() => setSelectedImageIndex(null)}
+        items={items}
+        initialIndex={selectedImageIndex ?? 0}
+        onIndexChange={(newIndex) => {
+          // Load more if we are nearing the end (e.g. last 3 items)
+          if (newIndex >= items.length - 3 && galleryQuery.hasNextPage && !galleryQuery.isFetchingNextPage) {
+            galleryQuery.fetchNextPage()
+          }
+        }}
+        onDelete={handleDelete}
+        onUpdate={handleUpdate}
+      />
     </Stack>
   )
 }
