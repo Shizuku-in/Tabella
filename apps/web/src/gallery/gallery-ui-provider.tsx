@@ -30,6 +30,8 @@ interface GalleryUiContextValue {
   setGalleryImageQuality: (value: 'thumbnail' | 'sample' | 'original') => void
   lightboxImageQuality: 'thumbnail' | 'sample' | 'original'
   setLightboxImageQuality: (value: 'thumbnail' | 'sample' | 'original') => void
+  showLightboxTags: boolean
+  setShowLightboxTags: (value: boolean) => void
 }
 
 const GalleryUiContext = createContext<GalleryUiContextValue | null>(null)
@@ -89,6 +91,11 @@ function readInitialLightboxQuality(): 'thumbnail' | 'sample' | 'original' {
   return 'sample' // default sample for lightbox
 }
 
+function readInitialShowLightboxTags(): boolean {
+  const stored = window.localStorage.getItem('tabella.gallery.showLightboxTags')
+  return stored === 'true' // default false
+}
+
 export function GalleryUiProvider({ children }: { children: ReactNode }) {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>(readInitialLayout)
   const [searchTags, setSearchTags] = useState<string[]>([])
@@ -102,6 +109,7 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
   const [showResultsCount, setShowResultsCount] = useState<boolean>(readInitialResultsCount)
   const [galleryImageQuality, setGalleryImageQuality] = useState<'thumbnail' | 'sample' | 'original'>(readInitialGalleryQuality)
   const [lightboxImageQuality, setLightboxImageQuality] = useState<'thumbnail' | 'sample' | 'original'>(readInitialLightboxQuality)
+  const [showLightboxTags, setShowLightboxTags] = useState<boolean>(readInitialShowLightboxTags())
 
   useEffect(() => {
     window.localStorage.setItem(LAYOUT_STORAGE_KEY, layoutMode)
@@ -135,6 +143,10 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem('tabella.gallery.lightboxQuality', lightboxImageQuality)
   }, [lightboxImageQuality])
 
+  useEffect(() => {
+    window.localStorage.setItem('tabella.gallery.showLightboxTags', String(showLightboxTags))
+  }, [showLightboxTags])
+
   return (
     <GalleryUiContext.Provider
       value={{
@@ -162,6 +174,8 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
         setGalleryImageQuality,
         lightboxImageQuality,
         setLightboxImageQuality,
+        showLightboxTags,
+        setShowLightboxTags,
       }}
     >
       {children}

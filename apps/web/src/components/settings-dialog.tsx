@@ -42,6 +42,8 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     setGalleryImageQuality,
     lightboxImageQuality,
     setLightboxImageQuality,
+    showLightboxTags,
+    setShowLightboxTags,
   } = useGalleryUi()
 
   return (
@@ -136,6 +138,19 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 label={
                   <Typography variant="body2">
                     Show image details on mobile
+                  </Typography>
+                }
+              />
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={showLightboxTags}
+                    onChange={(e) => setShowLightboxTags(e.target.checked)}
+                  />
+                }
+                label={
+                  <Typography variant="body2">
+                    Show tags in lightbox by default
                   </Typography>
                 }
               />

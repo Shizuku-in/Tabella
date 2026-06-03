@@ -14,6 +14,7 @@ import {
   Tooltip,
   Typography,
   Button,
+  Collapse,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
@@ -26,6 +27,7 @@ import {
   BrokenImage,
   InfoOutlined,
   DeleteOutline,
+  LocalOfferOutlined,
 } from '@mui/icons-material'
 import { forwardRef, useEffect, useState, useMemo } from 'react'
 import type { ReactElement, Ref } from 'react'
@@ -57,12 +59,13 @@ interface LightboxViewerProps {
 }
 
 export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChange, onDelete, onUpdate }: LightboxViewerProps) {
-  const { lightboxImageQuality, setSearchTags } = useGalleryUi()
+  const { lightboxImageQuality, setSearchTags, showLightboxTags } = useGalleryUi()
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const infoPanelWidth = isMobile ? '100%' : 360
   const [currentIndex, setCurrentIndex] = useState(initialIndex)
   const [showOverlays, setShowOverlays] = useState(true)
+  const [isTagsExpanded, setIsTagsExpanded] = useState(showLightboxTags)
   const [downloadAnchorEl, setDownloadAnchorEl] = useState<null | HTMLElement>(null)
   const [imgStatus, setImgStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
   const [fileSizes, setFileSizes] = useState({ thumb: 0, sample: 0, original: 0 })
@@ -85,8 +88,9 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
       setShowOverlays(true)
       setShowInfoPanel(false)
       setShowDeleteDialog(false)
+      setIsTagsExpanded(showLightboxTags)
     }
-  }, [open, initialIndex])
+  }, [open, initialIndex, showLightboxTags])
   useEffect(() => {
     if (item) {
       setEditRating(item.rating)
@@ -549,43 +553,72 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
         >
           <Box
             sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 1,
               maxWidth: { xs: 'calc(100vw - 80px)', md: '70%', lg: '50%' },
-              maxHeight: '40vh',
-              overflowY: 'auto',
               pointerEvents: 'auto',
-              // Hide scrollbar but keep functionality
-              msOverflowStyle: 'none',
-              scrollbarWidth: 'none',
-              '&::-webkit-scrollbar': { display: 'none' },
             }}
           >
-          {item.tags.map((tag) => (
-            <Chip
-              key={tag}
-              label={tag}
-              size="small"
-              icon={<Tag fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation()
-                setSearchTags([tag])
-                onClose()
-              }}
-              sx={{
-                bgcolor: alpha(getTagColor(tag, theme), 0.2),
-                color: getTagColor(tag, theme),
-                pointerEvents: 'auto',
-                backdropFilter: 'blur(10px)',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  bgcolor: getTagColor(tag, theme),
-                  color: theme.palette.getContrastText(getTagColor(tag, theme)),
-                }
-              }}
-            />
-          ))}
+            <Tooltip title={isTagsExpanded ? 'Hide Tags' : 'Show Tags'} placement="right">
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setIsTagsExpanded((prev) => !prev)
+                }}
+                sx={{
+                  color: isTagsExpanded ? 'primary.main' : 'text.secondary',
+                  mb: 1,
+                  bgcolor: alpha(theme.palette.background.default, 0.5),
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid',
+                  borderColor: isTagsExpanded ? alpha(theme.palette.primary.main, 0.5) : 'divider',
+                  '&:hover': {
+                    bgcolor: alpha(theme.palette.background.default, 0.8),
+                  },
+                }}
+              >
+                <LocalOfferOutlined fontSize="small" />
+              </IconButton>
+            </Tooltip>
+
+            <Collapse in={isTagsExpanded}>
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 1,
+                  maxHeight: '40vh',
+                  overflowY: 'auto',
+                  // Hide scrollbar but keep functionality
+                  msOverflowStyle: 'none',
+                  scrollbarWidth: 'none',
+                  '&::-webkit-scrollbar': { display: 'none' },
+                }}
+              >
+              {item.tags.map((tag) => (
+                <Chip
+                  key={tag}
+                  label={tag}
+                  size="small"
+                  icon={<Tag fontSize="small" />}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setSearchTags([tag])
+                    onClose()
+                  }}
+                  sx={{
+                    bgcolor: alpha(getTagColor(tag, theme), 0.2),
+                    color: getTagColor(tag, theme),
+                    backdropFilter: 'blur(10px)',
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      bgcolor: getTagColor(tag, theme),
+                      color: theme.palette.getContrastText(getTagColor(tag, theme)),
+                    }
+                  }}
+                />
+              ))}
+              </Box>
+            </Collapse>
           </Box>
         </Box>
       </Slide>
