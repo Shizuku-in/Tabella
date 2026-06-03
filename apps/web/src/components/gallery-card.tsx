@@ -2,19 +2,9 @@ import { Favorite, FavoriteBorder } from '@mui/icons-material'
 import { Box, IconButton, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { LazyImage } from './lazy-image.tsx'
-import type { GalleryItem, LayoutMode, Rating } from '../types.ts'
+import type { GalleryItem, LayoutMode } from '../types.ts'
 
-const ratingTone: Record<Rating, string> = {
-  safe: 'rgba(238, 241, 248, 0.86)',
-  suggestive: 'rgba(255, 238, 196, 0.88)',
-  explicit: 'rgba(255, 215, 215, 0.9)',
-}
-
-export const ratingLabel: Record<Rating, string> = {
-  safe: 'Safe',
-  suggestive: 'Suggestive',
-  explicit: 'Explicit',
-}
+import { ratingLabel, ratingTone } from '../lib/constants.ts'
 
 export interface GalleryCardProps {
   item: GalleryItem

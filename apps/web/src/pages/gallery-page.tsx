@@ -1,17 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Box, CircularProgress, Stack, Typography } from '@mui/material'
-import { useInfiniteQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { Masonry } from '@mui/lab'
 import { useGalleryUi } from '../gallery/gallery-ui-provider.tsx'
 import { LightboxViewer } from '../components/lightbox-viewer.tsx'
-import { listImages, toggleFavorite, deleteImage } from '../lib/api.ts'
+import { listImages, toggleFavorite } from '../lib/api.ts'
 import type { GalleryItem, LayoutMode } from '../types.ts'
-import { GalleryCard, ratingLabel } from '../components/gallery-card.tsx'
+import { GalleryCard } from '../components/gallery-card.tsx'
+import { ratingLabel } from '../lib/constants.ts'
 
 const PAGE_SIZE = 50
 
 export function GalleryPage() {
   const { layoutMode, searchText, sort, ratingFilter, favoritesOnly, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality } = useGalleryUi()
+  const queryClient = useQueryClient()
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<number, boolean>>({})
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
@@ -105,7 +107,7 @@ export function GalleryPage() {
     return labels
   }, [ratingFilter, searchText, sort])
 
-  const handleToggleFavorite = (id: number) => {
+  const handleToggleFavorite = async (id: number) => {
     const item = items.find((entry) => entry.id === id)
     if (!item) return
 
@@ -117,17 +119,20 @@ export function GalleryPage() {
       [id]: newValue,
     }))
 
-    toggleFavorite(id, newValue).catch((error) => {
+    try {
+      await toggleFavorite(id, newValue)
+      await queryClient.invalidateQueries({ queryKey: ['gallery'] })
+    } catch (error) {
       console.error('Failed to toggle favorite', error)
       // Revert optimistic update on failure
       setFavoriteOverrides((currentOverrides) => ({
         ...currentOverrides,
         [id]: currentValue,
       }))
-    })
+    }
   }
 
-  const handleDelete = (imageId: number) => {
+  const handleDelete = () => {
     // Invalidate the gallery query to refetch
     galleryQuery.refetch()
   }

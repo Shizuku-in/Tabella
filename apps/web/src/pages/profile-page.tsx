@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import React, { useRef, useState, useEffect } from 'react'
 import {
   Alert,
@@ -105,6 +106,7 @@ export function ProfilePage() {
       setAvatarFile(null)
       setAvatarPreview(null)
       
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       queryClient.setQueryData(['auth', 'me'], (old: any) => {
         if (!old || !old.user) return old
         return {
@@ -116,6 +118,7 @@ export function ProfilePage() {
           }
         }
       })
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       showSnackbar('Failed to update profile: ' + err.message, 'error')
     }

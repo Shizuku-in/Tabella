@@ -13,11 +13,6 @@ import {
   CircularProgress,
   Tooltip,
   Typography,
-  Autocomplete,
-  TextField,
-  Divider,
-  ToggleButton,
-  ToggleButtonGroup,
   Button,
   useMediaQuery,
   useTheme,
@@ -38,6 +33,7 @@ import type { TransitionProps } from '@mui/material/transitions'
 import type { GalleryItem, Rating } from '../types'
 import { useGalleryUi } from '../gallery/gallery-ui-provider'
 import { updateImage, deleteImage, suggestTags } from '../lib/api'
+import { LightboxViewerInfo } from './lightbox-viewer-info'
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
@@ -48,23 +44,6 @@ const Transition = forwardRef(function Transition(
   return <Fade ref={ref} {...props} />
 })
 
-function MetaRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <Box>
-      <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)' }}>{label}</Typography>
-      <Typography
-        variant="body2"
-        sx={{
-          color: 'white',
-          wordBreak: 'break-all',
-          ...(mono ? { fontFamily: 'monospace', fontSize: '0.7rem' } : {}),
-        }}
-      >
-        {value}
-      </Typography>
-    </Box>
-  )
-}
 
 interface LightboxViewerProps {
   open: boolean
@@ -220,9 +199,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
         rating: editRating,
         tags: editTags,
       })
-      // Update local item data
-      item.rating = editRating
-      item.tags = [...editTags]
+      // Defer state update to onUpdate
       setHasChanges(false)
       onUpdate?.()
     } catch (error) {
@@ -259,25 +236,11 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
     }
   }
 
-  const handleAddTag = (tag: string) => {
-    const trimmed = tag.trim()
-    if (trimmed && !editTags.includes(trimmed)) {
-      setEditTags(prev => [...prev, trimmed])
-      setHasChanges(true)
-    }
-    setTagInput('')
-  }
 
-  const handleRemoveTag = (tagToRemove: string) => {
-    setEditTags(prev => prev.filter(t => t !== tagToRemove))
+
+  const handleRatingChange = (newRating: Rating) => {
+    setEditRating(newRating)
     setHasChanges(true)
-  }
-
-  const handleRatingChange = (_: unknown, newRating: Rating | null) => {
-    if (newRating) {
-      setEditRating(newRating)
-      setHasChanges(true)
-    }
   }
 
   if (!item) return null
@@ -476,134 +439,24 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
       </Menu>
 
       {/* Info Panel */}
-      <Slide direction="left" in={showInfoPanel} mountOnEnter unmountOnExit>
-        <Box
-          onClick={(e) => e.stopPropagation()}
-          sx={{
-            position: 'absolute',
-            right: 0,
-            top: 0,
-            bottom: 0,
-            width: infoPanelWidth,
-            bgcolor: 'rgba(0, 0, 0, 0.92)',
-            backdropFilter: 'blur(20px)',
-            WebkitBackdropFilter: 'blur(20px)',
-            borderLeft: isMobile ? 'none' : '1px solid rgba(255, 255, 255, 0.08)',
-            zIndex: 2,
-            display: 'flex',
-            flexDirection: 'column',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Header */}
-          <Box sx={{ p: 2, pt: 8 }}>
-            <Typography variant="h6" sx={{ color: 'white', fontWeight: 700 }}>Image Info</Typography>
-          </Box>
-
-          {/* Scrollable content */}
-          <Box sx={{ flex: 1, overflow: 'auto', px: 2, pb: 2 }}>
-            {/* Metadata */}
-            <Stack spacing={1} sx={{ mb: 3 }}>
-              <MetaRow label="Filename" value={item.filename} />
-              <MetaRow label="Dimensions" value={`${item.width} × ${item.height}`} />
-              <MetaRow label="File size" value={formatSizeStr(item.fileSize || 0)} />
-              {item.sha256 && <MetaRow label="SHA256" value={item.sha256} mono />}
-              {item.importedAt && <MetaRow label="Imported" value={new Date(item.importedAt).toLocaleString()} />}
-              {item.sourceUrl && <MetaRow label="Source" value={item.sourceUrl} />}
-            </Stack>
-
-            <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mb: 2 }} />
-
-            {/* Rating */}
-            <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>Rating</Typography>
-            <ToggleButtonGroup
-              value={editRating}
-              exclusive
-              onChange={handleRatingChange}
-              fullWidth
-              size="small"
-              sx={{ mb: 3 }}
-            >
-              <ToggleButton value="safe" sx={{ color: 'white', '&.Mui-selected': { bgcolor: 'rgba(144,164,194,0.3)', color: 'white' } }}>Safe</ToggleButton>
-              <ToggleButton value="suggestive" sx={{ color: 'white', '&.Mui-selected': { bgcolor: 'rgba(255,183,77,0.3)', color: 'white' } }}>Suggestive</ToggleButton>
-              <ToggleButton value="explicit" sx={{ color: 'white', '&.Mui-selected': { bgcolor: 'rgba(229,115,115,0.3)', color: 'white' } }}>Explicit</ToggleButton>
-            </ToggleButtonGroup>
-
-            <Divider sx={{ borderColor: 'rgba(255,255,255,0.1)', mb: 2 }} />
-
-            {/* Tags */}
-            <Typography variant="subtitle2" sx={{ color: 'rgba(255,255,255,0.7)', mb: 1 }}>Tags</Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mb: 2 }}>
-              {editTags.map(tag => (
-                <Chip
-                  key={tag}
-                  label={tag}
-                  size="small"
-                  onDelete={() => handleRemoveTag(tag)}
-                  sx={{
-                    bgcolor: 'rgba(255,255,255,0.1)',
-                    color: 'white',
-                    '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.5)' },
-                  }}
-                />
-              ))}
-            </Box>
-
-            <Autocomplete
-              freeSolo
-              options={tagSuggestions}
-              inputValue={tagInput}
-              onInputChange={(_, newValue) => setTagInput(newValue)}
-              onChange={(_, newValue) => {
-                if (typeof newValue === 'string') handleAddTag(newValue)
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && tagInput.trim()) {
-                  e.preventDefault()
-                  handleAddTag(tagInput)
-                }
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  placeholder="Add tag (namespace:name)"
-                  size="small"
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      color: 'white',
-                      '& fieldset': { borderColor: 'rgba(255,255,255,0.2)' },
-                      '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.4)' },
-                      '&.Mui-focused fieldset': { borderColor: 'primary.main' },
-                    },
-                    '& .MuiInputBase-input::placeholder': { color: 'rgba(255,255,255,0.4)' },
-                  }}
-                />
-              )}
-              slotProps={{
-                paper: {
-                  sx: {
-                    bgcolor: 'rgba(30,30,30,0.95)',
-                    backdropFilter: 'blur(10px)',
-                    color: 'white',
-                  },
-                },
-              }}
-            />
-          </Box>
-
-          {/* Save button */}
-          <Box sx={{ p: 2, borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-            <Button
-              variant="contained"
-              fullWidth
-              disabled={!hasChanges || isSaving}
-              onClick={handleSave}
-            >
-              {isSaving ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </Box>
-        </Box>
-      </Slide>
+      <LightboxViewerInfo
+        showInfoPanel={showInfoPanel}
+        infoPanelWidth={infoPanelWidth}
+        isMobile={isMobile}
+        item={item}
+        formatSizeStr={formatSizeStr}
+        editRating={editRating}
+        handleRatingChange={handleRatingChange}
+        editTags={editTags}
+        setEditTags={setEditTags}
+        tagSuggestions={tagSuggestions}
+        tagInput={tagInput}
+        setTagInput={setTagInput}
+        hasChanges={hasChanges}
+        setHasChanges={setHasChanges}
+        isSaving={isSaving}
+        handleSave={handleSave}
+      />
 
       {/* Delete Confirmation Dialog */}
       <Dialog

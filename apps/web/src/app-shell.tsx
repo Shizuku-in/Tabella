@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
+import { startTransition, useEffect, useRef, useState } from 'react'
 import {
   PlaylistAdd,
   GroupOutlined,
@@ -90,10 +90,9 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
   const isAdminUsersRoute = location.pathname.startsWith('/admin/users')
   const isProfileRoute = location.pathname.startsWith('/profile')
   const isAdmin = user?.role === 'admin'
-  const userRoleDisplay = useMemo(() => {
-    if (!user?.role) return 'Viewer'
-    return user.role.charAt(0).toUpperCase() + user.role.slice(1)
-  }, [user?.role])
+  const userRoleDisplay = !user?.role
+    ? 'Viewer'
+    : user.role.charAt(0).toUpperCase() + user.role.slice(1)
 
   useEffect(() => {
     if (searchVisible) {
