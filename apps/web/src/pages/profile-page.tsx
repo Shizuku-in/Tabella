@@ -18,6 +18,12 @@ import { useAuth } from '../auth/auth-provider.tsx'
 import { request, uploadWithProgress } from '../lib/api.ts'
 import type { SessionUser } from '../types.ts'
 
+interface ProfileFieldErrors {
+  username?: string
+  currentPassword?: string
+  newPassword?: string
+}
+
 export function ProfilePage() {
   const { user } = useAuth()
   const queryClient = useQueryClient()
@@ -28,6 +34,7 @@ export function ProfilePage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const [errors, setErrors] = useState<ProfileFieldErrors>({})
   
   const [snackbar, setSnackbar] = useState<{ open: boolean, message: string, severity: 'success' | 'error' }>({ 
     open: false, 
@@ -44,6 +51,7 @@ export function ProfilePage() {
   useEffect(() => {
     if (user) {
       setUsername(user.username)
+      setErrors({})
     }
   }, [user])
 
@@ -88,6 +96,16 @@ export function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const nextErrors = validateProfileFields({
+      username,
+      currentPassword,
+      newPassword,
+    })
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) {
+      return
+    }
+
     try {
       const updatedProfile = await profileMutation.mutateAsync()
       let finalAvatarUrl = updatedProfile.avatar_url
@@ -205,7 +223,7 @@ export function ProfilePage() {
             </Stack>
           </Box>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} noValidate>
             <Stack spacing={3}>
               <Typography variant="h6" sx={{ fontSize: '1.1rem' }}>
                 Account Details
@@ -213,9 +231,16 @@ export function ProfilePage() {
               
               <TextField
                 label="Username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
                 required
+                value={username}
+                onChange={(e) => {
+                  setUsername(e.target.value)
+                  if (errors.username) {
+                    setErrors((prev) => ({ ...prev, username: undefined }))
+                  }
+                }}
+                error={Boolean(errors.username)}
+                helperText={errors.username}
                 fullWidth
               />
 
@@ -227,16 +252,37 @@ export function ProfilePage() {
                 label="Current Password"
                 type="password"
                 value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
+                onChange={(e) => {
+                  setCurrentPassword(e.target.value)
+                  if (errors.currentPassword || errors.newPassword) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      currentPassword: undefined,
+                      newPassword: undefined,
+                    }))
+                  }
+                }}
+                error={Boolean(errors.currentPassword)}
                 fullWidth
-                helperText="Required if you want to set a new password"
+                helperText={errors.currentPassword ?? 'Required if you want to set a new password'}
               />
 
               <TextField
                 label="New Password"
                 type="password"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={(e) => {
+                  setNewPassword(e.target.value)
+                  if (errors.currentPassword || errors.newPassword) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      currentPassword: undefined,
+                      newPassword: undefined,
+                    }))
+                  }
+                }}
+                error={Boolean(errors.newPassword)}
+                helperText={errors.newPassword}
                 fullWidth
               />
 
@@ -245,7 +291,7 @@ export function ProfilePage() {
                   type="submit"
                   variant="outlined"
                   startIcon={<Save />}
-                  disabled={profileMutation.isPending || avatarMutation.isPending || (!!newPassword && !currentPassword)}
+                  disabled={profileMutation.isPending || avatarMutation.isPending}
                 >
                   Save
                 </Button>
@@ -267,4 +313,33 @@ export function ProfilePage() {
       </Snackbar>
     </Stack>
   )
+}
+
+function validateProfileFields({
+  username,
+  currentPassword,
+  newPassword,
+}: {
+  username: string
+  currentPassword: string
+  newPassword: string
+}): ProfileFieldErrors {
+  const errors: ProfileFieldErrors = {}
+  const trimmedUsername = username.trim()
+  const trimmedCurrentPassword = currentPassword.trim()
+  const trimmedNewPassword = newPassword.trim()
+
+  if (!trimmedUsername) {
+    errors.username = 'Username is required.'
+  }
+
+  if (trimmedNewPassword && !trimmedCurrentPassword) {
+    errors.currentPassword = 'Current password is required to set a new password.'
+  }
+
+  if (trimmedCurrentPassword && !trimmedNewPassword) {
+    errors.newPassword = 'New password is required when current password is provided.'
+  }
+
+  return errors
 }

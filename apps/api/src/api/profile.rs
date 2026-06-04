@@ -68,6 +68,28 @@ async fn update_profile(
     Json(payload): Json<UpdateProfileRequest>,
 ) -> Result<Json<UserResponse>, ApiError> {
     let user = require_user(&state, &jar).await?;
+    let current_password = payload
+        .current_password
+        .clone()
+        .filter(|value| !value.trim().is_empty());
+    let new_password = payload
+        .new_password
+        .clone()
+        .filter(|value| !value.trim().is_empty());
+
+    if current_password.is_some() && new_password.is_none() {
+        return Err(ApiError::bad_request(
+            "missing_new_password",
+            "New password is required when current password is provided",
+        ));
+    }
+
+    if new_password.is_some() && current_password.is_none() {
+        return Err(ApiError::bad_request(
+            "missing_current_password",
+            "Current password is required to set a new password",
+        ));
+    }
 
     let mut query_builder = sqlx::QueryBuilder::new("update users set updated_at = now()");
     let mut has_updates = false;
@@ -87,36 +109,29 @@ async fn update_profile(
         has_updates = true;
     }
 
-    if let Some(new_password) = payload.new_password {
-        if let Some(current_password) = payload.current_password {
-            let current_hash: String =
-                sqlx::query_scalar("select password_hash from users where id = $1")
-                    .bind(user.id)
-                    .fetch_one(&state.pool)
-                    .await
-                    .map_err(|e| ApiError::internal(e.into()))?;
+    if let (Some(new_password), Some(current_password)) = (new_password, current_password) {
+        let current_hash: String =
+            sqlx::query_scalar("select password_hash from users where id = $1")
+                .bind(user.id)
+                .fetch_one(&state.pool)
+                .await
+                .map_err(|e| ApiError::internal(e.into()))?;
 
-            if !crate::auth::verify_password(&current_password, &current_hash)
-                .map_err(|e| ApiError::internal(e.into()))?
-            {
-                return Err(ApiError::bad_request(
-                    "invalid_password",
-                    "Current password is incorrect",
-                ));
-            }
-
-            let new_hash =
-                hash_password(&new_password).map_err(|e| ApiError::internal(e.into()))?;
-
-            query_builder.push(", password_hash = ");
-            query_builder.push_bind(new_hash);
-            has_updates = true;
-        } else {
+        if !crate::auth::verify_password(&current_password, &current_hash)
+            .map_err(|e| ApiError::internal(e.into()))?
+        {
             return Err(ApiError::bad_request(
-                "missing_current_password",
-                "Current password is required to change password",
+                "invalid_password",
+                "Current password is incorrect",
             ));
         }
+
+        let new_hash =
+            hash_password(&new_password).map_err(|e| ApiError::internal(e.into()))?;
+
+        query_builder.push(", password_hash = ");
+        query_builder.push_bind(new_hash);
+        has_updates = true;
     }
 
     if !has_updates {

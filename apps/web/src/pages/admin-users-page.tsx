@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  Alert,
   Button,
   Dialog,
   DialogActions,
@@ -9,6 +10,7 @@ import {
   IconButton,
   Paper,
   Stack,
+  Snackbar,
   Table,
   TableBody,
   TableCell,
@@ -30,6 +32,15 @@ export function AdminUsersPage() {
   const [editingUser, setEditingUser] = useState<UserRow | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<UserRow | null>(null)
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  })
+
+  function showSnackbar(message: string, severity: 'success' | 'error') {
+    setSnackbar({ open: true, message, severity })
+  }
 
   const usersQuery = useQuery({
     queryKey: ['adminUsers'],
@@ -48,9 +59,10 @@ export function AdminUsersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
+      showSnackbar('User created successfully.', 'success')
     },
     onError: (err) => {
-      alert('Failed to create user: ' + err.message)
+      showSnackbar('Failed to create user: ' + err.message, 'error')
     },
   })
 
@@ -64,9 +76,10 @@ export function AdminUsersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
+      showSnackbar('User updated successfully.', 'success')
     },
     onError: (err) => {
-      alert('Failed to update user: ' + err.message)
+      showSnackbar('Failed to update user: ' + err.message, 'error')
     },
   })
 
@@ -78,11 +91,13 @@ export function AdminUsersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
+      showSnackbar('User deleted successfully.', 'success')
     },
     onError: (err) => {
-      alert('Failed to delete user: ' + err.message)
+      showSnackbar('Failed to delete user: ' + err.message, 'error')
     },
   })
+
 
   const handleCreateClick = () => {
     setEditingUser(null)
@@ -204,6 +219,17 @@ export function AdminUsersPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity={snackbar.severity} onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Stack>
   )
 }

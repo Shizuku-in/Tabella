@@ -22,11 +22,17 @@ interface UserDialogProps {
   user: UserRow | null
 }
 
+interface FieldErrors {
+  username?: string
+  password?: string
+}
+
 export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<UserRole>('viewer')
   const [loading, setLoading] = useState(false)
+  const [errors, setErrors] = useState<FieldErrors>({})
 
   const isEdit = !!user
 
@@ -42,11 +48,18 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
         setRole('viewer')
       }
       setLoading(false)
+      setErrors({})
     }
   }, [open, user])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const nextErrors = validateFields({ username, password, isEdit })
+    setErrors(nextErrors)
+    if (Object.keys(nextErrors).length > 0) {
+      return
+    }
+
     setLoading(true)
     try {
       if (isEdit) {
@@ -72,23 +85,37 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{isEdit ? 'Edit User' : 'Create User'}</DialogTitle>
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} noValidate>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
               label="Username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              disabled={isEdit}
               required={!isEdit}
+              value={username}
+              onChange={(e) => {
+                setUsername(e.target.value)
+                if (errors.username) {
+                  setErrors((prev) => ({ ...prev, username: undefined }))
+                }
+              }}
+              disabled={isEdit}
+              error={Boolean(errors.username)}
+              helperText={errors.username}
               fullWidth
             />
             <TextField
               label={isEdit ? "New Password" : "Password"}
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
               required={!isEdit}
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value)
+                if (errors.password) {
+                  setErrors((prev) => ({ ...prev, password: undefined }))
+                }
+              }}
+              error={Boolean(errors.password)}
+              helperText={errors.password ?? (isEdit ? 'Leave blank to keep the current password.' : undefined)}
               fullWidth
             />
             <FormControl fullWidth>
@@ -114,4 +141,26 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
       </form>
     </Dialog>
   )
+}
+
+function validateFields({
+  username,
+  password,
+  isEdit,
+}: {
+  username: string
+  password: string
+  isEdit: boolean
+}): FieldErrors {
+  const errors: FieldErrors = {}
+
+  if (!isEdit && !username.trim()) {
+    errors.username = 'Username is required.'
+  }
+
+  if (!isEdit && !password.trim()) {
+    errors.password = 'Password is required.'
+  }
+
+  return errors
 }
