@@ -50,8 +50,6 @@ impl ApiError {
         }
     }
 
-
-
     pub(crate) fn internal(error: anyhow::Error) -> Self {
         Self::Internal(error)
     }

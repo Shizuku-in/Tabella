@@ -51,7 +51,10 @@ async fn main() -> anyhow::Result<()> {
 
     // Spawn workers in the background
     tokio::spawn(import_worker::start_worker(pool.clone(), config.clone()));
-    tokio::spawn(tasks::cleanup::run_cleanup_worker(pool.clone(), config.media_root.clone()));
+    tokio::spawn(tasks::cleanup::run_cleanup_worker(
+        pool.clone(),
+        config.media_root.clone(),
+    ));
 
     let app = Router::new()
         .nest_service(

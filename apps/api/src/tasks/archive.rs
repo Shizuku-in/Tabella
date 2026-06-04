@@ -1,14 +1,9 @@
 use anyhow::{Context, Result};
 use sqlx::PgPool;
-use std::{
-    fs::File,
-    path::PathBuf,
-};
+use std::{fs::File, path::PathBuf};
 use tracing::{error, info};
 use uuid::Uuid;
 use zip::write::{FileOptions, ZipWriter};
-
-
 
 #[derive(Debug)]
 pub(crate) struct ArchiveTask {
@@ -56,8 +51,7 @@ pub(crate) async fn process_archive_job(pool: PgPool, task: ArchiveTask) {
 async fn spawn_blocking_zip(task: ArchiveTask) -> Result<String> {
     tokio::task::spawn_blocking(move || {
         let downloads_dir = task.media_root.join("downloads");
-        std::fs::create_dir_all(&downloads_dir)
-            .context("failed to create downloads directory")?;
+        std::fs::create_dir_all(&downloads_dir).context("failed to create downloads directory")?;
 
         let zip_filename = format!("{}.zip", task.job_id);
         let zip_path = downloads_dir.join(&zip_filename);
@@ -69,7 +63,8 @@ async fn spawn_blocking_zip(task: ArchiveTask) -> Result<String> {
             .large_file(true);
 
         for (abs_path, original_filename) in task.image_paths {
-            let mut img_file = File::open(&abs_path).context(format!("failed to open image: {}", abs_path))?;
+            let mut img_file =
+                File::open(&abs_path).context(format!("failed to open image: {}", abs_path))?;
             zip.start_file(original_filename, options)
                 .context("failed to start zip file entry")?;
             std::io::copy(&mut img_file, &mut zip).context("failed to write to zip")?;

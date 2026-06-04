@@ -14,7 +14,7 @@ pub(crate) async fn run_cleanup_worker(pool: PgPool, media_root: PathBuf) {
             SELECT id, file_path
             FROM download_jobs
             WHERE expires_at < now()
-            "#
+            "#,
         )
         .fetch_all(&pool)
         .await;

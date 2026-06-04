@@ -13,7 +13,10 @@ use uuid::Uuid;
 
 use crate::AppState;
 
-use super::{error::ApiError, guards::{require_admin, require_editor}};
+use super::{
+    error::ApiError,
+    guards::{require_admin, require_editor},
+};
 
 const MAX_ADMIN_UPLOAD_BYTES: usize = 1_024 * 1_024 * 1_024;
 

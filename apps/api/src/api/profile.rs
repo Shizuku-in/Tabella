@@ -126,8 +126,7 @@ async fn update_profile(
             ));
         }
 
-        let new_hash =
-            hash_password(&new_password).map_err(|e| ApiError::internal(e.into()))?;
+        let new_hash = hash_password(&new_password).map_err(|e| ApiError::internal(e.into()))?;
 
         query_builder.push(", password_hash = ");
         query_builder.push_bind(new_hash);
