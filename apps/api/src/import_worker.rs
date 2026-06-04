@@ -9,6 +9,7 @@ use walkdir::WalkDir;
 
 use crate::config::Config;
 use crate::image_processor::{compute_sha256, process_image};
+use crate::tags::{ParsedTag, parse_tag};
 
 pub(crate) async fn start_worker(pool: PgPool, config: Config) {
     tracing::info!("Starting background import worker");
@@ -346,27 +347,11 @@ async fn process_single_file(
     let metadata = process_image(file_path, &config.media_root, &sha256)?;
 
     // 3.5 Read metadata JSON if exists
-    let mut tags_to_insert: Vec<String> = Vec::new();
+    let mut tags_to_insert: Vec<ParsedTag> = Vec::new();
     let mut rating_to_insert = "safe".to_string();
-    let json_path = file_path.with_extension("json");
-    if json_path.exists() {
-        if let Ok(content) = std::fs::read_to_string(&json_path) {
-            if let Ok(json_val) = serde_json::from_str::<serde_json::Value>(&content) {
-                if let Some(tags_arr) = json_val.get("tags").and_then(|v| v.as_array()) {
-                    for tag_val in tags_arr {
-                        if let Some(tag_str) = tag_val.as_str() {
-                            tags_to_insert.push(tag_str.to_string());
-                        }
-                    }
-                }
-                if let Some(rating_str) = json_val.get("rating").and_then(|v| v.as_str()) {
-                    let r = rating_str.to_lowercase();
-                    if r == "safe" || r == "suggestive" || r == "explicit" {
-                        rating_to_insert = r;
-                    }
-                }
-            }
-        }
+    if let Some(sidecar) = read_sidecar_metadata(file_path) {
+        tags_to_insert = sidecar.tags;
+        rating_to_insert = sidecar.rating;
     }
 
     // 4. Move original file to media_root/originals/
@@ -428,18 +413,20 @@ async fn process_single_file(
                 r#"
                 WITH new_tag AS (
                     INSERT INTO tags (namespace, name, normalized_namespace, normalized_name)
-                    VALUES ('', $1, '', $2)
+                    VALUES ($1, $2, $3, $4)
                     ON CONFLICT (normalized_namespace, normalized_name) DO NOTHING
                     RETURNING id
                 )
                 SELECT id FROM new_tag
                 UNION ALL
-                SELECT id FROM tags WHERE normalized_namespace = '' AND normalized_name = $2
+                SELECT id FROM tags WHERE normalized_namespace = $3 AND normalized_name = $4
                 LIMIT 1
                 "#,
             )
-            .bind(&tag)
-            .bind(&tag.to_lowercase())
+            .bind(&tag.namespace)
+            .bind(&tag.name)
+            .bind(&tag.normalized_namespace)
+            .bind(&tag.normalized_name)
             .fetch_one(pool)
             .await?;
 
@@ -454,4 +441,75 @@ async fn process_single_file(
     }
 
     Ok(true)
+}
+
+#[derive(Debug, Clone)]
+struct SidecarImportMetadata {
+    tags: Vec<ParsedTag>,
+    rating: String,
+}
+
+fn read_sidecar_metadata(file_path: &Path) -> Option<SidecarImportMetadata> {
+    let json_path = file_path.with_extension("json");
+    if !json_path.exists() {
+        return None;
+    }
+
+    let content = std::fs::read_to_string(&json_path).ok()?;
+    let json_val = serde_json::from_str::<serde_json::Value>(&content).ok()?;
+
+    let mut tags = Vec::new();
+    if let Some(tags_arr) = json_val.get("tags").and_then(|value| value.as_array()) {
+        for tag_val in tags_arr {
+            if let Some(tag_str) = tag_val.as_str() {
+                if let Some(tag) = parse_tag(tag_str) {
+                    tags.push(tag);
+                }
+            }
+        }
+    }
+
+    let rating = json_val
+        .get("rating")
+        .and_then(|value| value.as_str())
+        .map(str::to_lowercase)
+        .filter(|value| value == "safe" || value == "suggestive" || value == "explicit")
+        .unwrap_or_else(|| String::from("safe"));
+
+    Some(SidecarImportMetadata { tags, rating })
+}
+
+#[cfg(test)]
+mod tests {
+    use std::fs;
+    use std::path::Path;
+
+    use super::read_sidecar_metadata;
+
+    #[test]
+    fn read_sidecar_metadata_preserves_namespaces() {
+        let root = std::env::temp_dir().join(format!(
+            "tabella-sidecar-test-{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        fs::create_dir_all(&root).unwrap();
+
+        let image_path = root.join("sample.png");
+        fs::write(&image_path, b"not-an-image").unwrap();
+        fs::write(
+            image_path.with_extension("json"),
+            r#"{"tags":["artist:anmi","general:1girl"],"rating":"safe"}"#,
+        )
+        .unwrap();
+
+        let metadata = read_sidecar_metadata(Path::new(&image_path)).unwrap();
+        assert_eq!(metadata.tags.len(), 2);
+        assert_eq!(metadata.tags[0].namespace, "artist");
+        assert_eq!(metadata.tags[0].name, "anmi");
+        assert_eq!(metadata.tags[1].namespace, "general");
+        assert_eq!(metadata.rating, "safe");
+    }
 }

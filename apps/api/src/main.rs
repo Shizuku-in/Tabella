@@ -5,6 +5,7 @@ mod dto;
 mod image_processor;
 
 mod import_worker;
+mod tags;
 
 use anyhow::Context;
 use axum::Router;

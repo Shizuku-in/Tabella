@@ -14,6 +14,7 @@ use crate::{
         ImageListItem, ImageSort, ListImagesQuery, ListImagesResponse, Rating, TagSuggestQuery,
         UpdateImageRequest,
     },
+    tags::parse_tag,
 };
 
 use super::{
@@ -285,10 +286,7 @@ fn push_image_cursor_filter(
     Ok(())
 }
 
-fn push_image_sort_order(
-    builder: &mut sqlx::QueryBuilder<'_, sqlx::Postgres>,
-    sort: ImageSort,
-) {
+fn push_image_sort_order(builder: &mut sqlx::QueryBuilder<'_, sqlx::Postgres>, sort: ImageSort) {
     match sort {
         ImageSort::Newest => {
             builder.push(" ORDER BY i.imported_at DESC, i.id DESC ");
@@ -347,12 +345,8 @@ async fn update_image(
             .map_err(|e| ApiError::internal(e.into()))?;
 
         for tag_str in tags {
-            let (namespace, name) = match tag_str.find(':') {
-                Some(pos) => (
-                    tag_str[..pos].to_string(),
-                    tag_str[pos + 1..].to_string(),
-                ),
-                None => (String::new(), tag_str.clone()),
+            let Some(tag) = parse_tag(tag_str) else {
+                continue;
             };
 
             let tag_id: i64 = sqlx::query_scalar(
@@ -369,10 +363,10 @@ async fn update_image(
                 LIMIT 1
                 "#,
             )
-            .bind(&namespace)
-            .bind(&name)
-            .bind(&namespace.to_lowercase())
-            .bind(&name.to_lowercase())
+            .bind(&tag.namespace)
+            .bind(&tag.name)
+            .bind(&tag.normalized_namespace)
+            .bind(&tag.normalized_name)
             .fetch_one(&state.pool)
             .await
             .map_err(|e| ApiError::internal(e.into()))?;
@@ -475,14 +469,12 @@ async fn add_favorite(
 ) -> Result<Response, ApiError> {
     let user = require_user(&state, &jar).await?;
 
-    sqlx::query(
-        "INSERT INTO favorites (user_id, image_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-    )
-    .bind(user.id)
-    .bind(image_id)
-    .execute(&state.pool)
-    .await
-    .map_err(|e| ApiError::internal(e.into()))?;
+    sqlx::query("INSERT INTO favorites (user_id, image_id) VALUES ($1, $2) ON CONFLICT DO NOTHING")
+        .bind(user.id)
+        .bind(image_id)
+        .execute(&state.pool)
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
 
     Ok(StatusCode::NO_CONTENT.into_response())
 }
