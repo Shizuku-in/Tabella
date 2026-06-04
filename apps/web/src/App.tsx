@@ -62,8 +62,10 @@ function App() {
                   >
                     <Route index element={<GalleryPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
-                    <Route element={<RequireRole role="admin" />}>
+                    <Route element={<RequireRole role="editor" />}>
                       <Route path="/admin/imports" element={<AdminImportsPage />} />
+                    </Route>
+                    <Route element={<RequireRole role="admin" />}>
                       <Route path="/admin/users" element={<AdminUsersPage />} />
                       <Route path="/admin/server" element={<AdminServerPage />} />
                     </Route>

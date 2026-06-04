@@ -110,6 +110,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
   const isAdminUsersRoute = location.pathname.startsWith('/admin/users')
   const isProfileRoute = location.pathname.startsWith('/profile')
   const isAdmin = user?.role === 'admin'
+  const isEditor = user?.role === 'admin' || user?.role === 'editor'
   const userRoleDisplay = !user?.role
     ? 'Viewer'
     : user.role.charAt(0).toUpperCase() + user.role.slice(1)
@@ -659,7 +660,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
           </MenuItem>
         ) : null}
 
-        {isAdmin ? (
+        {isEditor ? (
           <MenuItem
             component={RouterLink}
             to="/admin/imports"

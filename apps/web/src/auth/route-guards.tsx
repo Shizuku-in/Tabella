@@ -24,6 +24,12 @@ export function RequireAuth() {
   return <Outlet />
 }
 
+const ROLE_WEIGHT: Record<UserRole, number> = {
+  viewer: 1,
+  editor: 2,
+  admin: 3,
+}
+
 export function RequireRole({ role }: { role: UserRole }) {
   const { status, user } = useAuth()
 
@@ -36,7 +42,7 @@ export function RequireRole({ role }: { role: UserRole }) {
     )
   }
 
-  if (!user || user.role !== role) {
+  if (!user || ROLE_WEIGHT[user.role] < ROLE_WEIGHT[role]) {
     return <Navigate to="/" replace />
   }
 

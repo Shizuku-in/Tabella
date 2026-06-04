@@ -23,6 +23,7 @@ import { useMutation, useQuery } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
 import { request, uploadWithProgress } from '../lib/api.ts'
 import type { ImportJobRow, ImportJobStatus } from '../types.ts'
+import { useAuth } from '../auth/auth-provider.tsx'
 
 interface LocalUploadJob {
   id: string
@@ -35,6 +36,7 @@ interface LocalUploadJob {
 }
 
 export function AdminImportsPage() {
+  const { user } = useAuth()
   const [serverDialogOpen, setServerDialogOpen] = useState(false)
   const [serverPath, setServerPath] = useState('')
   const [activeUploads, setActiveUploads] = useState<Record<string, LocalUploadJob>>({})
@@ -184,6 +186,7 @@ export function AdminImportsPage() {
             variant="outlined" 
             startIcon={<CloudUploadOutlined />}
             onClick={() => setServerDialogOpen(true)}
+            disabled={user?.role !== 'admin'}
           >
             Server
           </Button>

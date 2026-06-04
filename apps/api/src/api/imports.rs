@@ -13,7 +13,7 @@ use uuid::Uuid;
 
 use crate::AppState;
 
-use super::{error::ApiError, guards::require_admin};
+use super::{error::ApiError, guards::{require_admin, require_editor}};
 
 const MAX_ADMIN_UPLOAD_BYTES: usize = 1_024 * 1_024 * 1_024;
 
@@ -94,7 +94,7 @@ async fn get_import_job(
     jar: CookieJar,
     Path(job_id): Path<Uuid>,
 ) -> Result<Json<serde_json::Value>, ApiError> {
-    let _admin = require_admin(&state, &jar).await?;
+    let _user = require_editor(&state, &jar).await?;
 
     let job: Option<JobStatusRow> = sqlx::query_as(
         r#"
@@ -127,7 +127,7 @@ async fn list_import_jobs(
     State(state): State<AppState>,
     jar: CookieJar,
 ) -> Result<Json<serde_json::Value>, ApiError> {
-    let _user = require_admin(&state, &jar).await?;
+    let _user = require_editor(&state, &jar).await?;
 
     let limit = 50i64;
     let rows = sqlx::query(
@@ -170,7 +170,7 @@ async fn upload_import_files(
     Query(query): Query<UploadQuery>,
     mut multipart: Multipart,
 ) -> Result<Json<serde_json::Value>, ApiError> {
-    let user = require_admin(&state, &jar).await?;
+    let user = require_editor(&state, &jar).await?;
 
     // Create a temp directory for this upload batch
     let batch_id = uuid::Uuid::new_v4();
