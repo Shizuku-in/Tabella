@@ -1,23 +1,23 @@
 import { useEffect } from 'react'
 
-type EventCallback = (data: any) => void
+type EventCallback = (data: unknown) => void
 
 class ServerEventsManager {
   private eventSource: EventSource | null = null
   private listeners: Map<string, Set<EventCallback>> = new Map()
+  private wrappers = new WeakMap<EventCallback, EventListener>()
   private connectionCount = 0
 
   connect() {
     this.connectionCount++
     if (!this.eventSource) {
-      console.log('Connecting to SSE...')
       this.eventSource = new EventSource('/api/events')
-      
+
       this.eventSource.onerror = (error) => {
         console.error('SSE Error:', error)
       }
 
-      // Add all existing listeners to the new EventSource
+      // Re-attach all existing listeners to the new EventSource
       this.listeners.forEach((callbacks, eventName) => {
         callbacks.forEach((callback) => {
           this.attachListener(eventName, callback)
@@ -29,7 +29,6 @@ class ServerEventsManager {
   disconnect() {
     this.connectionCount--
     if (this.connectionCount <= 0 && this.eventSource) {
-      console.log('Disconnecting from SSE...')
       this.eventSource.close()
       this.eventSource = null
       this.connectionCount = 0
@@ -39,26 +38,25 @@ class ServerEventsManager {
   private attachListener(eventName: string, callback: EventCallback) {
     if (!this.eventSource) return
 
-    // We create a wrapper to parse the JSON data automatically
-    const wrapper = (e: MessageEvent) => {
+    const wrapper: EventListener = (e) => {
       try {
-        const data = JSON.parse(e.data)
+        const data = JSON.parse((e as MessageEvent).data) as unknown
         callback(data)
       } catch (err) {
         console.error('Failed to parse SSE data', err)
       }
     }
-    
-    // Store wrapper on callback for removal later
-    ;(callback as any)._wrapper = wrapper
+
+    this.wrappers.set(callback, wrapper)
     this.eventSource.addEventListener(eventName, wrapper)
   }
 
   private detachListener(eventName: string, callback: EventCallback) {
     if (!this.eventSource) return
-    const wrapper = (callback as any)._wrapper
+    const wrapper = this.wrappers.get(callback)
     if (wrapper) {
       this.eventSource.removeEventListener(eventName, wrapper)
+      this.wrappers.delete(callback)
     }
   }
 
@@ -67,7 +65,7 @@ class ServerEventsManager {
       this.listeners.set(eventName, new Set())
     }
     this.listeners.get(eventName)!.add(callback)
-    
+
     this.attachListener(eventName, callback)
 
     return () => {
@@ -89,7 +87,7 @@ export function useServerEvents(eventName: string, callback: EventCallback) {
   useEffect(() => {
     serverEvents.connect()
     const unsubscribe = serverEvents.subscribe(eventName, callback)
-    
+
     return () => {
       unsubscribe()
       serverEvents.disconnect()

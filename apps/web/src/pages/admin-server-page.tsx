@@ -21,6 +21,7 @@ interface ServerSettings {
   download_retention_hours: number
   session_ttl_hours: number
   secure_cookies: boolean
+  import_progress_batch_size: number
 }
 
 interface ServerSettingsForm {
@@ -29,6 +30,7 @@ interface ServerSettingsForm {
   download_retention_hours: string
   session_ttl_hours: string
   secure_cookies: boolean
+  import_progress_batch_size: string
 }
 
 interface ServerSettingsFieldErrors {
@@ -36,6 +38,7 @@ interface ServerSettingsFieldErrors {
   max_download_total_bytes?: string
   download_retention_hours?: string
   session_ttl_hours?: string
+  import_progress_batch_size?: string
 }
 
 export function AdminServerPage() {
@@ -194,6 +197,22 @@ export function AdminServerPage() {
 
               <Stack spacing={3}>
                 <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}>
+                  Imports
+                </Typography>
+                <TextField
+                  label="Import Progress Batch Size"
+                  type="number"
+                  required
+                  value={settings.import_progress_batch_size}
+                  onChange={(e) => handleNumberChange('import_progress_batch_size', e.target.value)}
+                  error={Boolean(errors.import_progress_batch_size)}
+                  helperText={errors.import_progress_batch_size ?? "How many files to process before updating progress in the database. Lower values give more frequent UI updates but higher DB load."}
+                  fullWidth
+                />
+              </Stack>
+
+              <Stack spacing={3}>
+                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}>
                   Security & Sessions
                 </Typography>
                 <TextField
@@ -249,6 +268,7 @@ function toFormState(settings: ServerSettings): ServerSettingsForm {
     download_retention_hours: settings.download_retention_hours.toString(),
     session_ttl_hours: settings.session_ttl_hours.toString(),
     secure_cookies: settings.secure_cookies,
+    import_progress_batch_size: settings.import_progress_batch_size.toString(),
   }
 }
 
@@ -259,6 +279,7 @@ function parseFormState(settings: ServerSettingsForm): ServerSettings {
     download_retention_hours: Number.parseInt(settings.download_retention_hours.trim(), 10),
     session_ttl_hours: Number.parseInt(settings.session_ttl_hours.trim(), 10),
     secure_cookies: settings.secure_cookies,
+    import_progress_batch_size: Number.parseInt(settings.import_progress_batch_size.trim(), 10),
   }
 }
 
@@ -288,6 +309,9 @@ function validateServerSettingsFields(settings: ServerSettingsForm): ServerSetti
 
   const sessionTtl = validatePositiveInteger(settings.session_ttl_hours, 'Session TTL')
   if (sessionTtl) errors.session_ttl_hours = sessionTtl
+
+  const batchSize = validatePositiveInteger(settings.import_progress_batch_size, 'Import progress batch size')
+  if (batchSize) errors.import_progress_batch_size = batchSize
 
   return errors
 }

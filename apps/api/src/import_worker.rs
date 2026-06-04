@@ -9,7 +9,7 @@ use walkdir::WalkDir;
 
 use crate::AppState;
 use crate::ServerEvent;
-use crate::config::Config;
+use crate::config::{Config, DynamicConfig};
 use crate::image_processor::{compute_sha256, process_image};
 use crate::tags::{ParsedTag, parse_tag};
 
@@ -58,6 +58,7 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
     tracing::info!("Found import job: {} (type: {})", job.id, job.source_type);
 
     // 2. Process the job
+    let dynamic_config = DynamicConfig::load(&state.pool, &state.config).await;
     let result = run_import_job(
         job.id,
         &job.source_archive_path,
@@ -65,6 +66,7 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
         &state.pool,
         &state.config,
         &state.tx,
+        dynamic_config.import_progress_batch_size,
     )
     .await;
 
@@ -113,6 +115,7 @@ async fn run_import_job(
     pool: &PgPool,
     config: &Config,
     tx: &tokio::sync::broadcast::Sender<ServerEvent>,
+    progress_batch_size: usize,
 ) -> Result<bool> {
     let mut source_path = PathBuf::from(source_path_str);
 
@@ -238,8 +241,8 @@ async fn run_import_job(
                     }
                 }
 
-                // Report progress every file now that we use SSE
-                if true {
+                // Report extraction progress at configured batch intervals
+                if i % progress_batch_size == 0 && i > 0 {
                     sqlx::query(
                         "UPDATE import_jobs SET processed_items = $1, updated_at = now() WHERE id = $2"
                     )
@@ -332,8 +335,8 @@ async fn run_import_job(
             }
         }
 
-        // Update progress every item now that we use SSE
-        if true {
+        // Update progress at configured batch intervals
+        if (index + 1) % progress_batch_size == 0 || (index + 1) == total as usize {
             sqlx::query(
                 "UPDATE import_jobs SET processed_items = $1, succeeded_items = $2, failed_items = $3, heartbeat_at = now(), updated_at = now() WHERE id = $4",
             )

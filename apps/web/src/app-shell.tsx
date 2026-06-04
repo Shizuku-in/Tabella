@@ -90,7 +90,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     setFavoritesOnly,
     selectionMode,
     setSelectionMode,
-    selectedIds,
+
     setSelectedIds,
     activeDownloadJobId,
     setActiveDownloadJobId,
@@ -136,8 +136,9 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     return () => clearTimeout(timer)
   }, [tagInput, searchTags])
 
-  useServerEvents('download_job_updated', useCallback(async (data: any) => {
-    if (!activeDownloadJobId || data.id !== activeDownloadJobId) return
+  useServerEvents('download_job_updated', useCallback(async (data: unknown) => {
+    const jobId = typeof data === 'object' && data !== null && 'id' in data ? (data as { id: unknown }).id : null
+    if (!activeDownloadJobId || jobId !== activeDownloadJobId) return
 
     try {
       const response = await fetch(`/api/download-jobs/${activeDownloadJobId}`)

@@ -15,9 +15,15 @@ pub(crate) struct DynamicConfig {
     pub(crate) download_retention_hours: u64,
     pub(crate) session_ttl_hours: u64,
     pub(crate) secure_cookies: bool,
+    #[serde(default = "DynamicConfig::default_import_progress_batch_size")]
+    pub(crate) import_progress_batch_size: usize,
 }
 
 impl DynamicConfig {
+    fn default_import_progress_batch_size() -> usize {
+        10
+    }
+
     pub async fn load(pool: &PgPool, fallback: &Config) -> Self {
         let row = sqlx::query("SELECT value FROM settings WHERE key = 'global'")
             .fetch_optional(pool)
@@ -39,6 +45,7 @@ impl DynamicConfig {
             download_retention_hours: fallback.download_retention_hours,
             session_ttl_hours: fallback.session_ttl_hours,
             secure_cookies: fallback.secure_cookies,
+            import_progress_batch_size: fallback.import_progress_batch_size,
         }
     }
 
@@ -54,6 +61,9 @@ impl DynamicConfig {
         }
         if self.session_ttl_hours == 0 {
             bail!("session_ttl_hours must be greater than 0");
+        }
+        if self.import_progress_batch_size == 0 {
+            bail!("import_progress_batch_size must be greater than 0");
         }
 
         Ok(())
@@ -87,6 +97,7 @@ pub(crate) struct Config {
     pub(crate) max_download_images: usize,
     pub(crate) max_download_total_bytes: u64,
     pub(crate) download_retention_hours: u64,
+    pub(crate) import_progress_batch_size: usize,
 }
 
 impl Default for Config {
@@ -104,6 +115,7 @@ impl Default for Config {
             max_download_images: 500,
             max_download_total_bytes: 2 * 1024 * 1024 * 1024,
             download_retention_hours: 24,
+            import_progress_batch_size: 10,
         }
     }
 }
@@ -132,6 +144,8 @@ impl Config {
                 .unwrap_or(defaults.max_download_total_bytes),
             download_retention_hours: read_env("TABELLA_DOWNLOAD_RETENTION_HOURS")
                 .unwrap_or(defaults.download_retention_hours),
+            import_progress_batch_size: read_env("TABELLA_IMPORT_PROGRESS_BATCH_SIZE")
+                .unwrap_or(defaults.import_progress_batch_size),
         })
     }
 }
@@ -156,6 +170,7 @@ mod tests {
             download_retention_hours: defaults.download_retention_hours,
             session_ttl_hours: defaults.session_ttl_hours,
             secure_cookies: defaults.secure_cookies,
+            import_progress_batch_size: defaults.import_progress_batch_size,
         };
 
         config.session_ttl_hours = 0;
