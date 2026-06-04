@@ -89,10 +89,14 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     setFavoritesOnly,
     selectionMode,
     setSelectionMode,
+    selectedIds,
     setSelectedIds,
     activeDownloadJobId,
     setActiveDownloadJobId,
+    topBarConfig,
   } = useGalleryUi()
+
+
   const [searchVisible, setSearchVisible] = useState(() => searchTags.length > 0)
   const [sortAnchor, setSortAnchor] = useState<HTMLElement | null>(null)
   const [layoutAnchor, setLayoutAnchor] = useState<HTMLElement | null>(null)
@@ -309,166 +313,180 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
 
             {isGalleryRoute ? (
               <>
-                <Tooltip title="Sort">
-                  <IconButton
-                    color={sortAnchor ? 'primary' : 'default'}
-                    aria-label="sort options"
-                    onClick={(event) => setSortAnchor(event.currentTarget)}
-                    sx={{ p: 0.75, borderRadius: '50%' }}
-                  >
-                    <Sort fontSize="small" />
-                  </IconButton>
-                </Tooltip>
+                {topBarConfig.sort && (
+                  <Tooltip title="Sort">
+                    <IconButton
+                      color={sortAnchor ? 'primary' : 'default'}
+                      aria-label="sort options"
+                      onClick={(event) => setSortAnchor(event.currentTarget)}
+                      sx={{ p: 0.75, borderRadius: '50%' }}
+                    >
+                      <Sort fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
 
-                <Tooltip title="Layout">
-                  <IconButton
-                    color={layoutAnchor ? 'primary' : 'default'}
-                    aria-label="layout options"
-                    onClick={(event) => setLayoutAnchor(event.currentTarget)}
-                    sx={{ p: 0.75, borderRadius: '50%' }}
-                  >
-                    <ArtTrack fontSize="small" />
-                  </IconButton>
-                </Tooltip>
+                {topBarConfig.layout && (
+                  <Tooltip title="Layout">
+                    <IconButton
+                      color={layoutAnchor ? 'primary' : 'default'}
+                      aria-label="layout options"
+                      onClick={(event) => setLayoutAnchor(event.currentTarget)}
+                      sx={{ p: 0.75, borderRadius: '50%' }}
+                    >
+                      <ArtTrack fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
 
-                <Tooltip title="Rating">
-                  <IconButton
-                    color={ratingFilter !== 'all' || ratingAnchor ? 'primary' : 'default'}
-                    aria-label="rating options"
-                    onClick={(event) => setRatingAnchor(event.currentTarget)}
-                    sx={{ p: 0.75, borderRadius: '50%' }}
-                  >
-                    {ratingFilter !== 'all' ? <StarOutlined fontSize="small" /> : <StarBorderOutlined fontSize="small" />}
-                  </IconButton>
-                </Tooltip>
+                {topBarConfig.rating && (
+                  <Tooltip title="Rating">
+                    <IconButton
+                      color={ratingFilter !== 'all' || ratingAnchor ? 'primary' : 'default'}
+                      aria-label="rating options"
+                      onClick={(event) => setRatingAnchor(event.currentTarget)}
+                      sx={{ p: 0.75, borderRadius: '50%' }}
+                    >
+                      {ratingFilter !== 'all' ? <StarOutlined fontSize="small" /> : <StarBorderOutlined fontSize="small" />}
+                    </IconButton>
+                  </Tooltip>
+                )}
 
-                <Tooltip title="Favorites Only">
-                  <IconButton
-                    color={favoritesOnly ? 'primary' : 'default'}
-                    aria-label="toggle favorites only"
-                    onClick={() => setFavoritesOnly(!favoritesOnly)}
-                    sx={{ p: 0.75, borderRadius: '50%' }}
-                  >
-                    {favoritesOnly ? <FavoriteOutlined fontSize="small" /> : <FavoriteBorderOutlined fontSize="small" />}
-                  </IconButton>
-                </Tooltip>
+                {topBarConfig.favorites && (
+                  <Tooltip title="Favorites Only">
+                    <IconButton
+                      color={favoritesOnly ? 'primary' : 'default'}
+                      aria-label="toggle favorites only"
+                      onClick={() => setFavoritesOnly(!favoritesOnly)}
+                      sx={{ p: 0.75, borderRadius: '50%' }}
+                    >
+                      {favoritesOnly ? <FavoriteOutlined fontSize="small" /> : <FavoriteBorderOutlined fontSize="small" />}
+                    </IconButton>
+                  </Tooltip>
+                )}
 
-                <Tooltip title="Select Multiple">
-                  <IconButton
-                    color={selectionMode ? 'primary' : 'default'}
-                    onClick={() => {
-                      setSelectionMode(!selectionMode)
-                      if (selectionMode) {
-                        setSelectedIds(new Set())
-                      }
-                    }}
-                    sx={{ p: 0.75, borderRadius: '50%' }}
-                  >
-                    {selectionMode ? <CheckCircle fontSize="small" /> : <CheckCircleOutline fontSize="small" />}
-                  </IconButton>
-                </Tooltip>
+                {topBarConfig.selectMultiple && (
+                  <Tooltip title="Select Multiple">
+                    <IconButton
+                      color={selectionMode ? 'primary' : 'default'}
+                      onClick={() => {
+                        setSelectionMode(!selectionMode)
+                        if (selectionMode) {
+                          setSelectedIds(new Set())
+                        }
+                      }}
+                      sx={{ p: 0.75, borderRadius: '50%' }}
+                    >
+                      {selectionMode ? <CheckCircle fontSize="small" /> : <CheckCircleOutline fontSize="small" />}
+                    </IconButton>
+                  </Tooltip>
+                )}
 
-                <Box
-                  sx={{
-                    width: searchVisible ? { xs: 150, sm: 184, md: 212 } : 0,
-                    opacity: searchVisible ? 1 : 0,
-                    transform: searchVisible ? 'translateX(0)' : 'translateX(14px)',
-                    transformOrigin: 'right center',
-                    overflow: 'hidden',
-                    pointerEvents: searchVisible ? 'auto' : 'none',
-                    transition:
-                      'width 180ms cubic-bezier(0.4, 0, 0.2, 1), opacity 120ms ease, transform 180ms cubic-bezier(0.4, 0, 0.2, 1), margin 180ms cubic-bezier(0.4, 0, 0.2, 1)',
-                    ml: searchVisible ? 1.25 : 0,
-                    mr: searchVisible ? 0.25 : 0,
-                  }}
-                >
-                  <Autocomplete
-                    multiple
-                    freeSolo
-                    options={tagSuggestions}
-                    filterOptions={(x) => x}
-                    value={searchTags}
-                    inputValue={tagInput}
-                    onInputChange={(_, newValue) => setTagInput(newValue)}
-                    onChange={(_, newValue) => {
-                      const uniqueTags = Array.from(new Set(newValue as string[]))
-                      setSearchTags(uniqueTags)
-                    }}
-                    onBlur={handleSearchBlur}
-                    size="small"
-                    renderTags={(value, getTagProps) =>
-                      value.map((option, index) => {
-                        const { key, ...chipProps } = getTagProps({ index })
-                        return (
-                          <Chip
-                            {...chipProps}
-                            key={key}
-                            label={option}
-                            size="small"
+                {topBarConfig.search && (
+                  <>
+                    <Box
+                      sx={{
+                        width: searchVisible ? { xs: 150, sm: 184, md: 212 } : 0,
+                        opacity: searchVisible ? 1 : 0,
+                        transform: searchVisible ? 'translateX(0)' : 'translateX(14px)',
+                        transformOrigin: 'right center',
+                        overflow: 'hidden',
+                        pointerEvents: searchVisible ? 'auto' : 'none',
+                        transition:
+                          'width 180ms cubic-bezier(0.4, 0, 0.2, 1), opacity 120ms ease, transform 180ms cubic-bezier(0.4, 0, 0.2, 1), margin 180ms cubic-bezier(0.4, 0, 0.2, 1)',
+                        ml: searchVisible ? 1.25 : 0,
+                        mr: searchVisible ? 0.25 : 0,
+                      }}
+                    >
+                      <Autocomplete
+                        multiple
+                        freeSolo
+                        options={tagSuggestions}
+                        filterOptions={(x) => x}
+                        value={searchTags}
+                        inputValue={tagInput}
+                        onInputChange={(_, newValue) => setTagInput(newValue)}
+                        onChange={(_, newValue) => {
+                          const uniqueTags = Array.from(new Set(newValue as string[]))
+                          setSearchTags(uniqueTags)
+                        }}
+                        onBlur={handleSearchBlur}
+                        size="small"
+                        renderTags={(value, getTagProps) =>
+                          value.map((option, index) => {
+                            const { key, ...chipProps } = getTagProps({ index })
+                            return (
+                              <Chip
+                                {...chipProps}
+                                key={key}
+                                label={option}
+                                size="small"
+                                sx={{
+                                  height: 20,
+                                  fontSize: '0.75rem',
+                                  bgcolor: (theme) => alpha(getTagColor(option, theme), 0.15),
+                                  color: (theme) => getTagColor(option, theme),
+                                }}
+                              />
+                            )
+                          })
+                        }
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            inputRef={searchInputRef}
+                            variant="standard"
+                            placeholder={searchTags.length === 0 ? "Search" : ""}
+                            fullWidth
+                            onKeyDown={(event) => {
+                              if (event.key === 'Escape' && searchTags.length === 0) {
+                                setSearchVisible(false)
+                              }
+                            }}
                             sx={{
-                              height: 20,
-                              fontSize: '0.75rem',
-                              bgcolor: (theme) => alpha(getTagColor(option, theme), 0.15),
-                              color: (theme) => getTagColor(option, theme),
+                              '& .MuiInput-root': {
+                                minHeight: 30,
+                                fontSize: '0.9rem',
+                                color: 'text.primary',
+                                '&:before': { borderBottomColor: 'divider' },
+                                '&:after': { borderBottomWidth: '2px' },
+                                '&:hover:not(.Mui-disabled, .Mui-error):before': { borderBottomColor: 'text.secondary' },
+                                pt: 0,
+                                pb: 0.5,
+                                flexWrap: 'nowrap',
+                                overflowX: 'auto',
+                                scrollbarWidth: 'none',
+                                '&::-webkit-scrollbar': { display: 'none' },
+                              },
+                              '& .MuiInputBase-input': {
+                                py: 0.25,
+                                px: 0,
+                              },
                             }}
                           />
-                        )
-                      })
-                    }
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        inputRef={searchInputRef}
-                        variant="standard"
-                        placeholder={searchTags.length === 0 ? "Search" : ""}
-                        fullWidth
-                        onKeyDown={(event) => {
-                          if (event.key === 'Escape' && searchTags.length === 0) {
+                        )}
+                      />
+                    </Box>
+
+                    <Tooltip title="Search">
+                      <IconButton
+                        color={searchVisible || searchTags.length > 0 ? 'primary' : 'default'}
+                        aria-label="toggle search"
+                        onClick={() => {
+                          if (searchVisible && searchTags.length === 0) {
                             setSearchVisible(false)
+                          } else {
+                            setSearchVisible(true)
+                            setTimeout(() => searchInputRef.current?.focus(), 100)
                           }
                         }}
-                        sx={{
-                          '& .MuiInput-root': {
-                            minHeight: 30,
-                            fontSize: '0.9rem',
-                            color: 'text.primary',
-                            '&:before': { borderBottomColor: 'divider' },
-                            '&:after': { borderBottomWidth: '2px' },
-                            '&:hover:not(.Mui-disabled, .Mui-error):before': { borderBottomColor: 'text.secondary' },
-                            pt: 0,
-                            pb: 0.5,
-                            flexWrap: 'nowrap',
-                            overflowX: 'auto',
-                            scrollbarWidth: 'none',
-                            '&::-webkit-scrollbar': { display: 'none' },
-                          },
-                          '& .MuiInputBase-input': {
-                            py: 0.25,
-                            px: 0,
-                          },
-                        }}
-                      />
-                    )}
-                  />
-                </Box>
-
-                <Tooltip title="Search">
-                  <IconButton
-                    color={searchVisible || searchTags.length > 0 ? 'primary' : 'default'}
-                    aria-label="toggle search"
-                    onClick={() => {
-                      if (searchVisible && searchTags.length === 0) {
-                        setSearchVisible(false)
-                      } else {
-                        setSearchVisible(true)
-                        setTimeout(() => searchInputRef.current?.focus(), 100)
-                      }
-                    }}
-                    sx={{ p: 0.75, borderRadius: '50%' }}
-                  >
-                    <Search fontSize="small" />
-                  </IconButton>
-                </Tooltip>
+                        sx={{ p: 0.75, borderRadius: '50%' }}
+                      >
+                        <Search fontSize="small" />
+                      </IconButton>
+                    </Tooltip>
+                  </>
+                )}
               </>
             ) : null}
           </Stack>
@@ -490,20 +508,22 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
               </Tooltip>
             )}
 
-            <Tooltip title={mode === 'light' ? 'Dark mode' : 'Light mode'}>
-              <IconButton
-                color="default"
-                onClick={onToggleMode}
-                aria-label="toggle color mode"
-                sx={{ p: 0.75, borderRadius: '50%' }}
-              >
-                {mode === 'light' ? (
-                  <LightModeOutlined fontSize="small" />
-                ) : (
-                  <DarkModeOutlined fontSize="small" />
-                )}
-              </IconButton>
-            </Tooltip>
+            {topBarConfig.themeToggle && (
+              <Tooltip title={mode === 'light' ? 'Dark mode' : 'Light mode'}>
+                <IconButton
+                  color="default"
+                  onClick={onToggleMode}
+                  aria-label="toggle color mode"
+                  sx={{ p: 0.75, borderRadius: '50%' }}
+                >
+                  {mode === 'light' ? (
+                    <LightModeOutlined fontSize="small" />
+                  ) : (
+                    <DarkModeOutlined fontSize="small" />
+                  )}
+                </IconButton>
+              </Tooltip>
+            )}
 
             <Tooltip title="Settings">
               <IconButton
