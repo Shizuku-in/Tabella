@@ -23,6 +23,7 @@ import {
 import {
   AppBar,
   Autocomplete,
+  Alert,
   Avatar,
   Box,
   Chip,
@@ -30,6 +31,7 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  Snackbar,
   Stack,
   TextField,
   Tooltip,
@@ -104,6 +106,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
   const [ratingAnchor, setRatingAnchor] = useState<HTMLElement | null>(null)
   const [userAnchor, setUserAnchor] = useState<HTMLElement | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
+  const [errorSnackbar, setErrorSnackbar] = useState<string | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const isGalleryRoute = location.pathname === '/'
   const isAdminImportsRoute = location.pathname.startsWith('/admin/imports')
@@ -136,9 +139,8 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     return () => clearTimeout(timer)
   }, [tagInput, searchTags])
 
-  useServerEvents('download_job_updated', useCallback(async (data: unknown) => {
-    const jobId = typeof data === 'object' && data !== null && 'id' in data ? (data as { id: unknown }).id : null
-    if (!activeDownloadJobId || jobId !== activeDownloadJobId) return
+  useServerEvents<{ id: unknown }>('download_job_updated', useCallback(async (data) => {
+    if (!activeDownloadJobId || data.id !== activeDownloadJobId) return
 
     try {
       const response = await fetch(`/api/download-jobs/${activeDownloadJobId}`)
@@ -150,7 +152,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
       const statusData = await response.json()
       if (statusData.status === 'completed') {
         setActiveDownloadJobId(null)
-        
+
         // Trigger file download
         const a = document.createElement('a')
         a.href = `/api/download-jobs/${activeDownloadJobId}/file`
@@ -160,7 +162,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
         document.body.removeChild(a)
       } else if (statusData.status === 'failed') {
         setActiveDownloadJobId(null)
-        alert(`Download job failed: ${statusData.error_message}`)
+        setErrorSnackbar(statusData.error_message ?? 'Download job failed.')
       }
     } catch (e) {
       console.error('Failed to check download job:', e)
@@ -696,6 +698,17 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
       >
         <Outlet />
       </Container>
+
+      <Snackbar
+        open={errorSnackbar !== null}
+        autoHideDuration={6000}
+        onClose={() => setErrorSnackbar(null)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="error" onClose={() => setErrorSnackbar(null)} sx={{ width: '100%' }}>
+          {errorSnackbar}
+        </Alert>
+      </Snackbar>
     </Box>
   )
 }
