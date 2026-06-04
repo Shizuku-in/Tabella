@@ -1,4 +1,4 @@
-import { Favorite, FavoriteBorder } from '@mui/icons-material'
+import { DownloadOutlined, Favorite, FavoriteBorder } from '@mui/icons-material'
 import { Box, IconButton, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { LazyImage } from './lazy-image.tsx'
@@ -10,11 +10,12 @@ export interface GalleryCardProps {
   item: GalleryItem
   layoutMode: LayoutMode
   showMobileDetails: boolean
-  hoverInfo: { name: boolean; resolution: boolean; tags: boolean; loved: boolean; rating: boolean }
+  hoverInfo: { name: boolean; resolution: boolean; tags: boolean; loved: boolean; rating: boolean; download: boolean }
   isFavorite: boolean
   onToggleFavorite: () => void
   onClick: () => void
   imageQuality: 'thumbnail' | 'sample' | 'original'
+  hoverDownloadQuality: 'thumbnail' | 'sample' | 'original'
   isSelected?: boolean
 }
 
@@ -27,6 +28,7 @@ export function GalleryCard({
   onToggleFavorite,
   onClick,
   imageQuality,
+  hoverDownloadQuality,
   isSelected,
 }: GalleryCardProps) {
   const isJustified = layoutMode === 'justified'
@@ -191,31 +193,64 @@ export function GalleryCard({
               </Typography>
             )}
           </Stack>
-          {hoverInfo.loved && (
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation()
-                onToggleFavorite()
-              }}
-              aria-label={isFavorite ? 'remove favorite' : 'add favorite'}
-              sx={{
-                width: 32,
-                height: 32,
-                flexShrink: 0,
-                color: 'common.white',
-                bgcolor: alpha('#ffffff', 0.12),
-                backdropFilter: 'blur(10px)',
-                WebkitBackdropFilter: 'blur(10px)',
-                transform: 'translateZ(0)',
-                '&:hover': {
-                  bgcolor: alpha('#ffffff', 0.18),
-                },
-              }}
-            >
-              {isFavorite ? <Favorite fontSize="small" /> : <FavoriteBorder fontSize="small" />}
-            </IconButton>
-          )}
+          <Stack direction="row" spacing={0.5} alignItems="center">
+            {hoverInfo.download && (
+              <IconButton
+                size="small"
+                component="a"
+                href={
+                  hoverDownloadQuality === 'original' && item.originalSrc ? item.originalSrc :
+                  (hoverDownloadQuality === 'original' || hoverDownloadQuality === 'sample') && item.sampleSrc ? item.sampleSrc :
+                  item.thumbnailSrc
+                }
+                download={item.filename}
+                onClick={(e) => {
+                  e.stopPropagation()
+                }}
+                aria-label="download"
+                sx={{
+                  width: 32,
+                  height: 32,
+                  flexShrink: 0,
+                  color: 'common.white',
+                  bgcolor: alpha('#ffffff', 0.12),
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  transform: 'translateZ(0)',
+                  '&:hover': {
+                    bgcolor: alpha('#ffffff', 0.18),
+                  },
+                }}
+              >
+                <DownloadOutlined fontSize="small" />
+              </IconButton>
+            )}
+            {hoverInfo.loved && (
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onToggleFavorite()
+                }}
+                aria-label={isFavorite ? 'remove favorite' : 'add favorite'}
+                sx={{
+                  width: 32,
+                  height: 32,
+                  flexShrink: 0,
+                  color: 'common.white',
+                  bgcolor: alpha('#ffffff', 0.12),
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  transform: 'translateZ(0)',
+                  '&:hover': {
+                    bgcolor: alpha('#ffffff', 0.18),
+                  },
+                }}
+              >
+                {isFavorite ? <Favorite fontSize="small" /> : <FavoriteBorder fontSize="small" />}
+              </IconButton>
+            )}
+          </Stack>
         </Box>
       )}
     </Box>

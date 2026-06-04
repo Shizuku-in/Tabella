@@ -44,6 +44,8 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     setLightboxImageQuality,
     showLightboxTags,
     setShowLightboxTags,
+    hoverDownloadQuality,
+    setHoverDownloadQuality,
     topBarConfig,
     setTopBarConfig,
   } = useGalleryUi()
@@ -200,7 +202,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               Hover Info
             </Typography>
             <FormGroup row>
-              {(['name', 'resolution', 'tags', 'loved', 'rating'] as const).map((key) => (
+              {(['name', 'resolution', 'tags', 'loved', 'rating', 'download'] as const).map((key) => (
                 <FormControlLabel
                   key={key}
                   control={
@@ -239,6 +241,21 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               row
               value={lightboxImageQuality}
               onChange={(e) => setLightboxImageQuality(e.target.value as 'thumbnail' | 'sample' | 'original')}
+            >
+              <FormControlLabel value="thumbnail" control={<Radio size="small" />} label="Thumbnail" />
+              <FormControlLabel value="sample" control={<Radio size="small" />} label="Sample" />
+              <FormControlLabel value="original" control={<Radio size="small" />} label="Original" />
+            </RadioGroup>
+          </Box>
+
+          <Box>
+            <Typography variant="subtitle2" gutterBottom>
+              Quick Download Quality
+            </Typography>
+            <RadioGroup
+              row
+              value={hoverDownloadQuality}
+              onChange={(e) => setHoverDownloadQuality(e.target.value as 'thumbnail' | 'sample' | 'original')}
             >
               <FormControlLabel value="thumbnail" control={<Radio size="small" />} label="Thumbnail" />
               <FormControlLabel value="sample" control={<Radio size="small" />} label="Sample" />

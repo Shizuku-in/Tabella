@@ -23,8 +23,8 @@ interface GalleryUiContextValue {
   setGridColumns: (value: { xs: number; sm: number; lg: number; xl: number }) => void
   showMobileDetails: boolean
   setShowMobileDetails: (value: boolean) => void
-  hoverInfo: { name: boolean; resolution: boolean; tags: boolean; loved: boolean; rating: boolean }
-  setHoverInfo: (value: { name: boolean; resolution: boolean; tags: boolean; loved: boolean; rating: boolean }) => void
+  hoverInfo: { name: boolean; resolution: boolean; tags: boolean; loved: boolean; rating: boolean; download: boolean }
+  setHoverInfo: (value: { name: boolean; resolution: boolean; tags: boolean; loved: boolean; rating: boolean; download: boolean }) => void
   showResultsCount: boolean
   setShowResultsCount: (value: boolean) => void
   galleryImageQuality: 'thumbnail' | 'sample' | 'original'
@@ -33,6 +33,8 @@ interface GalleryUiContextValue {
   setLightboxImageQuality: (value: 'thumbnail' | 'sample' | 'original') => void
   showLightboxTags: boolean
   setShowLightboxTags: (value: boolean) => void
+  hoverDownloadQuality: 'thumbnail' | 'sample' | 'original'
+  setHoverDownloadQuality: (value: 'thumbnail' | 'sample' | 'original') => void
   selectionMode: boolean
   setSelectionMode: (value: boolean) => void
   selectedIds: Set<number>
@@ -94,9 +96,16 @@ function readInitialMobileDetails(): boolean {
 function readInitialHoverInfo() {
   const stored = window.localStorage.getItem('tabella.gallery.hoverInfo')
   if (stored) {
-    try { return JSON.parse(stored) } catch { /* ignore */ }
+    try { return { ...{ name: true, resolution: true, tags: true, loved: true, rating: true, download: true }, ...JSON.parse(stored) } } catch { /* ignore */ }
   }
-  return { name: true, resolution: true, tags: true, loved: true, rating: true }
+  return { name: true, resolution: true, tags: true, loved: true, rating: true, download: true }
+}
+
+function readInitialHoverDownloadQuality(): 'thumbnail' | 'sample' | 'original' {
+  const stored = window.localStorage.getItem('tabella.gallery.hoverDownloadQuality')
+  if (stored === 'thumbnail') return 'thumbnail'
+  if (stored === 'sample') return 'sample'
+  return 'original'
 }
 
 function readInitialResultsCount(): boolean {
@@ -145,6 +154,7 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
   const [galleryImageQuality, setGalleryImageQuality] = useState<'thumbnail' | 'sample' | 'original'>(readInitialGalleryQuality)
   const [lightboxImageQuality, setLightboxImageQuality] = useState<'thumbnail' | 'sample' | 'original'>(readInitialLightboxQuality)
   const [showLightboxTags, setShowLightboxTags] = useState<boolean>(readInitialShowLightboxTags())
+  const [hoverDownloadQuality, setHoverDownloadQuality] = useState<'thumbnail' | 'sample' | 'original'>(readInitialHoverDownloadQuality)
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [activeDownloadJobId, setActiveDownloadJobId] = useState<string | null>(null)
@@ -197,6 +207,10 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
   }, [showLightboxTags])
 
   useEffect(() => {
+    window.localStorage.setItem('tabella.gallery.hoverDownloadQuality', hoverDownloadQuality)
+  }, [hoverDownloadQuality])
+
+  useEffect(() => {
     window.localStorage.setItem('tabella.gallery.topBarConfig', JSON.stringify(topBarConfig))
   }, [topBarConfig])
 
@@ -235,6 +249,8 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
         setLightboxImageQuality,
         showLightboxTags,
         setShowLightboxTags,
+        hoverDownloadQuality,
+        setHoverDownloadQuality,
         selectionMode,
         setSelectionMode,
         selectedIds,

@@ -13,7 +13,7 @@ import { ratingLabel } from '../lib/constants.ts'
 const PAGE_SIZE = 50
 
 export function GalleryPage() {
-  const { layoutMode, searchTags, sort, ratingFilter, favoritesOnly, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality, selectionMode, setSelectionMode, selectedIds, setSelectedIds, setActiveDownloadJobId, advancedIncludeTags, excludeTags, uploadedAfter, uploadedBefore, minWidth, minHeight, aspectRatioMin, aspectRatioMax } = useGalleryUi()
+  const { layoutMode, searchTags, sort, ratingFilter, favoritesOnly, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality, selectionMode, setSelectionMode, selectedIds, setSelectedIds, setActiveDownloadJobId, advancedIncludeTags, excludeTags, uploadedAfter, uploadedBefore, minWidth, minHeight, aspectRatioMin, aspectRatioMax, hoverDownloadQuality } = useGalleryUi()
   const queryClient = useQueryClient()
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
@@ -318,6 +318,7 @@ export function GalleryPage() {
                   onClick={() => handleImageClick(index)}
                   imageQuality={galleryImageQuality}
                   isSelected={selectedIds.has(item.id)}
+                  hoverDownloadQuality={hoverDownloadQuality}
                 />
               ))}
             </Masonry>
@@ -347,6 +348,7 @@ export function GalleryPage() {
                   onClick={() => handleImageClick(index)}
                   imageQuality={galleryImageQuality}
                   isSelected={selectedIds.has(item.id)}
+                  hoverDownloadQuality={hoverDownloadQuality}
                 />
               ))}
             </Box>
