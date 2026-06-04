@@ -39,6 +39,8 @@ interface GalleryUiContextValue {
   setSelectedIds: (value: Set<number> | ((prev: Set<number>) => Set<number>)) => void
   activeDownloadJobId: string | null
   setActiveDownloadJobId: (value: string | null) => void
+  topBarConfig: { sort: boolean; layout: boolean; rating: boolean; favorites: boolean; selectMultiple: boolean; search: boolean; themeToggle: boolean }
+  setTopBarConfig: (value: { sort: boolean; layout: boolean; rating: boolean; favorites: boolean; selectMultiple: boolean; search: boolean; themeToggle: boolean }) => void
 }
 
 const GalleryUiContext = createContext<GalleryUiContextValue | null>(null)
@@ -103,6 +105,14 @@ function readInitialShowLightboxTags(): boolean {
   return stored === 'true' // default false
 }
 
+function readInitialTopBarConfig() {
+  const stored = window.localStorage.getItem('tabella.gallery.topBarConfig')
+  if (stored) {
+    try { return JSON.parse(stored) } catch { /* ignore */ }
+  }
+  return { sort: true, layout: true, rating: true, favorites: true, selectMultiple: true, search: true, themeToggle: true }
+}
+
 export function GalleryUiProvider({ children }: { children: ReactNode }) {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>(readInitialLayout)
   const [searchTags, setSearchTags] = useState<string[]>([])
@@ -120,6 +130,7 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
   const [selectionMode, setSelectionMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [activeDownloadJobId, setActiveDownloadJobId] = useState<string | null>(null)
+  const [topBarConfig, setTopBarConfig] = useState(readInitialTopBarConfig)
 
   useEffect(() => {
     window.localStorage.setItem(LAYOUT_STORAGE_KEY, layoutMode)
@@ -156,6 +167,10 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     window.localStorage.setItem('tabella.gallery.showLightboxTags', String(showLightboxTags))
   }, [showLightboxTags])
+
+  useEffect(() => {
+    window.localStorage.setItem('tabella.gallery.topBarConfig', JSON.stringify(topBarConfig))
+  }, [topBarConfig])
 
   useEffect(() => {
     if (!selectionMode) {
@@ -198,6 +213,8 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
         setSelectedIds,
         activeDownloadJobId,
         setActiveDownloadJobId,
+        topBarConfig,
+        setTopBarConfig,
       }}
     >
       {children}

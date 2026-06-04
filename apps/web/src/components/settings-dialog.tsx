@@ -44,6 +44,8 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     setLightboxImageQuality,
     showLightboxTags,
     setShowLightboxTags,
+    topBarConfig,
+    setTopBarConfig,
   } = useGalleryUi()
 
   return (
@@ -51,6 +53,41 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       <DialogTitle>Gallery Settings</DialogTitle>
       <DialogContent dividers sx={{ p: 0 }}>
         <Accordion square disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Typography variant="subtitle2">TopBar Buttons</Typography>
+          </AccordionSummary>
+          <AccordionDetails sx={{ pt: 0, pb: 2 }}>
+            <FormGroup row sx={{ px: 1 }}>
+              {(['sort', 'layout', 'rating', 'favorites', 'selectMultiple', 'search', 'themeToggle'] as const).map((key) => {
+                const labelMap: Record<typeof key, string> = {
+                  sort: 'Sort',
+                  layout: 'Layout',
+                  rating: 'Rating',
+                  favorites: 'Favorites Only',
+                  selectMultiple: 'Select Multiple',
+                  search: 'Search',
+                  themeToggle: 'Dark/Light Mode',
+                }
+                return (
+                  <FormControlLabel
+                    key={key}
+                    control={
+                      <Checkbox
+                        checked={topBarConfig[key]}
+                        onChange={(e) => setTopBarConfig({ ...topBarConfig, [key]: e.target.checked })}
+                        size="small"
+                      />
+                    }
+                    label={<Typography variant="body2">{labelMap[key]}</Typography>}
+                    sx={{ width: '45%' }}
+                  />
+                )
+              })}
+            </FormGroup>
+          </AccordionDetails>
+        </Accordion>
+
+        <Accordion square disableGutters elevation={0} sx={{ borderTop: 1, borderColor: 'divider', '&:before': { display: 'none' } }}>
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Typography variant="subtitle2">Masonry Columns</Typography>
           </AccordionSummary>
