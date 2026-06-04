@@ -1,4 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
+/* eslint-disable react-hooks/set-state-in-effect */
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { GallerySort, LayoutMode, RatingFilter } from '../types.ts'
@@ -32,6 +33,12 @@ interface GalleryUiContextValue {
   setLightboxImageQuality: (value: 'thumbnail' | 'sample' | 'original') => void
   showLightboxTags: boolean
   setShowLightboxTags: (value: boolean) => void
+  selectionMode: boolean
+  setSelectionMode: (value: boolean) => void
+  selectedIds: Set<number>
+  setSelectedIds: (value: Set<number> | ((prev: Set<number>) => Set<number>)) => void
+  activeDownloadJobId: string | null
+  setActiveDownloadJobId: (value: string | null) => void
 }
 
 const GalleryUiContext = createContext<GalleryUiContextValue | null>(null)
@@ -110,6 +117,9 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
   const [galleryImageQuality, setGalleryImageQuality] = useState<'thumbnail' | 'sample' | 'original'>(readInitialGalleryQuality)
   const [lightboxImageQuality, setLightboxImageQuality] = useState<'thumbnail' | 'sample' | 'original'>(readInitialLightboxQuality)
   const [showLightboxTags, setShowLightboxTags] = useState<boolean>(readInitialShowLightboxTags())
+  const [selectionMode, setSelectionMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [activeDownloadJobId, setActiveDownloadJobId] = useState<string | null>(null)
 
   useEffect(() => {
     window.localStorage.setItem(LAYOUT_STORAGE_KEY, layoutMode)
@@ -147,6 +157,12 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
     window.localStorage.setItem('tabella.gallery.showLightboxTags', String(showLightboxTags))
   }, [showLightboxTags])
 
+  useEffect(() => {
+    if (!selectionMode) {
+      setSelectedIds(new Set())
+    }
+  }, [selectionMode])
+
   return (
     <GalleryUiContext.Provider
       value={{
@@ -176,6 +192,12 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
         setLightboxImageQuality,
         showLightboxTags,
         setShowLightboxTags,
+        selectionMode,
+        setSelectionMode,
+        selectedIds,
+        setSelectedIds,
+        activeDownloadJobId,
+        setActiveDownloadJobId,
       }}
     >
       {children}

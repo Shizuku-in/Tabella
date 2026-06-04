@@ -6,6 +6,7 @@ mod image_processor;
 
 mod import_worker;
 mod tags;
+mod tasks;
 
 use anyhow::Context;
 use axum::Router;
@@ -48,8 +49,9 @@ async fn main() -> anyhow::Result<()> {
         pool: pool.clone(),
     };
 
-    // Spawn import worker in the background
+    // Spawn workers in the background
     tokio::spawn(import_worker::start_worker(pool.clone(), config.clone()));
+    tokio::spawn(tasks::cleanup::run_cleanup_worker(pool.clone(), config.media_root.clone()));
 
     let app = Router::new()
         .nest_service(

@@ -16,6 +16,9 @@ import {
   PersonOutline,
   FavoriteBorderOutlined,
   FavoriteOutlined,
+  CheckCircleOutline,
+  CheckCircle,
+  DownloadOutlined,
 } from '@mui/icons-material'
 import {
   AppBar,
@@ -32,6 +35,8 @@ import {
   Tooltip,
   Toolbar,
   Typography,
+  Badge,
+  CircularProgress,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import type { PaletteMode } from '@mui/material'
@@ -82,6 +87,11 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     setRatingFilter,
     favoritesOnly,
     setFavoritesOnly,
+    selectionMode,
+    setSelectionMode,
+    setSelectedIds,
+    activeDownloadJobId,
+    setActiveDownloadJobId,
   } = useGalleryUi()
   const [searchVisible, setSearchVisible] = useState(() => searchTags.length > 0)
   const [sortAnchor, setSortAnchor] = useState<HTMLElement | null>(null)
@@ -119,6 +129,43 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     }, 300)
     return () => clearTimeout(timer)
   }, [tagInput, searchTags])
+
+  useEffect(() => {
+    if (!activeDownloadJobId) return
+
+    const interval = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/download-jobs/${activeDownloadJobId}`)
+        if (!response.ok) {
+          clearInterval(interval)
+          setActiveDownloadJobId(null)
+          return
+        }
+
+        const data = await response.json()
+        if (data.status === 'completed') {
+          clearInterval(interval)
+          setActiveDownloadJobId(null)
+          
+          // Trigger file download
+          const a = document.createElement('a')
+          a.href = `/api/download-jobs/${activeDownloadJobId}/file`
+          a.download = '' // Let backend dictate filename
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+        } else if (data.status === 'failed') {
+          clearInterval(interval)
+          setActiveDownloadJobId(null)
+          alert(`Download job failed: ${data.error_message}`)
+        }
+      } catch (e) {
+        console.error('Failed to poll download job:', e)
+      }
+    }, 2000)
+
+    return () => clearInterval(interval)
+  }, [activeDownloadJobId, setActiveDownloadJobId])
 
   useEffect(() => {
     if (searchVisible) {
@@ -306,6 +353,21 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                   </IconButton>
                 </Tooltip>
 
+                <Tooltip title="Select Multiple">
+                  <IconButton
+                    color={selectionMode ? 'primary' : 'default'}
+                    onClick={() => {
+                      setSelectionMode(!selectionMode)
+                      if (selectionMode) {
+                        setSelectedIds(new Set())
+                      }
+                    }}
+                    sx={{ p: 0.75, borderRadius: '50%' }}
+                  >
+                    {selectionMode ? <CheckCircle fontSize="small" /> : <CheckCircleOutline fontSize="small" />}
+                  </IconButton>
+                </Tooltip>
+
                 <Box
                   sx={{
                     width: searchVisible ? { xs: 150, sm: 184, md: 212 } : 0,
@@ -412,6 +474,22 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
           </Stack>
 
           <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexShrink: 0 }}>
+            {activeDownloadJobId && (
+              <Tooltip title="Downloading archive...">
+                <IconButton color="primary" sx={{ p: 0.75, borderRadius: '50%' }}>
+                  <Badge
+                    overlap="circular"
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    badgeContent={
+                      <CircularProgress size={12} thickness={5} sx={{ color: 'primary.main', position: 'absolute', right: -2, bottom: -2 }} />
+                    }
+                  >
+                    <DownloadOutlined fontSize="small" />
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+            )}
+
             <Tooltip title={mode === 'light' ? 'Dark mode' : 'Light mode'}>
               <IconButton
                 color="default"

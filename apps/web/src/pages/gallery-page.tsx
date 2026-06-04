@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Box, CircularProgress, Stack, Typography } from '@mui/material'
+import { Box, Button, CircularProgress, Fade, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material'
+import { Close, Download, SelectAll } from '@mui/icons-material'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { Masonry } from '@mui/lab'
 import { useGalleryUi } from '../gallery/gallery-ui-provider.tsx'
@@ -12,7 +13,7 @@ import { ratingLabel } from '../lib/constants.ts'
 const PAGE_SIZE = 50
 
 export function GalleryPage() {
-  const { layoutMode, searchTags, sort, ratingFilter, favoritesOnly, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality } = useGalleryUi()
+  const { layoutMode, searchTags, sort, ratingFilter, favoritesOnly, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality, selectionMode, setSelectionMode, selectedIds, setSelectedIds, setActiveDownloadJobId } = useGalleryUi()
   const queryClient = useQueryClient()
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<number, boolean>>({})
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
@@ -132,6 +133,23 @@ export function GalleryPage() {
     }
   }
 
+  const handleImageClick = (index: number) => {
+    const item = items[index]
+    if (selectionMode) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev)
+        if (next.has(item.id)) {
+          next.delete(item.id)
+        } else {
+          next.add(item.id)
+        }
+        return next
+      })
+    } else {
+      setSelectedImageIndex(index)
+    }
+  }
+
   const handleDelete = () => {
     // Invalidate the gallery query to refetch
     galleryQuery.refetch()
@@ -139,6 +157,39 @@ export function GalleryPage() {
 
   const handleUpdate = () => {
     galleryQuery.refetch()
+  }
+
+  const handleDownloadSelected = async () => {
+    if (selectedIds.size === 0) return
+
+    try {
+      const response = await fetch('/api/download-jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image_ids: Array.from(selectedIds) }),
+      })
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        alert(`Failed to start download: ${err.message || response.statusText}`)
+        return
+      }
+
+      const job = await response.json()
+      setActiveDownloadJobId(job.id)
+      setSelectionMode(false)
+    } catch (error) {
+      console.error('Download error:', error)
+      alert('Network error while starting download')
+    }
+  }
+
+  const handleSelectAll = () => {
+    if (selectedIds.size === items.length) {
+      setSelectedIds(new Set())
+    } else {
+      setSelectedIds(new Set(items.map(item => item.id)))
+    }
   }
 
   if (galleryQuery.status === 'error') {
@@ -165,6 +216,10 @@ export function GalleryPage() {
 
   const showInitialLoading = galleryQuery.isPending && items.length === 0
   const isEmpty = !showInitialLoading && items.length === 0
+
+  const activeHoverInfo = selectionMode 
+    ? { name: false, resolution: false, tags: false, loved: false, rating: false }
+    : hoverInfo
 
   return (
     <Stack spacing={1.5}>
@@ -237,11 +292,12 @@ export function GalleryPage() {
                   item={item}
                   layoutMode={layoutMode}
                   showMobileDetails={showMobileDetails}
-                  hoverInfo={hoverInfo}
+                  hoverInfo={activeHoverInfo}
                   isFavorite={favoriteOverrides[item.id] ?? item.favorite}
                   onToggleFavorite={() => handleToggleFavorite(item.id)}
-                  onClick={() => setSelectedImageIndex(index)}
+                  onClick={() => handleImageClick(index)}
                   imageQuality={galleryImageQuality}
+                  isSelected={selectedIds.has(item.id)}
                 />
               ))}
             </Masonry>
@@ -265,11 +321,12 @@ export function GalleryPage() {
                   item={item}
                   layoutMode={layoutMode}
                   showMobileDetails={showMobileDetails}
-                  hoverInfo={hoverInfo}
+                  hoverInfo={activeHoverInfo}
                   isFavorite={favoriteOverrides[item.id] ?? item.favorite}
                   onToggleFavorite={() => handleToggleFavorite(item.id)}
-                  onClick={() => setSelectedImageIndex(index)}
+                  onClick={() => handleImageClick(index)}
                   imageQuality={galleryImageQuality}
+                  isSelected={selectedIds.has(item.id)}
                 />
               ))}
             </Box>
@@ -309,6 +366,56 @@ export function GalleryPage() {
         onDelete={handleDelete}
         onUpdate={handleUpdate}
       />
+
+      <Fade in={selectionMode}>
+        <Paper
+          elevation={6}
+          sx={{
+            position: 'fixed',
+            bottom: { xs: 16, sm: 24, md: 32 },
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 1100,
+            borderRadius: 8,
+            overflow: 'hidden',
+            bgcolor: 'background.paper',
+            border: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            sx={{ px: 2, py: 1.5, minWidth: 280 }}
+          >
+            <IconButton size="small" onClick={() => setSelectionMode(false)} edge="start">
+              <Close />
+            </IconButton>
+            
+            <Typography variant="body2" sx={{ fontWeight: 600, flex: 1, px: 1 }}>
+              {selectedIds.size} Selected
+            </Typography>
+
+            <Tooltip title="Select all loaded items">
+              <IconButton size="small" onClick={handleSelectAll}>
+                <SelectAll />
+              </IconButton>
+            </Tooltip>
+
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<Download />}
+              disabled={selectedIds.size === 0}
+              onClick={handleDownloadSelected}
+              sx={{ borderRadius: 6, textTransform: 'none', px: 2 }}
+            >
+              Download
+            </Button>
+          </Stack>
+        </Paper>
+      </Fade>
     </Stack>
   )
 }
