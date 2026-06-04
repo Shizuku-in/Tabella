@@ -7,21 +7,25 @@ use tokio::time::sleep;
 use uuid::Uuid;
 use walkdir::WalkDir;
 
+use crate::AppState;
+use crate::ServerEvent;
 use crate::config::Config;
 use crate::image_processor::{compute_sha256, process_image};
 use crate::tags::{ParsedTag, parse_tag};
 
-pub(crate) async fn start_worker(pool: PgPool, config: Config) {
+pub(crate) async fn start_worker(state: AppState) {
     tracing::info!("Starting background import worker");
     loop {
-        if let Err(e) = process_next_job(&pool, &config).await {
-            tracing::error!("Import worker error: {:?}", e);
+        match process_next_job(&state).await {
+            Ok(true) => continue, // Processed a job, check for next one immediately
+            Ok(false) => {}       // No jobs found, sleep
+            Err(e) => tracing::error!("Import worker error: {:?}", e),
         }
         sleep(Duration::from_secs(5)).await;
     }
 }
 
-async fn process_next_job(pool: &PgPool, config: &Config) -> Result<()> {
+async fn process_next_job(state: &AppState) -> Result<bool> {
     #[derive(sqlx::FromRow)]
     struct JobRow {
         id: Uuid,
@@ -43,12 +47,12 @@ async fn process_next_job(pool: &PgPool, config: &Config) -> Result<()> {
         RETURNING id, source_archive_path, source_type
         "#,
     )
-    .fetch_optional(pool)
+    .fetch_optional(&state.pool)
     .await?;
 
     let job = match job {
         Some(j) => j,
-        None => return Ok(()),
+        None => return Ok(false),
     };
 
     tracing::info!("Found import job: {} (type: {})", job.id, job.source_type);
@@ -58,8 +62,9 @@ async fn process_next_job(pool: &PgPool, config: &Config) -> Result<()> {
         job.id,
         &job.source_archive_path,
         &job.source_type,
-        pool,
-        config,
+        &state.pool,
+        &state.config,
+        &state.tx,
     )
     .await;
 
@@ -90,10 +95,15 @@ async fn process_next_job(pool: &PgPool, config: &Config) -> Result<()> {
     .bind(final_status)
     .bind(error_msg)
     .bind(job.id)
-    .execute(pool)
+    .execute(&state.pool)
     .await?;
 
-    Ok(())
+    let _ = state.tx.send(ServerEvent {
+        event: "import_job_updated".to_string(),
+        data: serde_json::json!({ "id": job.id }),
+    });
+
+    Ok(true)
 }
 
 async fn run_import_job(
@@ -102,6 +112,7 @@ async fn run_import_job(
     source_type: &str,
     pool: &PgPool,
     config: &Config,
+    tx: &tokio::sync::broadcast::Sender<ServerEvent>,
 ) -> Result<bool> {
     let mut source_path = PathBuf::from(source_path_str);
 
@@ -170,6 +181,10 @@ async fn run_import_job(
             .bind(job_id)
             .execute(pool)
             .await?;
+            let _ = tx.send(ServerEvent {
+                event: "import_job_updated".to_string(),
+                data: serde_json::json!({ "id": job_id }),
+            });
 
             let file = std::fs::File::open(&source_path)?;
             let mut archive = zip::ZipArchive::new(file)?;
@@ -182,6 +197,10 @@ async fn run_import_job(
             .bind(job_id)
             .execute(pool)
             .await?;
+            let _ = tx.send(ServerEvent {
+                event: "import_job_updated".to_string(),
+                data: serde_json::json!({ "id": job_id }),
+            });
 
             // Create a temporary extraction directory inside media root
             let temp_extract_dir = config
@@ -219,8 +238,8 @@ async fn run_import_job(
                     }
                 }
 
-                // Report progress every 50 files
-                if i % 50 == 0 && i > 0 {
+                // Report progress every file now that we use SSE
+                if true {
                     sqlx::query(
                         "UPDATE import_jobs SET processed_items = $1, updated_at = now() WHERE id = $2"
                     )
@@ -228,6 +247,10 @@ async fn run_import_job(
                     .bind(job_id)
                     .execute(pool)
                     .await?;
+                    let _ = tx.send(ServerEvent {
+                        event: "import_job_updated".to_string(),
+                        data: serde_json::json!({ "id": job_id }),
+                    });
                 }
             }
         } else if matches!(ext.as_str(), "7z") {
@@ -239,6 +262,10 @@ async fn run_import_job(
             .bind(job_id)
             .execute(pool)
             .await?;
+            let _ = tx.send(ServerEvent {
+                event: "import_job_updated".to_string(),
+                data: serde_json::json!({ "id": job_id }),
+            });
 
             let temp_extract_dir = config
                 .media_root
@@ -281,6 +308,10 @@ async fn run_import_job(
     .bind(job_id)
     .execute(pool)
     .await?;
+    let _ = tx.send(ServerEvent {
+        event: "import_job_updated".to_string(),
+        data: serde_json::json!({ "id": job_id }),
+    });
 
     let mut succeeded = 0;
     let mut failed = 0;
@@ -301,8 +332,8 @@ async fn run_import_job(
             }
         }
 
-        // Update progress every 10 items or at the end
-        if (index + 1) % 10 == 0 || (index + 1) == total as usize {
+        // Update progress every item now that we use SSE
+        if true {
             sqlx::query(
                 "UPDATE import_jobs SET processed_items = $1, succeeded_items = $2, failed_items = $3, heartbeat_at = now(), updated_at = now() WHERE id = $4",
             )
@@ -312,6 +343,10 @@ async fn run_import_job(
             .bind(job_id)
             .execute(pool)
             .await?;
+            let _ = tx.send(ServerEvent {
+                event: "import_job_updated".to_string(),
+                data: serde_json::json!({ "id": job_id }),
+            });
         }
     }
 

@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { startTransition, useEffect, useRef, useState } from 'react'
+import { startTransition, useEffect, useRef, useState, useCallback } from 'react'
 import {
   PlaylistAdd,
   GroupOutlined,
@@ -46,6 +46,7 @@ import { useAuth } from './auth/auth-provider.tsx'
 import { useGalleryUi } from './gallery/gallery-ui-provider.tsx'
 import type { GallerySort, LayoutMode, RatingFilter } from './types.ts'
 import { suggestTags } from './lib/api.ts'
+import { useServerEvents } from './hooks/use-server-events.ts'
 import { getTagColor } from './lib/tags.ts'
 
 interface AppShellProps {
@@ -135,42 +136,35 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     return () => clearTimeout(timer)
   }, [tagInput, searchTags])
 
-  useEffect(() => {
-    if (!activeDownloadJobId) return
+  useServerEvents('download_job_updated', useCallback(async (data: any) => {
+    if (!activeDownloadJobId || data.id !== activeDownloadJobId) return
 
-    const interval = setInterval(async () => {
-      try {
-        const response = await fetch(`/api/download-jobs/${activeDownloadJobId}`)
-        if (!response.ok) {
-          clearInterval(interval)
-          setActiveDownloadJobId(null)
-          return
-        }
-
-        const data = await response.json()
-        if (data.status === 'completed') {
-          clearInterval(interval)
-          setActiveDownloadJobId(null)
-          
-          // Trigger file download
-          const a = document.createElement('a')
-          a.href = `/api/download-jobs/${activeDownloadJobId}/file`
-          a.download = '' // Let backend dictate filename
-          document.body.appendChild(a)
-          a.click()
-          document.body.removeChild(a)
-        } else if (data.status === 'failed') {
-          clearInterval(interval)
-          setActiveDownloadJobId(null)
-          alert(`Download job failed: ${data.error_message}`)
-        }
-      } catch (e) {
-        console.error('Failed to poll download job:', e)
+    try {
+      const response = await fetch(`/api/download-jobs/${activeDownloadJobId}`)
+      if (!response.ok) {
+        setActiveDownloadJobId(null)
+        return
       }
-    }, 2000)
 
-    return () => clearInterval(interval)
-  }, [activeDownloadJobId, setActiveDownloadJobId])
+      const statusData = await response.json()
+      if (statusData.status === 'completed') {
+        setActiveDownloadJobId(null)
+        
+        // Trigger file download
+        const a = document.createElement('a')
+        a.href = `/api/download-jobs/${activeDownloadJobId}/file`
+        a.download = '' // Let backend dictate filename
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+      } else if (statusData.status === 'failed') {
+        setActiveDownloadJobId(null)
+        alert(`Download job failed: ${statusData.error_message}`)
+      }
+    } catch (e) {
+      console.error('Failed to check download job:', e)
+    }
+  }, [activeDownloadJobId, setActiveDownloadJobId]))
 
   useEffect(() => {
     if (searchVisible) {

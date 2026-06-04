@@ -1,6 +1,7 @@
 mod auth_handlers;
 mod downloads;
 mod error;
+mod events;
 mod guards;
 mod health;
 mod images;
@@ -22,5 +23,9 @@ pub(crate) fn router(state: AppState) -> Router {
         .merge(downloads::routes(state.clone()))
         .merge(profile::routes(state.clone()))
         .merge(settings::routes(state.clone()))
-        .merge(users::routes(state))
+        .merge(users::routes(state.clone()))
+        .route(
+            "/api/events",
+            axum::routing::get(events::sse_handler).with_state(state),
+        )
 }

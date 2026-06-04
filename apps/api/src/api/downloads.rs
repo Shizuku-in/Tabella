@@ -134,7 +134,7 @@ async fn create_download_job(
         image_paths,
         media_root: state.config.media_root.clone(),
     };
-    tokio::spawn(process_archive_job(state.pool.clone(), task));
+    tokio::spawn(process_archive_job(state.clone(), task));
 
     Ok(Json(DownloadJobResponse {
         id: job_id,

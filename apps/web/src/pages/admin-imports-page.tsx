@@ -19,11 +19,12 @@ import {
   CircularProgress,
   LinearProgress,
 } from '@mui/material'
-import { useMutation, useQuery } from '@tanstack/react-query'
-import { useRef, useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useRef, useState, useCallback } from 'react'
 import { request, uploadWithProgress } from '../lib/api.ts'
 import type { ImportJobRow, ImportJobStatus } from '../types.ts'
 import { useAuth } from '../auth/auth-provider.tsx'
+import { useServerEvents } from '../hooks/use-server-events.ts'
 
 interface LocalUploadJob {
   id: string
@@ -42,13 +43,17 @@ export function AdminImportsPage() {
   const [activeUploads, setActiveUploads] = useState<Record<string, LocalUploadJob>>({})
   const packageInputRef = useRef<HTMLInputElement>(null)
   const folderInputRef = useRef<HTMLInputElement>(null)
+  const queryClient = useQueryClient()
+
+  useServerEvents('import_job_updated', useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['importJobs'] })
+  }, [queryClient]))
 
   const jobsQuery = useQuery({
     queryKey: ['importJobs'],
     queryFn: async () => {
       return request<{ items: ImportJobRow[] }>('/api/admin/imports')
     },
-    refetchInterval: 5000,
   })
 
   const startJobMutation = useMutation({

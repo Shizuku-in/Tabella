@@ -1,5 +1,6 @@
+use crate::AppState;
+use crate::ServerEvent;
 use anyhow::{Context, Result};
-use sqlx::PgPool;
 use std::{fs::File, path::PathBuf};
 use tracing::{error, info};
 use uuid::Uuid;
@@ -12,7 +13,7 @@ pub(crate) struct ArchiveTask {
     pub media_root: PathBuf,
 }
 
-pub(crate) async fn process_archive_job(pool: PgPool, task: ArchiveTask) {
+pub(crate) async fn process_archive_job(state: AppState, task: ArchiveTask) {
     let job_id = task.job_id;
     match spawn_blocking_zip(task).await {
         Ok(relative_zip_path) => {
@@ -26,9 +27,14 @@ pub(crate) async fn process_archive_job(pool: PgPool, task: ArchiveTask) {
             )
             .bind(relative_zip_path)
             .bind(job_id)
-            .execute(&pool)
+            .execute(&state.pool)
             .await
             .inspect_err(|e| error!(%job_id, %e, "Failed to update job status to completed"));
+
+            let _ = state.tx.send(ServerEvent {
+                event: "download_job_updated".to_string(),
+                data: serde_json::json!({ "id": job_id }),
+            });
         }
         Err(e) => {
             error!(%job_id, %e, "Archive job failed");
@@ -41,9 +47,14 @@ pub(crate) async fn process_archive_job(pool: PgPool, task: ArchiveTask) {
             )
             .bind(e.to_string())
             .bind(job_id)
-            .execute(&pool)
+            .execute(&state.pool)
             .await
             .inspect_err(|e| error!(%job_id, %e, "Failed to update job status to failed"));
+
+            let _ = state.tx.send(ServerEvent {
+                event: "download_job_updated".to_string(),
+                data: serde_json::json!({ "id": job_id }),
+            });
         }
     }
 }

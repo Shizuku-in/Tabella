@@ -15,10 +15,17 @@ use sqlx::postgres::PgPoolOptions;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+#[derive(Clone, Debug, serde::Serialize)]
+pub(crate) struct ServerEvent {
+    pub(crate) event: String,
+    pub(crate) data: serde_json::Value,
+}
+
 #[derive(Clone)]
 pub(crate) struct AppState {
     pub(crate) config: Config,
     pub(crate) pool: sqlx::PgPool,
+    pub(crate) tx: tokio::sync::broadcast::Sender<ServerEvent>,
 }
 
 #[tokio::main]
@@ -44,13 +51,16 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("failed to bootstrap default admin")?;
 
+    let (tx, _rx) = tokio::sync::broadcast::channel(100);
+
     let app_state = AppState {
         config: config.clone(),
         pool: pool.clone(),
+        tx,
     };
 
     // Spawn workers in the background
-    tokio::spawn(import_worker::start_worker(pool.clone(), config.clone()));
+    tokio::spawn(import_worker::start_worker(app_state.clone()));
     tokio::spawn(tasks::cleanup::run_cleanup_worker(
         pool.clone(),
         config.media_root.clone(),
