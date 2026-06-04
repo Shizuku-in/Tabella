@@ -143,6 +143,7 @@ export function AdminServerPage() {
             <TextField
               label="Max Download Images"
               type="number"
+              required
               value={settings.max_download_images}
               onChange={(e) => handleNumberChange('max_download_images', e.target.value)}
               helperText="Maximum number of images allowed in a single archive download."
@@ -151,6 +152,7 @@ export function AdminServerPage() {
             <TextField
               label="Max Download Size (Bytes)"
               type="number"
+              required
               value={settings.max_download_total_bytes}
               onChange={(e) => handleNumberChange('max_download_total_bytes', e.target.value)}
               helperText="Maximum total file size allowed in a single archive download."
@@ -159,6 +161,7 @@ export function AdminServerPage() {
             <TextField
               label="Download Retention (Hours)"
               type="number"
+              required
               value={settings.download_retention_hours}
               onChange={(e) => handleNumberChange('download_retention_hours', e.target.value)}
               helperText="How long generated archives are kept before being automatically deleted."
@@ -173,6 +176,7 @@ export function AdminServerPage() {
             <TextField
               label="Session TTL (Hours)"
               type="number"
+              required
               value={settings.session_ttl_hours}
               onChange={(e) => handleNumberChange('session_ttl_hours', e.target.value)}
               helperText="How long a user session remains valid before requiring re-login."
@@ -204,7 +208,7 @@ export function AdminServerPage() {
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity={snackbarSeverity} sx={{ width: '100%' }}>
+        <Alert severity={snackbarSeverity} onClose={() => setSnackbarOpen(false)} sx={{ width: '100%' }}>
           {snackbarMessage}
         </Alert>
       </Snackbar>
