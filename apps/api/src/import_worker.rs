@@ -31,6 +31,7 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
         id: Uuid,
         source_archive_path: String,
         source_type: String,
+        created_by_user_id: Option<i64>,
     }
 
     let job: Option<JobRow> = sqlx::query_as(
@@ -44,7 +45,7 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
             FOR UPDATE SKIP LOCKED 
             LIMIT 1
         )
-        RETURNING id, source_archive_path, source_type
+        RETURNING id, source_archive_path, source_type, created_by_user_id
         "#,
     )
     .fetch_optional(&state.pool)
@@ -67,6 +68,7 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
         &state.config,
         &state.tx,
         dynamic_config.import_progress_batch_size,
+        job.created_by_user_id,
     )
     .await;
 
@@ -116,6 +118,7 @@ async fn run_import_job(
     config: &Config,
     tx: &tokio::sync::broadcast::Sender<ServerEvent>,
     progress_batch_size: usize,
+    uploader_id: Option<i64>,
 ) -> Result<bool> {
     let mut source_path = PathBuf::from(source_path_str);
 
@@ -325,7 +328,7 @@ async fn run_import_job(
     std::fs::create_dir_all(&originals_dir)?;
 
     for (index, file_path) in files_to_process.into_iter().enumerate() {
-        match process_single_file(&file_path, &originals_dir, pool, config).await {
+        match process_single_file(&file_path, &originals_dir, pool, config, uploader_id).await {
             Ok(true) => succeeded += 1,  // Success
             Ok(false) => succeeded += 1, // Skipped (already exists), user wants it counted as succeeded
             Err(e) => {
@@ -361,6 +364,7 @@ async fn process_single_file(
     originals_dir: &Path,
     pool: &PgPool,
     config: &Config,
+    uploader_id: Option<i64>,
 ) -> Result<bool> {
     // 1. Compute SHA256
     let sha256 = compute_sha256(file_path).context("failed to compute sha256")?;
@@ -424,9 +428,9 @@ async fn process_single_file(
         r#"
         INSERT INTO images (
             sha256, original_path, preview_path, thumbnail_path, original_filename,
-            mime_type, width, height, file_size, rating
+            mime_type, width, height, file_size, rating, uploader_id
         ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11
         )
         RETURNING id
         "#,
@@ -441,6 +445,7 @@ async fn process_single_file(
     .bind(metadata.height as i32)
     .bind(file_size)
     .bind(&rating_to_insert)
+    .bind(uploader_id)
     .fetch_one(pool)
     .await?;
 

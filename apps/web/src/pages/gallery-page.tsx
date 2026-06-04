@@ -71,6 +71,7 @@ export function GalleryPage() {
           sha256: item.sha256,
           sourceUrl: item.source_url || undefined,
           note: item.note || undefined,
+          uploader: item.uploader || undefined,
         }) as GalleryItem),
         nextCursor: response.next_cursor,
       }

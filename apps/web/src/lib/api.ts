@@ -149,6 +149,11 @@ export interface BackendImageListItem {
   source_url: string | null
   note: string | null
   imported_at: string
+  uploader?: {
+    id: number
+    username: string
+    avatar_url?: string
+  } | null
 }
 
 export interface BackendListImagesResponse {

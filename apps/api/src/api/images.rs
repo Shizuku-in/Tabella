@@ -55,6 +55,9 @@ struct ImageListRow {
     tags: Vec<String>,
     imported_at: time::OffsetDateTime,
     sort_filename: String,
+    uploader_id: Option<i64>,
+    uploader_username: Option<String>,
+    uploader_avatar_url: Option<String>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
@@ -101,8 +104,10 @@ async fn list_images(
              JOIN tags t ON t.id = it.tag_id \
              WHERE it.image_id = i.id \
              ORDER BY t.namespace, t.name \
-         ), '{}') AS tags \
+         ), '{}') AS tags, \
+         u.id AS uploader_id, u.username AS uploader_username, u.avatar_url AS uploader_avatar_url \
          FROM images i \
+         LEFT JOIN users u ON u.id = i.uploader_id \
          WHERE 1=1 ",
     );
 
@@ -224,6 +229,19 @@ async fn list_images(
             _ => Rating::Safe,
         };
 
+        let uploader = match (
+            row.uploader_id,
+            row.uploader_username,
+            row.uploader_avatar_url,
+        ) {
+            (Some(id), Some(username), avatar_url) => Some(crate::dto::ImageUploader {
+                id,
+                username,
+                avatar_url,
+            }),
+            _ => None,
+        };
+
         items.push(ImageListItem {
             id: row.id,
             original_filename: row.original_filename,
@@ -241,6 +259,7 @@ async fn list_images(
             is_favorite: row.is_favorite,
             tags: row.tags,
             file_size: row.file_size,
+            uploader,
         });
     }
 

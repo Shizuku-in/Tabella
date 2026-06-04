@@ -133,6 +133,13 @@ pub(crate) struct UpdateImageRequest {
 }
 
 #[derive(Debug, Clone, Serialize)]
+pub(crate) struct ImageUploader {
+    pub(crate) id: i64,
+    pub(crate) username: String,
+    pub(crate) avatar_url: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
 pub(crate) struct ImageListItem {
     pub(crate) id: i64,
     pub(crate) original_filename: String,
@@ -150,6 +157,7 @@ pub(crate) struct ImageListItem {
     pub(crate) is_favorite: bool,
     pub(crate) tags: Vec<String>,
     pub(crate) file_size: i64,
+    pub(crate) uploader: Option<ImageUploader>,
 }
 
 #[derive(Debug, Clone, Serialize)]

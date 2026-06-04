@@ -31,6 +31,11 @@ export interface GalleryItem {
   sha256?: string
   sourceUrl?: string
   note?: string
+  uploader?: {
+    id: number
+    username: string
+    avatar_url?: string
+  }
 }
 
 

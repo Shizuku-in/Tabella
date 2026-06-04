@@ -87,7 +87,10 @@ async fn main() -> anyhow::Result<()> {
             .not_found_service(tower_http::services::ServeFile::new(index_path));
         app = app.fallback_service(serve_dir);
     } else {
-        tracing::warn!("frontend directory {:?} not found, skipping frontend serving", frontend_path);
+        tracing::warn!(
+            "frontend directory {:?} not found, skipping frontend serving",
+            frontend_path
+        );
     }
 
     let app = app.layer(TraceLayer::new_for_http());

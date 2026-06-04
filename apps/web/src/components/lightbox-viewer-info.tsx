@@ -12,6 +12,7 @@ import {
   MenuItem,
   FormControl,
   Button,
+  Avatar,
 } from '@mui/material'
 import { alpha, useTheme } from '@mui/material/styles'
 import type { GalleryItem, Rating } from '../types'
@@ -111,6 +112,25 @@ export function LightboxViewerInfo({
             {item.sha256 && <MetaRow label="SHA256" value={item.sha256} />}
             {item.importedAt && <MetaRow label="Imported" value={new Date(item.importedAt).toLocaleString()} />}
             {item.sourceUrl && <MetaRow label="Source" value={item.sourceUrl} />}
+            {item.uploader && (
+              <Box sx={{ mt: 1 }}>
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                  Uploader
+                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Avatar
+                    src={item.uploader.avatar_url || undefined}
+                    alt={item.uploader.username}
+                    sx={{ width: 24, height: 24, bgcolor: 'primary.main', fontSize: '0.75rem' }}
+                  >
+                    {item.uploader.username.charAt(0).toUpperCase()}
+                  </Avatar>
+                  <Typography variant="body2" color="text.primary" fontWeight={500}>
+                    {item.uploader.username}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
           </Stack>
 
           <Divider sx={{ borderColor: 'divider', mb: 2 }} />
