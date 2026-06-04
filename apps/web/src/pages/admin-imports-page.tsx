@@ -18,6 +18,8 @@ import {
   TableRow,
   CircularProgress,
   LinearProgress,
+  Alert,
+  Snackbar,
 } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState, useCallback } from 'react'
@@ -45,6 +47,20 @@ export function AdminImportsPage() {
   const folderInputRef = useRef<HTMLInputElement>(null)
   const queryClient = useQueryClient()
 
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  })
+
+  const showSnackbar = (message: string, severity: 'success' | 'error') => {
+    setSnackbar({ open: true, message, severity })
+  }
+
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }))
+  }
+
   useServerEvents('import_job_updated', useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['importJobs'] })
   }, [queryClient]))
@@ -65,12 +81,12 @@ export function AdminImportsPage() {
       })
     },
     onSuccess: (data) => {
-      alert('Job started. Job ID: ' + data.id)
+      showSnackbar('Job started. Job ID: ' + data.id, 'success')
       setServerDialogOpen(false)
       jobsQuery.refetch()
     },
     onError: (err) => {
-      alert('Failed to start job: ' + err.message)
+      showSnackbar('Failed to start job: ' + err.message, 'error')
     }
   })
 
@@ -127,7 +143,7 @@ export function AdminImportsPage() {
       jobsQuery.refetch()
     },
     onError: (err) => {
-      alert('Failed to upload: ' + err.message)
+      showSnackbar('Failed to upload: ' + err.message, 'error')
     }
   })
 
@@ -334,6 +350,17 @@ export function AdminImportsPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity={snackbar.severity} onClose={handleCloseSnackbar} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Stack>
   )
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Box, Button, CircularProgress, Fade, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material'
+import { Box, Button, CircularProgress, Fade, IconButton, Paper, Stack, Tooltip, Typography, Alert, Snackbar } from '@mui/material'
 import { Close, Download, SelectAll } from '@mui/icons-material'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { Masonry } from '@mui/lab'
@@ -15,6 +15,19 @@ const PAGE_SIZE = 50
 export function GalleryPage() {
   const { layoutMode, searchTags, sort, ratingFilter, favoritesOnly, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality, selectionMode, setSelectionMode, selectedIds, setSelectedIds, setActiveDownloadJobId } = useGalleryUi()
   const queryClient = useQueryClient()
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+    open: false,
+    message: '',
+    severity: 'success',
+  })
+
+  const showSnackbar = (message: string, severity: 'success' | 'error' = 'success') => {
+    setSnackbar({ open: true, message, severity })
+  }
+
+  const handleCloseSnackbar = () => {
+    setSnackbar(prev => ({ ...prev, open: false }))
+  }
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<number, boolean>>({})
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
@@ -171,7 +184,7 @@ export function GalleryPage() {
 
       if (!response.ok) {
         const err = await response.json().catch(() => ({}))
-        alert(`Failed to start download: ${err.message || response.statusText}`)
+        showSnackbar(`Failed to start download: ${err.message || response.statusText}`, 'error')
         return
       }
 
@@ -180,7 +193,7 @@ export function GalleryPage() {
       setSelectionMode(false)
     } catch (error) {
       console.error('Download error:', error)
-      alert('Network error while starting download')
+      showSnackbar('Network error while starting download', 'error')
     }
   }
 
