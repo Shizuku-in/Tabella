@@ -1,7 +1,7 @@
 use axum::{
+    Json,
     extract::{Path, State},
     http::StatusCode,
-    Json,
 };
 use axum_extra::extract::CookieJar;
 
@@ -61,12 +61,15 @@ pub(crate) async fn create_user(
 
     let normalized = normalize_username(&payload.username);
     if normalized.is_empty() {
-        return Err(ApiError::bad_request("invalid_username", "Username cannot be empty"));
+        return Err(ApiError::bad_request(
+            "invalid_username",
+            "Username cannot be empty",
+        ));
     }
 
-    let password_hash = hash_password(&payload.password)
-        .map_err(|e| ApiError::internal(e.into()))?;
-        
+    let password_hash =
+        hash_password(&payload.password).map_err(|e| ApiError::internal(e.into()))?;
+
     let role_str = match payload.role {
         UserRole::Admin => "admin",
         UserRole::Editor => "editor",
@@ -117,7 +120,10 @@ pub(crate) async fn update_user(
 
     if let Some(ref new_role) = payload.role {
         if id == admin.id && *new_role != admin.role {
-            return Err(ApiError::bad_request("role_change_not_allowed", "You cannot change your own role"));
+            return Err(ApiError::bad_request(
+                "role_change_not_allowed",
+                "You cannot change your own role",
+            ));
         }
     }
 
@@ -137,8 +143,7 @@ pub(crate) async fn update_user(
     }
 
     if let Some(password) = payload.password {
-        let password_hash = hash_password(&password)
-            .map_err(|e| ApiError::internal(e.into()))?;
+        let password_hash = hash_password(&password).map_err(|e| ApiError::internal(e.into()))?;
         query_builder.push(", password_hash = ");
         query_builder.push_bind(password_hash);
         has_updates = true;
@@ -172,7 +177,10 @@ pub(crate) async fn delete_user(
     let admin = require_admin(&state, &jar).await?;
 
     if id == admin.id {
-        return Err(ApiError::bad_request("self_delete_not_allowed", "You cannot delete your own account"));
+        return Err(ApiError::bad_request(
+            "self_delete_not_allowed",
+            "You cannot delete your own account",
+        ));
     }
 
     let result = sqlx::query!("delete from users where id = $1", id)
@@ -189,7 +197,13 @@ pub(crate) async fn delete_user(
 
 pub(crate) fn routes(state: AppState) -> axum::Router {
     axum::Router::new()
-        .route("/api/admin/users", axum::routing::get(list_users).post(create_user))
-        .route("/api/admin/users/{id}", axum::routing::put(update_user).delete(delete_user))
+        .route(
+            "/api/admin/users",
+            axum::routing::get(list_users).post(create_user),
+        )
+        .route(
+            "/api/admin/users/{id}",
+            axum::routing::put(update_user).delete(delete_user),
+        )
         .with_state(state)
 }

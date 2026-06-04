@@ -60,14 +60,20 @@ async fn login(
     let user_agent = headers
         .get("user-agent")
         .and_then(|value| value.to_str().ok());
-    let (session_id, expires_at) =
-        auth::create_session(&state.pool, &state.config, user.id, user_agent)
-            .await
-            .context("failed to create session")
-            .map_err(ApiError::internal)?;
+    let dynamic_config = crate::config::DynamicConfig::load(&state.pool, &state.config).await;
+    let (session_id, expires_at) = auth::create_session(
+        &state.pool,
+        dynamic_config.session_ttl_hours,
+        user.id,
+        user_agent,
+    )
+    .await
+    .context("failed to create session")
+    .map_err(ApiError::internal)?;
 
     let jar = jar.add(auth::build_session_cookie(
-        &state.config,
+        &state.config.session_cookie_name,
+        dynamic_config.secure_cookies,
         session_id,
         expires_at,
     ));
@@ -79,17 +85,19 @@ async fn logout(
     State(state): State<AppState>,
     jar: CookieJar,
 ) -> Result<(CookieJar, StatusCode), ApiError> {
-    if let Some(session_id) =
-        auth::session_id_from_jar(&jar, &state.config.session_cookie_name)
-    {
+    if let Some(session_id) = auth::session_id_from_jar(&jar, &state.config.session_cookie_name) {
         auth::destroy_session(&state.pool, session_id)
             .await
             .context("failed to delete session")
             .map_err(ApiError::internal)?;
     }
 
+    let dynamic_config = crate::config::DynamicConfig::load(&state.pool, &state.config).await;
     Ok((
-        jar.add(auth::build_logout_cookie(&state.config)),
+        jar.add(auth::build_logout_cookie(
+            &state.config.session_cookie_name,
+            dynamic_config.secure_cookies,
+        )),
         StatusCode::NO_CONTENT,
     ))
 }

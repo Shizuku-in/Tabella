@@ -90,12 +90,12 @@ pub(crate) async fn authenticate(
 
 pub(crate) async fn create_session(
     pool: &PgPool,
-    config: &Config,
+    session_ttl_hours: u64,
     user_id: i64,
     user_agent: Option<&str>,
 ) -> Result<(Uuid, OffsetDateTime)> {
     let session_id = Uuid::new_v4();
-    let expires_at = OffsetDateTime::now_utc() + Duration::hours(config.session_ttl_hours as i64);
+    let expires_at = OffsetDateTime::now_utc() + Duration::hours(session_ttl_hours as i64);
 
     sqlx::query(
         r#"
@@ -165,24 +165,28 @@ pub(crate) async fn destroy_session(pool: &PgPool, session_id: Uuid) -> Result<(
 }
 
 pub(crate) fn build_session_cookie(
-    config: &Config,
+    session_cookie_name: &str,
+    secure_cookies: bool,
     session_id: Uuid,
     expires_at: OffsetDateTime,
 ) -> Cookie<'static> {
-    Cookie::build((config.session_cookie_name.clone(), session_id.to_string()))
+    Cookie::build((session_cookie_name.to_string(), session_id.to_string()))
         .http_only(true)
         .same_site(SameSite::Lax)
-        .secure(config.secure_cookies)
+        .secure(secure_cookies)
         .path("/")
         .expires(expires_at)
         .build()
 }
 
-pub(crate) fn build_logout_cookie(config: &Config) -> Cookie<'static> {
-    Cookie::build((config.session_cookie_name.clone(), ""))
+pub(crate) fn build_logout_cookie(
+    session_cookie_name: &str,
+    secure_cookies: bool,
+) -> Cookie<'static> {
+    Cookie::build((session_cookie_name.to_string(), ""))
         .http_only(true)
         .same_site(SameSite::Lax)
-        .secure(config.secure_cookies)
+        .secure(secure_cookies)
         .path("/")
         .max_age(Duration::seconds(0))
         .build()

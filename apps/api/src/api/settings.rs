@@ -1,0 +1,44 @@
+use axum::{
+    Json, Router,
+    extract::State,
+    routing::{get, put},
+};
+use axum_extra::extract::CookieJar;
+
+use crate::{AppState, config::DynamicConfig};
+
+use super::{error::ApiError, guards::require_admin};
+
+pub(crate) fn routes(state: AppState) -> Router {
+    Router::new()
+        .route("/api/settings", get(get_settings))
+        .route("/api/settings", put(update_settings))
+        .with_state(state)
+}
+
+async fn get_settings(
+    State(state): State<AppState>,
+    jar: CookieJar,
+) -> Result<Json<DynamicConfig>, ApiError> {
+    require_admin(&state, &jar).await?;
+    Ok(Json(DynamicConfig::load(&state.pool, &state.config).await))
+}
+
+async fn update_settings(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    Json(new_settings): Json<DynamicConfig>,
+) -> Result<Json<DynamicConfig>, ApiError> {
+    require_admin(&state, &jar).await?;
+
+    new_settings
+        .validate()
+        .map_err(|error| ApiError::bad_request("invalid_settings", error.to_string()))?;
+
+    new_settings
+        .save(&state.pool)
+        .await
+        .map_err(ApiError::internal)?;
+
+    Ok(Json(new_settings))
+}

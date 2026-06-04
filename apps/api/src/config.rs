@@ -4,7 +4,74 @@ use std::{
     path::PathBuf,
 };
 
-use anyhow::{Context, Result};
+use anyhow::{Context, Result, bail};
+use serde::{Deserialize, Serialize};
+use sqlx::{PgPool, Row};
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub(crate) struct DynamicConfig {
+    pub(crate) max_download_images: usize,
+    pub(crate) max_download_total_bytes: u64,
+    pub(crate) download_retention_hours: u64,
+    pub(crate) session_ttl_hours: u64,
+    pub(crate) secure_cookies: bool,
+}
+
+impl DynamicConfig {
+    pub async fn load(pool: &PgPool, fallback: &Config) -> Self {
+        let row = sqlx::query("SELECT value FROM settings WHERE key = 'global'")
+            .fetch_optional(pool)
+            .await
+            .ok()
+            .flatten();
+
+        if let Some(row) = row {
+            if let Ok(value) = row.try_get::<serde_json::Value, _>("value") {
+                if let Ok(config) = serde_json::from_value::<DynamicConfig>(value) {
+                    return config;
+                }
+            }
+        }
+
+        Self {
+            max_download_images: fallback.max_download_images,
+            max_download_total_bytes: fallback.max_download_total_bytes,
+            download_retention_hours: fallback.download_retention_hours,
+            session_ttl_hours: fallback.session_ttl_hours,
+            secure_cookies: fallback.secure_cookies,
+        }
+    }
+
+    pub fn validate(&self) -> Result<()> {
+        if self.max_download_images == 0 {
+            bail!("max_download_images must be greater than 0");
+        }
+        if self.max_download_total_bytes == 0 {
+            bail!("max_download_total_bytes must be greater than 0");
+        }
+        if self.download_retention_hours == 0 {
+            bail!("download_retention_hours must be greater than 0");
+        }
+        if self.session_ttl_hours == 0 {
+            bail!("session_ttl_hours must be greater than 0");
+        }
+
+        Ok(())
+    }
+
+    pub async fn save(&self, pool: &PgPool) -> Result<()> {
+        self.validate()?;
+        let value = serde_json::to_value(self)?;
+        sqlx::query(
+            "INSERT INTO settings (key, value, updated_at) VALUES ('global', $1, NOW())
+             ON CONFLICT (key) DO UPDATE SET value = $1, updated_at = NOW()",
+        )
+        .bind(value)
+        .execute(pool)
+        .await?;
+        Ok(())
+    }
+}
 
 #[derive(Clone, Debug)]
 pub(crate) struct Config {
@@ -74,4 +141,28 @@ where
     T: std::str::FromStr,
 {
     env::var(key).ok()?.parse().ok()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Config, DynamicConfig};
+
+    #[test]
+    fn dynamic_config_validate_rejects_zero_values() {
+        let defaults = Config::default();
+        let mut config = DynamicConfig {
+            max_download_images: defaults.max_download_images,
+            max_download_total_bytes: defaults.max_download_total_bytes,
+            download_retention_hours: defaults.download_retention_hours,
+            session_ttl_hours: defaults.session_ttl_hours,
+            secure_cookies: defaults.secure_cookies,
+        };
+
+        config.session_ttl_hours = 0;
+        assert!(config.validate().is_err());
+
+        config.session_ttl_hours = 1;
+        config.max_download_images = 0;
+        assert!(config.validate().is_err());
+    }
 }

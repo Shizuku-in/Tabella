@@ -10,6 +10,7 @@ import {
   Search,
   SettingsOutlined,
   Sort,
+  Storage,
   StarBorderOutlined,
   StarOutlined,
   PersonOutline,
@@ -91,6 +92,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
   const searchInputRef = useRef<HTMLInputElement>(null)
   const isGalleryRoute = location.pathname === '/'
   const isAdminImportsRoute = location.pathname.startsWith('/admin/imports')
+  const isAdminServerRoute = location.pathname.startsWith('/admin/server')
   const isAdminUsersRoute = location.pathname.startsWith('/admin/users')
   const isProfileRoute = location.pathname.startsWith('/profile')
   const isAdmin = user?.role === 'admin'
@@ -206,7 +208,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                   fontStyle: 'italic',
                 }}
               >
-                / Imports
+                /Imports
               </Typography>
             )}
 
@@ -222,7 +224,23 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                   fontStyle: 'italic',
                 }}
               >
-                / Users
+                /Users
+              </Typography>
+            )}
+
+            {isAdminServerRoute && (
+              <Typography
+                sx={{
+                  color: 'text.secondary',
+                  fontFamily: '"Google Sans Code", monospace',
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                  ml: 0.5,
+                  mr: 1,
+                  fontStyle: 'italic',
+                }}
+              >
+                /Server
               </Typography>
             )}
 
@@ -238,7 +256,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                   fontStyle: 'italic',
                 }}
               >
-                / Profile
+                /Profile
               </Typography>
             )}
 
@@ -552,6 +570,18 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
           >
             <PlaylistAdd fontSize="small" sx={{ mr: 1 }} />
             Import Jobs
+          </MenuItem>
+        ) : null}
+
+        {isAdmin ? (
+          <MenuItem
+            component={RouterLink}
+            to="/admin/server"
+            selected={isAdminServerRoute}
+            onClick={() => setUserAnchor(null)}
+          >
+            <Storage fontSize="small" sx={{ mr: 1 }} />
+            Server Manage
           </MenuItem>
         ) : null}
 

@@ -1,19 +1,19 @@
 use axum::{
+    Json, Router,
     extract::{DefaultBodyLimit, Multipart, State},
     http::StatusCode,
     routing::{get, post},
-    Json, Router,
 };
 use axum_extra::extract::CookieJar;
 use serde_json::json;
 use tokio::io::AsyncWriteExt;
 
 use crate::{
+    AppState,
     api::error::ApiError,
     api::guards::require_user,
     auth::{hash_password, normalize_username},
     dto::{UpdateProfileRequest, UserResponse},
-    AppState,
 };
 
 const MAX_AVATAR_UPLOAD_BYTES: usize = 5 * 1024 * 1024; // 5 MB
@@ -75,7 +75,10 @@ async fn update_profile(
     if let Some(username) = payload.username {
         let normalized = normalize_username(&username);
         if normalized.is_empty() {
-            return Err(ApiError::bad_request("invalid_username", "Username cannot be empty"));
+            return Err(ApiError::bad_request(
+                "invalid_username",
+                "Username cannot be empty",
+            ));
         }
         query_builder.push(", username = ");
         query_builder.push_bind(username);
@@ -86,25 +89,33 @@ async fn update_profile(
 
     if let Some(new_password) = payload.new_password {
         if let Some(current_password) = payload.current_password {
-            let current_hash: String = sqlx::query_scalar("select password_hash from users where id = $1")
-                .bind(user.id)
-                .fetch_one(&state.pool)
-                .await
-                .map_err(|e| ApiError::internal(e.into()))?;
+            let current_hash: String =
+                sqlx::query_scalar("select password_hash from users where id = $1")
+                    .bind(user.id)
+                    .fetch_one(&state.pool)
+                    .await
+                    .map_err(|e| ApiError::internal(e.into()))?;
 
             if !crate::auth::verify_password(&current_password, &current_hash)
-                .map_err(|e| ApiError::internal(e.into()))? {
-                return Err(ApiError::bad_request("invalid_password", "Current password is incorrect"));
+                .map_err(|e| ApiError::internal(e.into()))?
+            {
+                return Err(ApiError::bad_request(
+                    "invalid_password",
+                    "Current password is incorrect",
+                ));
             }
 
-            let new_hash = hash_password(&new_password)
-                .map_err(|e| ApiError::internal(e.into()))?;
+            let new_hash =
+                hash_password(&new_password).map_err(|e| ApiError::internal(e.into()))?;
 
             query_builder.push(", password_hash = ");
             query_builder.push_bind(new_hash);
             has_updates = true;
         } else {
-            return Err(ApiError::bad_request("missing_current_password", "Current password is required to change password"));
+            return Err(ApiError::bad_request(
+                "missing_current_password",
+                "Current password is required to change password",
+            ));
         }
     }
 
@@ -123,14 +134,17 @@ async fn update_profile(
         .map_err(|err| {
             if let sqlx::Error::Database(ref db_err) = err {
                 if db_err.constraint() == Some("users_normalized_username_key") {
-                    return ApiError::bad_request("duplicate_username", "Username is already taken");
+                    return ApiError::bad_request(
+                        "duplicate_username",
+                        "Username is already taken",
+                    );
                 }
             }
             ApiError::internal(err.into())
         })?;
 
-    use sqlx::Row;
     use crate::dto::UserRole;
+    use sqlx::Row;
     let role_str: String = row.get("role");
     let role = match role_str.as_str() {
         "admin" => UserRole::Admin,
@@ -200,12 +214,17 @@ async fn upload_avatar(
         }
     }
 
-    let url = avatar_url.ok_or_else(|| ApiError::bad_request("no_file", "No avatar file provided"))?;
+    let url =
+        avatar_url.ok_or_else(|| ApiError::bad_request("no_file", "No avatar file provided"))?;
 
-    sqlx::query!("update users set avatar_url = $1, updated_at = now() where id = $2", url, user.id)
-        .execute(&state.pool)
-        .await
-        .map_err(|e| ApiError::internal(e.into()))?;
+    sqlx::query!(
+        "update users set avatar_url = $1, updated_at = now() where id = $2",
+        url,
+        user.id
+    )
+    .execute(&state.pool)
+    .await
+    .map_err(|e| ApiError::internal(e.into()))?;
 
     Ok(Json(json!({
         "avatar_url": url
