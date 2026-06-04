@@ -164,6 +164,12 @@ export async function listImages(query: {
   include_tags?: string[]
   exclude_tags?: string[]
   favorites_only?: boolean
+  uploaded_after?: string | null
+  uploaded_before?: string | null
+  min_width?: number | null
+  min_height?: number | null
+  aspect_ratio_min?: number | null
+  aspect_ratio_max?: number | null
 }): Promise<BackendListImagesResponse> {
   const params = new URLSearchParams()
   if (query.cursor) params.set('cursor', query.cursor)
@@ -179,6 +185,12 @@ export async function listImages(query: {
   if (query.exclude_tags && query.exclude_tags.length > 0) {
     params.set('exclude_tags', query.exclude_tags.join(','))
   }
+  if (query.uploaded_after) params.set('uploaded_after', query.uploaded_after)
+  if (query.uploaded_before) params.set('uploaded_before', query.uploaded_before)
+  if (query.min_width) params.set('min_width', query.min_width.toString())
+  if (query.min_height) params.set('min_height', query.min_height.toString())
+  if (query.aspect_ratio_min) params.set('aspect_ratio_min', query.aspect_ratio_min.toString())
+  if (query.aspect_ratio_max) params.set('aspect_ratio_max', query.aspect_ratio_max.toString())
 
   return request<BackendListImagesResponse>(`/api/images?${params.toString()}`)
 }

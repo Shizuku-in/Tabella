@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/auth-provider.tsx'
 import { RequireAuth, RequireRole } from './auth/route-guards.tsx'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import AppShell from './app-shell.tsx'
 import { GalleryUiProvider } from './gallery/gallery-ui-provider.tsx'
 import { AdminImportsPage } from './pages/admin-imports-page.tsx'
@@ -50,8 +52,9 @@ function App() {
 
   return (
     <ThemeProvider theme={buildTheme(mode)}>
-      <CssBaseline />
-      <QueryClientProvider client={queryClient}>
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <CssBaseline />
+        <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <GalleryUiProvider>
             <BrowserRouter>
@@ -78,6 +81,7 @@ function App() {
           </GalleryUiProvider>
         </AuthProvider>
       </QueryClientProvider>
+      </LocalizationProvider>
     </ThemeProvider>
   )
 }

@@ -19,6 +19,7 @@ import {
   CheckCircleOutline,
   CheckCircle,
   DownloadOutlined,
+  Troubleshoot,
 } from '@mui/icons-material'
 import {
   AppBar,
@@ -44,6 +45,7 @@ import { alpha } from '@mui/material/styles'
 import type { PaletteMode } from '@mui/material'
 import { Link as RouterLink, Outlet, useLocation } from 'react-router-dom'
 import { SettingsDialog } from './components/settings-dialog.tsx'
+import { AdvancedSearchDialog } from './components/advanced-search-dialog.tsx'
 import { useAuth } from './auth/auth-provider.tsx'
 import { useGalleryUi } from './gallery/gallery-ui-provider.tsx'
 import type { GallerySort, LayoutMode, RatingFilter } from './types.ts'
@@ -97,10 +99,27 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     activeDownloadJobId,
     setActiveDownloadJobId,
     topBarConfig,
+    advancedIncludeTags,
+    setAdvancedIncludeTags,
+    excludeTags,
+    setExcludeTags,
+    uploadedAfter,
+    setUploadedAfter,
+    uploadedBefore,
+    setUploadedBefore,
+    minWidth,
+    setMinWidth,
+    minHeight,
+    setMinHeight,
+    aspectRatioMin,
+    setAspectRatioMin,
+    aspectRatioMax,
+    setAspectRatioMax,
   } = useGalleryUi()
 
 
   const [searchVisible, setSearchVisible] = useState(() => searchTags.length > 0)
+  const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false)
   const [sortAnchor, setSortAnchor] = useState<HTMLElement | null>(null)
   const [layoutAnchor, setLayoutAnchor] = useState<HTMLElement | null>(null)
   const [ratingAnchor, setRatingAnchor] = useState<HTMLElement | null>(null)
@@ -138,6 +157,19 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     }, 300)
     return () => clearTimeout(timer)
   }, [tagInput, searchTags])
+
+  const isAdvancedSearchActive =
+    advancedIncludeTags.length > 0 ||
+    excludeTags.length > 0 ||
+    uploadedAfter ||
+    uploadedBefore ||
+    minWidth ||
+    minHeight ||
+    aspectRatioMin ||
+    aspectRatioMax
+  const hasBasicSearch = searchTags.length > 0
+  const showSearchControl = !isAdvancedSearchActive && (topBarConfig.search || hasBasicSearch)
+  const showAdvancedSearchControl = !hasBasicSearch && (topBarConfig.advancedSearch || Boolean(isAdvancedSearchActive))
 
   useServerEvents<{ id: unknown }>('download_job_updated', useCallback(async (data) => {
     if (!activeDownloadJobId || data.id !== activeDownloadJobId) return
@@ -180,6 +212,30 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
       setSearchVisible(true)
     }
   }, [searchTags])
+
+  useEffect(() => {
+    if (hasBasicSearch && isAdvancedSearchActive) {
+      setAdvancedIncludeTags([])
+      setExcludeTags([])
+      setUploadedAfter(null)
+      setUploadedBefore(null)
+      setMinWidth(null)
+      setMinHeight(null)
+      setAspectRatioMin(null)
+      setAspectRatioMax(null)
+    }
+  }, [
+    hasBasicSearch,
+    isAdvancedSearchActive,
+    setAdvancedIncludeTags,
+    setExcludeTags,
+    setUploadedAfter,
+    setUploadedBefore,
+    setMinWidth,
+    setMinHeight,
+    setAspectRatioMin,
+    setAspectRatioMax,
+  ])
 
   const handleLayoutSelect = (next: LayoutMode) => {
     setLayoutAnchor(null)
@@ -380,7 +436,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                   </Tooltip>
                 )}
 
-                {topBarConfig.search && (
+                {showSearchControl && (
                   <>
                     <Box
                       sx={{
@@ -406,6 +462,16 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                         onInputChange={(_, newValue) => setTagInput(newValue)}
                         onChange={(_, newValue) => {
                           const uniqueTags = Array.from(new Set(newValue as string[]))
+                          if (uniqueTags.length > 0) {
+                            setAdvancedIncludeTags([])
+                            setExcludeTags([])
+                            setUploadedAfter(null)
+                            setUploadedBefore(null)
+                            setMinWidth(null)
+                            setMinHeight(null)
+                            setAspectRatioMin(null)
+                            setAspectRatioMax(null)
+                          }
                           setSearchTags(uniqueTags)
                         }}
                         onBlur={handleSearchBlur}
@@ -484,6 +550,18 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
                       </IconButton>
                     </Tooltip>
                   </>
+                )}
+
+                {showAdvancedSearchControl && (
+                  <Tooltip title="Advanced Search">
+                    <IconButton
+                      color={isAdvancedSearchActive ? 'primary' : 'default'}
+                      onClick={() => setAdvancedSearchOpen(true)}
+                      sx={{ p: 0.75, borderRadius: '50%' }}
+                    >
+                      <Troubleshoot fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
                 )}
               </>
             ) : null}
@@ -688,6 +766,9 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
       </Menu>
 
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      {showAdvancedSearchControl && (
+        <AdvancedSearchDialog open={advancedSearchOpen} onClose={() => setAdvancedSearchOpen(false)} />
+      )}
 
       <Container
         maxWidth={false}

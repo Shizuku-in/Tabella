@@ -58,7 +58,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0, pb: 2 }}>
             <FormGroup row sx={{ px: 1 }}>
-              {(['sort', 'layout', 'rating', 'favorites', 'selectMultiple', 'search', 'themeToggle'] as const).map((key) => {
+              {(['sort', 'layout', 'rating', 'favorites', 'selectMultiple', 'search', 'advancedSearch', 'themeToggle'] as const).map((key) => {
                 const labelMap: Record<typeof key, string> = {
                   sort: 'Sort',
                   layout: 'Layout',
@@ -66,6 +66,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                   favorites: 'Favorites Only',
                   selectMultiple: 'Select Multiple',
                   search: 'Search',
+                  advancedSearch: 'Advanced Search',
                   themeToggle: 'Dark/Light Mode',
                 }
                 return (

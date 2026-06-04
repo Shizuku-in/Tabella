@@ -108,6 +108,14 @@ pub(crate) struct ListImagesQuery {
     pub(crate) limit: Option<u32>,
     #[serde(default)]
     pub(crate) favorites_only: bool,
+    #[serde(with = "time::serde::iso8601::option", default)]
+    pub(crate) uploaded_after: Option<time::OffsetDateTime>,
+    #[serde(with = "time::serde::iso8601::option", default)]
+    pub(crate) uploaded_before: Option<time::OffsetDateTime>,
+    pub(crate) min_width: Option<u32>,
+    pub(crate) min_height: Option<u32>,
+    pub(crate) aspect_ratio_min: Option<f32>,
+    pub(crate) aspect_ratio_max: Option<f32>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]

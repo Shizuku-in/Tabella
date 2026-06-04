@@ -13,7 +13,7 @@ import { ratingLabel } from '../lib/constants.ts'
 const PAGE_SIZE = 50
 
 export function GalleryPage() {
-  const { layoutMode, searchTags, sort, ratingFilter, favoritesOnly, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality, selectionMode, setSelectionMode, selectedIds, setSelectedIds, setActiveDownloadJobId } = useGalleryUi()
+  const { layoutMode, searchTags, sort, ratingFilter, favoritesOnly, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality, selectionMode, setSelectionMode, selectedIds, setSelectedIds, setActiveDownloadJobId, advancedIncludeTags, excludeTags, uploadedAfter, uploadedBefore, minWidth, minHeight, aspectRatioMin, aspectRatioMax } = useGalleryUi()
   const queryClient = useQueryClient()
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
@@ -31,12 +31,12 @@ export function GalleryPage() {
   const [favoriteOverrides, setFavoriteOverrides] = useState<Record<number, boolean>>({})
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null)
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
+  const hasBasicSearch = searchTags.length > 0
 
   const galleryQuery = useInfiniteQuery({
-    queryKey: ['gallery', searchTags, sort, ratingFilter, favoritesOnly],
+    queryKey: ['gallery', searchTags, advancedIncludeTags, excludeTags, sort, ratingFilter, favoritesOnly, uploadedAfter, uploadedBefore, minWidth, minHeight, aspectRatioMin, aspectRatioMax],
     queryFn: async ({ pageParam }) => {
-      // Use searchTags directly
-      const tags = searchTags
+      const tags = hasBasicSearch ? searchTags : advancedIncludeTags
 
       const response = await listImages({
         cursor: pageParam,
@@ -44,7 +44,14 @@ export function GalleryPage() {
         sort: sort,
         rating: ratingFilter === 'all' ? undefined : [ratingFilter],
         include_tags: tags,
+        exclude_tags: hasBasicSearch ? undefined : excludeTags,
         favorites_only: favoritesOnly ? true : undefined,
+        uploaded_after: hasBasicSearch ? undefined : uploadedAfter,
+        uploaded_before: hasBasicSearch ? undefined : uploadedBefore,
+        min_width: hasBasicSearch ? undefined : minWidth,
+        min_height: hasBasicSearch ? undefined : minHeight,
+        aspect_ratio_min: hasBasicSearch ? undefined : aspectRatioMin,
+        aspect_ratio_max: hasBasicSearch ? undefined : aspectRatioMax,
       })
 
       return {
@@ -417,7 +424,7 @@ export function GalleryPage() {
             </Tooltip>
 
             <Button
-              variant="contained"
+              variant="outlined"
               size="small"
               startIcon={<Download />}
               disabled={selectedIds.size === 0}

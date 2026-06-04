@@ -114,6 +114,36 @@ async fn list_images(
         builder.push(") ");
     }
 
+    if let Some(uploaded_after) = query.uploaded_after {
+        builder.push(" AND i.imported_at >= ");
+        builder.push_bind(uploaded_after);
+    }
+
+    if let Some(uploaded_before) = query.uploaded_before {
+        builder.push(" AND i.imported_at <= ");
+        builder.push_bind(uploaded_before);
+    }
+
+    if let Some(min_width) = query.min_width {
+        builder.push(" AND i.width >= ");
+        builder.push_bind(min_width as i32);
+    }
+
+    if let Some(min_height) = query.min_height {
+        builder.push(" AND i.height >= ");
+        builder.push_bind(min_height as i32);
+    }
+
+    if let Some(ar_min) = query.aspect_ratio_min {
+        builder.push(" AND (i.width::float / i.height::float) >= ");
+        builder.push_bind(ar_min);
+    }
+
+    if let Some(ar_max) = query.aspect_ratio_max {
+        builder.push(" AND (i.width::float / i.height::float) <= ");
+        builder.push_bind(ar_max);
+    }
+
     if !query.rating.is_empty() {
         builder.push(" AND i.rating = ANY(");
         let ratings: Vec<&str> = query.rating.iter().map(|rating| rating.as_str()).collect();

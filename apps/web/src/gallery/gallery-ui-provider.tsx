@@ -39,8 +39,26 @@ interface GalleryUiContextValue {
   setSelectedIds: (value: Set<number> | ((prev: Set<number>) => Set<number>)) => void
   activeDownloadJobId: string | null
   setActiveDownloadJobId: (value: string | null) => void
-  topBarConfig: { sort: boolean; layout: boolean; rating: boolean; favorites: boolean; selectMultiple: boolean; search: boolean; themeToggle: boolean }
-  setTopBarConfig: (value: { sort: boolean; layout: boolean; rating: boolean; favorites: boolean; selectMultiple: boolean; search: boolean; themeToggle: boolean }) => void
+  topBarConfig: { sort: boolean; layout: boolean; rating: boolean; favorites: boolean; selectMultiple: boolean; search: boolean; advancedSearch: boolean; themeToggle: boolean }
+  setTopBarConfig: (value: { sort: boolean; layout: boolean; rating: boolean; favorites: boolean; selectMultiple: boolean; search: boolean; advancedSearch: boolean; themeToggle: boolean }) => void
+  showAdvancedSearch: boolean
+  setShowAdvancedSearch: (value: boolean) => void
+  advancedIncludeTags: string[]
+  setAdvancedIncludeTags: (value: string[]) => void
+  excludeTags: string[]
+  setExcludeTags: (value: string[]) => void
+  uploadedAfter: string | null
+  setUploadedAfter: (value: string | null) => void
+  uploadedBefore: string | null
+  setUploadedBefore: (value: string | null) => void
+  minWidth: number | null
+  setMinWidth: (value: number | null) => void
+  minHeight: number | null
+  setMinHeight: (value: number | null) => void
+  aspectRatioMin: number | null
+  setAspectRatioMin: (value: number | null) => void
+  aspectRatioMax: number | null
+  setAspectRatioMax: (value: number | null) => void
 }
 
 const GalleryUiContext = createContext<GalleryUiContextValue | null>(null)
@@ -110,7 +128,7 @@ function readInitialTopBarConfig() {
   if (stored) {
     try { return JSON.parse(stored) } catch { /* ignore */ }
   }
-  return { sort: true, layout: true, rating: true, favorites: true, selectMultiple: true, search: true, themeToggle: true }
+  return { sort: true, layout: true, rating: true, favorites: true, selectMultiple: true, search: true, advancedSearch: true, themeToggle: true }
 }
 
 export function GalleryUiProvider({ children }: { children: ReactNode }) {
@@ -131,6 +149,16 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [activeDownloadJobId, setActiveDownloadJobId] = useState<string | null>(null)
   const [topBarConfig, setTopBarConfig] = useState(readInitialTopBarConfig)
+
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState<boolean>(false)
+  const [advancedIncludeTags, setAdvancedIncludeTags] = useState<string[]>([])
+  const [excludeTags, setExcludeTags] = useState<string[]>([])
+  const [uploadedAfter, setUploadedAfter] = useState<string | null>(null)
+  const [uploadedBefore, setUploadedBefore] = useState<string | null>(null)
+  const [minWidth, setMinWidth] = useState<number | null>(null)
+  const [minHeight, setMinHeight] = useState<number | null>(null)
+  const [aspectRatioMin, setAspectRatioMin] = useState<number | null>(null)
+  const [aspectRatioMax, setAspectRatioMax] = useState<number | null>(null)
 
   useEffect(() => {
     window.localStorage.setItem(LAYOUT_STORAGE_KEY, layoutMode)
@@ -215,6 +243,24 @@ export function GalleryUiProvider({ children }: { children: ReactNode }) {
         setActiveDownloadJobId,
         topBarConfig,
         setTopBarConfig,
+        showAdvancedSearch,
+        setShowAdvancedSearch,
+        advancedIncludeTags,
+        setAdvancedIncludeTags,
+        excludeTags,
+        setExcludeTags,
+        uploadedAfter,
+        setUploadedAfter,
+        uploadedBefore,
+        setUploadedBefore,
+        minWidth,
+        setMinWidth,
+        minHeight,
+        setMinHeight,
+        aspectRatioMin,
+        setAspectRatioMin,
+        aspectRatioMax,
+        setAspectRatioMax,
       }}
     >
       {children}
