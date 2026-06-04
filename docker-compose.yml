@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  tabella:
+    build: .
+    container_name: tabella
+    restart: unless-stopped
+    ports:
+      - "8787:8787"
+    environment:
+      - DATABASE_URL=postgres://tabella:tabella_secret@db/tabella
+      - TABELLA_LISTEN_ADDR=0.0.0.0:8787
+      - TABELLA_MEDIA_ROOT=/app/var/media
+      - TABELLA_TEMP_ROOT=/app/var/tmp
+      - TABELLA_SESSION_COOKIE_NAME=tabella_session
+      - TABELLA_SESSION_TTL_HOURS=720
+      - TABELLA_SECURE_COOKIES=false
+      - TABELLA_BOOTSTRAP_ADMIN_USERNAME=admin
+      - TABELLA_BOOTSTRAP_ADMIN_PASSWORD=admin
+    volumes:
+      - tabella-data:/app/var/media
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    container_name: tabella-db
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=tabella
+      - POSTGRES_PASSWORD=tabella_secret
+      - POSTGRES_DB=tabella
+    volumes:
+      - tabella-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U tabella -d tabella"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  tabella-data:
+  tabella-db-data:

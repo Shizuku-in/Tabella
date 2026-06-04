@@ -66,7 +66,10 @@ async fn main() -> anyhow::Result<()> {
         config.media_root.clone(),
     ));
 
-    let app = Router::new()
+    let frontend_dir = std::env::var("TABELLA_FRONTEND_DIR").unwrap_or_else(|_| "dist".to_string());
+    let frontend_path = std::path::Path::new(&frontend_dir);
+
+    let mut app = Router::new()
         .nest_service(
             "/media",
             tower_http::services::ServeDir::new(&config.media_root),
@@ -75,8 +78,19 @@ async fn main() -> anyhow::Result<()> {
             "/tmp",
             tower_http::services::ServeDir::new(&config.temp_root),
         )
-        .merge(api::router(app_state))
-        .layer(TraceLayer::new_for_http());
+        .merge(api::router(app_state));
+
+    if frontend_path.exists() {
+        tracing::info!("serving frontend from {:?}", frontend_path);
+        let index_path = frontend_path.join("index.html");
+        let serve_dir = tower_http::services::ServeDir::new(frontend_path)
+            .not_found_service(tower_http::services::ServeFile::new(index_path));
+        app = app.fallback_service(serve_dir);
+    } else {
+        tracing::warn!("frontend directory {:?} not found, skipping frontend serving", frontend_path);
+    }
+
+    let app = app.layer(TraceLayer::new_for_http());
 
     let listener = tokio::net::TcpListener::bind(config.listen_addr)
         .await
