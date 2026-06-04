@@ -137,7 +137,7 @@ export function AdminServerPage() {
             </Typography>
             <Button
               type="submit"
-              variant="contained"
+              variant="outlined"
               startIcon={<Save />}
               disabled={updateMutation.isPending || !isDirty}
             >
