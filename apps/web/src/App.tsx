@@ -13,6 +13,7 @@ import { LoginPage } from './pages/login-page.tsx'
 import { AdminUsersPage } from './pages/admin-users-page.tsx'
 import { AdminServerPage } from './pages/admin-server-page.tsx'
 import { ProfilePage } from './pages/profile-page.tsx'
+import { NotFoundPage } from './pages/not-found-page.tsx'
 import { buildTheme } from './theme.ts'
 
 const queryClient = new QueryClient({
@@ -71,6 +72,7 @@ function App() {
                     </Route>
                   </Route>
                 </Route>
+                <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </BrowserRouter>
           </GalleryUiProvider>
