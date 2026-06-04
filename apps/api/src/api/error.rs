@@ -12,7 +12,6 @@ pub(crate) enum ApiError {
     Forbidden { code: &'static str, message: String },
     PayloadTooLarge { message: String },
     NotFound { code: &'static str, message: String },
-    NotImplemented { message: String },
     Internal(anyhow::Error),
 }
 
@@ -51,11 +50,7 @@ impl ApiError {
         }
     }
 
-    pub(crate) fn not_implemented(message: impl Into<String>) -> Self {
-        Self::NotImplemented {
-            message: message.into(),
-        }
-    }
+
 
     pub(crate) fn internal(error: anyhow::Error) -> Self {
         Self::Internal(error)
@@ -90,11 +85,7 @@ impl IntoResponse for ApiError {
                 Json(json!({ "error": code, "message": message })),
             )
                 .into_response(),
-            Self::NotImplemented { message } => (
-                StatusCode::NOT_IMPLEMENTED,
-                Json(json!({ "error": "not_implemented", "message": message })),
-            )
-                .into_response(),
+
             Self::Internal(error) => {
                 tracing::error!(error = ?error, "request failed");
                 (
