@@ -12,7 +12,7 @@ import {
   PersonOutline,
   GroupOutlined,
   PlaylistAdd,
-  Storage,
+  AdminPanelSettingsOutlined,
   LogoutOutlined,
 } from '@mui/icons-material'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
@@ -300,7 +300,7 @@ export function UserControl() {
             selected={location.pathname.startsWith('/admin/server')}
             onClick={() => setAnchorEl(null)}
           >
-            <Storage fontSize="small" sx={{ mr: 1 }} />
+            <AdminPanelSettingsOutlined fontSize="small" sx={{ mr: 1 }} />
             Server Manage
           </MenuItem>
         )}
