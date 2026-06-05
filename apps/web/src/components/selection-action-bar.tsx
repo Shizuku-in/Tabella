@@ -1,0 +1,70 @@
+import { Fade, Paper, Stack, IconButton, Typography, Tooltip, Button } from '@mui/material'
+import { Close, Download, SelectAll } from '@mui/icons-material'
+
+export interface SelectionActionBarProps {
+  selectionMode: boolean
+  selectedCount: number
+  onClose: () => void
+  onSelectAll: () => void
+  onDownload: () => void
+}
+
+export function SelectionActionBar({
+  selectionMode,
+  selectedCount,
+  onClose,
+  onSelectAll,
+  onDownload,
+}: SelectionActionBarProps) {
+  return (
+    <Fade in={selectionMode}>
+      <Paper
+        elevation={6}
+        sx={{
+          position: 'fixed',
+          bottom: { xs: 16, sm: 24, md: 32 },
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 1100,
+          borderRadius: 8,
+          overflow: 'hidden',
+          bgcolor: 'background.paper',
+          border: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          sx={{ px: 2, py: 1.5, minWidth: 280 }}
+        >
+          <IconButton size="small" onClick={onClose} edge="start">
+            <Close />
+          </IconButton>
+          
+          <Typography variant="body2" sx={{ fontWeight: 600, flex: 1, px: 1 }}>
+            {selectedCount} Selected
+          </Typography>
+
+          <Tooltip title="Select all loaded items">
+            <IconButton size="small" onClick={onSelectAll}>
+              <SelectAll />
+            </IconButton>
+          </Tooltip>
+
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Download />}
+            disabled={selectedCount === 0}
+            onClick={onDownload}
+            sx={{ borderRadius: 6, textTransform: 'none', px: 2 }}
+          >
+            Download
+          </Button>
+        </Stack>
+      </Paper>
+    </Fade>
+  )
+}

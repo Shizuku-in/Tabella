@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useCallback, useEffect } from 'react'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { useServerEvents } from './use-server-events.ts'
