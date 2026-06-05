@@ -70,6 +70,7 @@ export function SearchBar() {
     <Autocomplete
       multiple
       freeSolo
+      disableClearable
       options={tagSuggestions}
       filterOptions={(x) => x}
       value={searchTags}
