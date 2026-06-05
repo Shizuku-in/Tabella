@@ -160,6 +160,10 @@ function validateFields({
 
   if (!isEdit && !password.trim()) {
     errors.password = 'Password is required.'
+  } else if (password) {
+    if (password.length < 8 || !/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      errors.password = 'Password must be at least 8 characters, and include an uppercase letter, lowercase letter, and a number.'
+    }
   }
 
   return errors

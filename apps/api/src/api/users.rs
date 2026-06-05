@@ -67,6 +67,8 @@ pub(crate) async fn create_user(
         ));
     }
 
+    validate_password(&payload.password)?;
+
     let password_hash =
         hash_password(&payload.password).map_err(|e| ApiError::internal(e.into()))?;
 
@@ -143,6 +145,7 @@ pub(crate) async fn update_user(
     }
 
     if let Some(password) = payload.password {
+        validate_password(&password)?;
         let password_hash = hash_password(&password).map_err(|e| ApiError::internal(e.into()))?;
         query_builder.push(", password_hash = ");
         query_builder.push_bind(password_hash);
@@ -206,4 +209,32 @@ pub(crate) fn routes(state: AppState) -> axum::Router {
             axum::routing::put(update_user).delete(delete_user),
         )
         .with_state(state)
+}
+
+fn validate_password(password: &str) -> Result<(), ApiError> {
+    if password.chars().count() < 8 {
+        return Err(ApiError::bad_request(
+            "weak_password",
+            "Password must be at least 8 characters long",
+        ));
+    }
+    if !password.chars().any(|c| c.is_ascii_lowercase()) {
+        return Err(ApiError::bad_request(
+            "weak_password",
+            "Password must contain at least one lowercase letter",
+        ));
+    }
+    if !password.chars().any(|c| c.is_ascii_uppercase()) {
+        return Err(ApiError::bad_request(
+            "weak_password",
+            "Password must contain at least one uppercase letter",
+        ));
+    }
+    if !password.chars().any(|c| c.is_ascii_digit()) {
+        return Err(ApiError::bad_request(
+            "weak_password",
+            "Password must contain at least one number",
+        ));
+    }
+    Ok(())
 }
