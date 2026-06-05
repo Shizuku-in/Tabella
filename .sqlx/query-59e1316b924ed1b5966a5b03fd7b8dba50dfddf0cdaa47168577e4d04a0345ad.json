@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update users set avatar_url = $1, updated_at = now() where id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "59e1316b924ed1b5966a5b03fd7b8dba50dfddf0cdaa47168577e4d04a0345ad"
+}
