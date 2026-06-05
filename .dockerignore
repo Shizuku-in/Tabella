@@ -8,3 +8,4 @@ var/
 apps/web/node_modules/
 apps/api/target/
 crates/tagger-cli/target/
+docs/
