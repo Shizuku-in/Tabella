@@ -36,6 +36,7 @@ import type { GalleryItem, Rating } from '../types'
 import { getTagColor } from '../lib/tags'
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
+import { useShallow } from 'zustand/react/shallow'
 import { updateImage, deleteImage, suggestTags } from '../lib/api'
 import { LightboxViewerInfo } from './lightbox-viewer-info'
 
@@ -60,8 +61,13 @@ interface LightboxViewerProps {
 }
 
 export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChange, onDelete, onUpdate }: LightboxViewerProps) {
-  const { lightboxImageQuality, showLightboxTags } = useGalleryPreferencesStore()
-  const { setSearchTags } = useGallerySessionStore()
+  const { lightboxImageQuality, showLightboxTags } = useGalleryPreferencesStore(
+    useShallow((state) => ({
+      lightboxImageQuality: state.lightboxImageQuality,
+      showLightboxTags: state.showLightboxTags,
+    }))
+  )
+  const setSearchTags = useGallerySessionStore((state) => state.setSearchTags)
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('md'))
   const infoPanelWidth = isMobile ? '100%' : 360

@@ -5,6 +5,7 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { Masonry } from '@mui/lab'
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
+import { useShallow } from 'zustand/react/shallow'
 import { LightboxViewer } from '../components/lightbox-viewer.tsx'
 import { createDownloadJob, listImages, toggleFavorite } from '../lib/api.ts'
 import type { GalleryItem, LayoutMode } from '../types.ts'
@@ -14,8 +15,39 @@ import { ratingLabel } from '../lib/constants.ts'
 const PAGE_SIZE = 50
 
 export function GalleryPage() {
-  const { layoutMode, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality, hoverDownloadQuality } = useGalleryPreferencesStore()
-  const { searchTags, sort, ratingFilter, favoritesOnly, selectionMode, setSelectionMode, selectedIds, setSelectedIds, setActiveDownloadJobId, advancedIncludeTags, excludeTags, uploadedAfter, uploadedBefore, minWidth, minHeight, aspectRatioMin, aspectRatioMax } = useGallerySessionStore()
+  const { layoutMode, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality, hoverDownloadQuality } = useGalleryPreferencesStore(
+    useShallow((state) => ({
+      layoutMode: state.layoutMode,
+      masonryColumns: state.masonryColumns,
+      gridColumns: state.gridColumns,
+      showMobileDetails: state.showMobileDetails,
+      hoverInfo: state.hoverInfo,
+      showResultsCount: state.showResultsCount,
+      galleryImageQuality: state.galleryImageQuality,
+      hoverDownloadQuality: state.hoverDownloadQuality,
+    }))
+  )
+  const { searchTags, sort, ratingFilter, favoritesOnly, selectionMode, setSelectionMode, selectedIds, setSelectedIds, setActiveDownloadJobId, advancedIncludeTags, excludeTags, uploadedAfter, uploadedBefore, minWidth, minHeight, aspectRatioMin, aspectRatioMax } = useGallerySessionStore(
+    useShallow((state) => ({
+      searchTags: state.searchTags,
+      sort: state.sort,
+      ratingFilter: state.ratingFilter,
+      favoritesOnly: state.favoritesOnly,
+      selectionMode: state.selectionMode,
+      setSelectionMode: state.setSelectionMode,
+      selectedIds: state.selectedIds,
+      setSelectedIds: state.setSelectedIds,
+      setActiveDownloadJobId: state.setActiveDownloadJobId,
+      advancedIncludeTags: state.advancedIncludeTags,
+      excludeTags: state.excludeTags,
+      uploadedAfter: state.uploadedAfter,
+      uploadedBefore: state.uploadedBefore,
+      minWidth: state.minWidth,
+      minHeight: state.minHeight,
+      aspectRatioMin: state.aspectRatioMin,
+      aspectRatioMax: state.aspectRatioMax,
+    }))
+  )
   const queryClient = useQueryClient()
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,

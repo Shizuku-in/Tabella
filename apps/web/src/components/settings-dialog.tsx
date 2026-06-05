@@ -20,6 +20,7 @@ import {
 } from '@mui/material'
 import { ExpandMore } from '@mui/icons-material'
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
+import { useShallow } from 'zustand/react/shallow'
 
 export interface SettingsDialogProps {
   open: boolean
@@ -48,7 +49,30 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     setHoverDownloadQuality,
     topBarConfig,
     setTopBarConfig,
-  } = useGalleryPreferencesStore()
+  } = useGalleryPreferencesStore(
+    useShallow((state) => ({
+      masonryColumns: state.masonryColumns,
+      setMasonryColumns: state.setMasonryColumns,
+      gridColumns: state.gridColumns,
+      setGridColumns: state.setGridColumns,
+      showMobileDetails: state.showMobileDetails,
+      setShowMobileDetails: state.setShowMobileDetails,
+      hoverInfo: state.hoverInfo,
+      setHoverInfo: state.setHoverInfo,
+      showResultsCount: state.showResultsCount,
+      setShowResultsCount: state.setShowResultsCount,
+      galleryImageQuality: state.galleryImageQuality,
+      setGalleryImageQuality: state.setGalleryImageQuality,
+      lightboxImageQuality: state.lightboxImageQuality,
+      setLightboxImageQuality: state.setLightboxImageQuality,
+      showLightboxTags: state.showLightboxTags,
+      setShowLightboxTags: state.setShowLightboxTags,
+      hoverDownloadQuality: state.hoverDownloadQuality,
+      setHoverDownloadQuality: state.setHoverDownloadQuality,
+      topBarConfig: state.topBarConfig,
+      setTopBarConfig: state.setTopBarConfig,
+    }))
+  )
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>

@@ -49,6 +49,7 @@ import { AdvancedSearchDialog } from './components/advanced-search-dialog.tsx'
 import { useAuth } from './auth/auth-provider.tsx'
 import { useGalleryPreferencesStore } from './gallery/gallery-preferences-store.ts'
 import { useGallerySessionStore } from './gallery/gallery-session-store.ts'
+import { useShallow } from 'zustand/react/shallow'
 import type { GallerySort, LayoutMode, RatingFilter } from './types.ts'
 import { suggestTags } from './lib/api.ts'
 import { useServerEvents } from './hooks/use-server-events.ts'
@@ -82,7 +83,13 @@ const ratingOptions: Array<{ value: RatingFilter; label: string }> = [
 export default function AppShell({ mode, onToggleMode }: AppShellProps) {
   const location = useLocation()
   const { user, logout } = useAuth()
-  const { layoutMode, setLayoutMode, topBarConfig } = useGalleryPreferencesStore()
+  const { layoutMode, setLayoutMode, topBarConfig } = useGalleryPreferencesStore(
+    useShallow((state) => ({
+      layoutMode: state.layoutMode,
+      setLayoutMode: state.setLayoutMode,
+      topBarConfig: state.topBarConfig,
+    }))
+  )
   const {
     searchTags,
     setSearchTags,
@@ -113,7 +120,39 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     setAspectRatioMin,
     aspectRatioMax,
     setAspectRatioMax,
-  } = useGallerySessionStore()
+  } = useGallerySessionStore(
+    useShallow((state) => ({
+      searchTags: state.searchTags,
+      setSearchTags: state.setSearchTags,
+      sort: state.sort,
+      setSort: state.setSort,
+      ratingFilter: state.ratingFilter,
+      setRatingFilter: state.setRatingFilter,
+      favoritesOnly: state.favoritesOnly,
+      setFavoritesOnly: state.setFavoritesOnly,
+      selectionMode: state.selectionMode,
+      setSelectionMode: state.setSelectionMode,
+      setSelectedIds: state.setSelectedIds,
+      activeDownloadJobId: state.activeDownloadJobId,
+      setActiveDownloadJobId: state.setActiveDownloadJobId,
+      advancedIncludeTags: state.advancedIncludeTags,
+      setAdvancedIncludeTags: state.setAdvancedIncludeTags,
+      excludeTags: state.excludeTags,
+      setExcludeTags: state.setExcludeTags,
+      uploadedAfter: state.uploadedAfter,
+      setUploadedAfter: state.setUploadedAfter,
+      uploadedBefore: state.uploadedBefore,
+      setUploadedBefore: state.setUploadedBefore,
+      minWidth: state.minWidth,
+      setMinWidth: state.setMinWidth,
+      minHeight: state.minHeight,
+      setMinHeight: state.setMinHeight,
+      aspectRatioMin: state.aspectRatioMin,
+      setAspectRatioMin: state.setAspectRatioMin,
+      aspectRatioMax: state.aspectRatioMax,
+      setAspectRatioMax: state.setAspectRatioMax,
+    }))
+  )
 
 
   const [searchVisible, setSearchVisible] = useState(() => searchTags.length > 0)

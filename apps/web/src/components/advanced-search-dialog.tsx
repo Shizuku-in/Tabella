@@ -19,6 +19,7 @@ import dayjs, { Dayjs } from 'dayjs'
 import { useEffect, useState } from 'react'
 import { suggestTags } from '../lib/api.ts'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
+import { useShallow } from 'zustand/react/shallow'
 
 export interface AdvancedSearchDialogProps {
   open: boolean
@@ -72,7 +73,28 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
     setAspectRatioMin,
     aspectRatioMax,
     setAspectRatioMax,
-  } = useGallerySessionStore()
+  } = useGallerySessionStore(
+    useShallow((state) => ({
+      searchTags: state.searchTags,
+      setSearchTags: state.setSearchTags,
+      advancedIncludeTags: state.advancedIncludeTags,
+      setAdvancedIncludeTags: state.setAdvancedIncludeTags,
+      excludeTags: state.excludeTags,
+      setExcludeTags: state.setExcludeTags,
+      uploadedAfter: state.uploadedAfter,
+      setUploadedAfter: state.setUploadedAfter,
+      uploadedBefore: state.uploadedBefore,
+      setUploadedBefore: state.setUploadedBefore,
+      minWidth: state.minWidth,
+      setMinWidth: state.setMinWidth,
+      minHeight: state.minHeight,
+      setMinHeight: state.setMinHeight,
+      aspectRatioMin: state.aspectRatioMin,
+      setAspectRatioMin: state.setAspectRatioMin,
+      aspectRatioMax: state.aspectRatioMax,
+      setAspectRatioMax: state.setAspectRatioMax,
+    }))
+  )
 
   // Local state for the dialog form
   const [localIncludeTags, setLocalIncludeTags] = useState<string[]>([])
