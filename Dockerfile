@@ -1,7 +1,7 @@
 # Stage 1: Build the React frontend
 FROM node:20-slim AS frontend-builder
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
 # Copy workspace files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -10,15 +10,16 @@ COPY apps/web apps/web/
 
 # Install dependencies and build
 RUN pnpm install --frozen-lockfile
-RUN pnpm --filter web build
+RUN pnpm --filter @tabella/web build
 
 # Stage 2: Build the Rust backend
-FROM rust:1.80-slim AS backend-builder
+FROM rust:1.85-slim AS backend-builder
 WORKDIR /app
 # Install system dependencies required for compilation
-RUN apt-get update && apt-get install -y pkg-config libssl-dev
+RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
 
 COPY Cargo.toml Cargo.lock ./
+COPY .sqlx .sqlx/
 COPY apps/api apps/api/
 
 # Use the pre-generated sqlx offline data

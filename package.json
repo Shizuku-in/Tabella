@@ -1,6 +1,7 @@
 {
   "name": "tabella",
   "private": true,
+  "packageManager": "pnpm@9.15.9",
   "scripts": {
     "dev:web": "pnpm --filter @tabella/web dev",
     "build:web": "pnpm --filter @tabella/web build",
