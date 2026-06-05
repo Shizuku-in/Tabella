@@ -13,10 +13,24 @@ import {
   FormControl,
   Button,
   Avatar,
+  Popper,
+  Grow,
 } from '@mui/material'
 import { alpha, useTheme } from '@mui/material/styles'
 import type { GalleryItem, Rating } from '../types'
 import { getTagColor } from '../lib/tags.ts'
+
+const CustomPopper = function (props: any) {
+  return (
+    <Popper {...props} transition placement="bottom-start" style={{ zIndex: 1300 }}>
+      {({ TransitionProps }) => (
+        <Grow {...TransitionProps} timeout={200}>
+          <Box sx={{ transformOrigin: 'top left' }}>{props.children}</Box>
+        </Grow>
+      )}
+    </Popper>
+  )
+}
 
 function MetaRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
@@ -176,6 +190,7 @@ export function LightboxViewerInfo({
           <Autocomplete
             multiple
             freeSolo
+            PopperComponent={CustomPopper}
             options={tagSuggestions}
             filterOptions={(x) => x}
             value={editTags}

@@ -190,8 +190,17 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
     if (!open) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if user is typing in an input (like the tags field)
-      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+      const target = e.target as HTMLElement
+      // Ignore if user is interacting with an input, chip, or dropdown menu
+      if (
+        target.tagName === 'INPUT' || 
+        target.tagName === 'TEXTAREA' || 
+        target.isContentEditable ||
+        target.closest('.MuiAutocomplete-root') ||
+        target.closest('.MuiInputBase-root') ||
+        target.closest('[role="listbox"]') ||
+        target.closest('[role="menu"]')
+      ) {
         return
       }
 
