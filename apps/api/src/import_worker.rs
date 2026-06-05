@@ -1,5 +1,6 @@
 use std::path::{Path, PathBuf};
 use std::time::Duration;
+use std::{error::Error as StdError, fmt};
 
 use anyhow::{Context, Result};
 use sqlx::PgPool;
@@ -12,6 +13,23 @@ use crate::ServerEvent;
 use crate::config::{Config, DynamicConfig};
 use crate::image_processor::compute_sha256;
 use crate::tags::{ParsedTag, parse_tag};
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ImportJobError {
+    NoImportableFiles,
+}
+
+impl fmt::Display for ImportJobError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::NoImportableFiles => {
+                f.write_str("No supported image files were found in the import source")
+            }
+        }
+    }
+}
+
+impl StdError for ImportJobError {}
 
 pub(crate) async fn start_worker(state: AppState) {
     tracing::info!("Starting background import worker");
@@ -89,11 +107,10 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
 
     let (user_error_message, error_code, error_detail) = match result {
         Ok(_) => (None, None, None),
-        Err(e) => (
-            Some("Import job failed.".to_string()),
-            Some("import_processing_failed"),
-            Some(e.to_string()),
-        ),
+        Err(e) => {
+            let (code, message) = classify_import_error(&e);
+            (Some(message.to_string()), Some(code), Some(e.to_string()))
+        }
     };
 
     sqlx::query(
@@ -317,6 +334,10 @@ async fn run_import_job(
         anyhow::bail!("Source path does not exist or is not a valid file/directory");
     }
 
+    if files_to_process.is_empty() {
+        return Err(ImportJobError::NoImportableFiles.into());
+    }
+
     let total = files_to_process.len() as i32;
     sqlx::query(
         "UPDATE import_jobs SET status = 'processing', total_items = $1, processed_items = 0, succeeded_items = 0, failed_items = 0, updated_at = now() WHERE id = $2",
@@ -379,6 +400,19 @@ async fn run_import_job(
     }
 
     Ok(has_errors)
+}
+
+fn classify_import_error(error: &anyhow::Error) -> (&'static str, &'static str) {
+    if let Some(import_error) = error.downcast_ref::<ImportJobError>() {
+        match import_error {
+            ImportJobError::NoImportableFiles => (
+                "no_importable_files",
+                "No supported image files were found in the import source.",
+            ),
+        }
+    } else {
+        ("import_processing_failed", "Import job failed.")
+    }
 }
 
 async fn process_single_file(
@@ -551,7 +585,9 @@ mod tests {
     use std::fs;
     use std::path::Path;
 
-    use super::read_sidecar_metadata;
+    use anyhow::anyhow;
+
+    use super::{ImportJobError, classify_import_error, read_sidecar_metadata};
 
     #[test]
     fn read_sidecar_metadata_preserves_namespaces() {
@@ -578,5 +614,16 @@ mod tests {
         assert_eq!(metadata.tags[0].name, "anmi");
         assert_eq!(metadata.tags[1].namespace, "general");
         assert_eq!(metadata.rating, "safe");
+    }
+
+    #[test]
+    fn classify_import_error_maps_no_importable_files() {
+        let error = anyhow!(ImportJobError::NoImportableFiles);
+        let (code, message) = classify_import_error(&error);
+        assert_eq!(code, "no_importable_files");
+        assert_eq!(
+            message,
+            "No supported image files were found in the import source."
+        );
     }
 }

@@ -23,7 +23,7 @@ import {
 } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState, useCallback } from 'react'
-import { getApiErrorMessage, request, uploadWithProgress } from '../lib/api.ts'
+import { formatApiErrorMessage, getApiErrorMessage, request, uploadWithProgress } from '../lib/api.ts'
 import type { ImportJobRow, ImportJobStatus } from '../types.ts'
 import { useAuth } from '../auth/auth-provider.tsx'
 import { useServerEvents } from '../hooks/use-server-events.ts'
@@ -251,7 +251,17 @@ export function AdminImportsPage() {
               let color = 'secondary.main'
               let progressColor: LinearProgressProps['color'] = 'secondary'
               const isCompleted = job.status === 'completed' || job.status === 'completed_with_errors'
-              const label = formatImportJobStatus(job.status)
+              const hasStructuredError =
+                (job.status === 'failed' || job.status === 'completed_with_errors') &&
+                Boolean(job.errorCode || job.lastError)
+              let label = formatImportJobStatus(job.status)
+              if (hasStructuredError) {
+                label = formatApiErrorMessage(
+                  job.errorCode ?? undefined,
+                  job.errorParams ?? null,
+                  job.lastError ?? label
+                )
+              }
 
               if (job.status === 'completed') {
                 icon = <Done color="success" />
@@ -273,7 +283,8 @@ export function AdminImportsPage() {
               } else if (job.totalItems > 0) {
                 progressPercent = Math.round((job.processedItems / job.totalItems) * 100)
               }
-              const showProgressBar = job.status !== 'queued' && job.status !== 'failed'
+              const showProgressBar =
+                !hasStructuredError && job.status !== 'queued' && job.status !== 'failed'
               const progressVariant = isCompleted || job.totalItems > 0 ? 'determinate' : 'indeterminate'
 
               return (
@@ -288,7 +299,7 @@ export function AdminImportsPage() {
                           <Typography variant="body2" sx={{ color, textTransform: 'capitalize', fontWeight: 500 }}>
                             {label}
                           </Typography>
-                          {job.totalItems > 0 && (
+                          {!hasStructuredError && job.totalItems > 0 && (
                             <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
                               {job.status === 'extracting' && job.sourceType === 'package' ? (
                                 `Extracted ${job.processedItems} / ${job.totalItems}`

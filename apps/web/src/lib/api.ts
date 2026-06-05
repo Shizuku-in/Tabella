@@ -40,6 +40,7 @@ const ERROR_MESSAGE_MAP: Record<string, ErrorMessageFormatter> = {
   user_not_found: 'User not found.',
   image_not_found: 'Image not found.',
   import_job_not_found: 'Import job not found.',
+  no_importable_files: 'No supported image files were found in the import source.',
   no_files_uploaded: 'No files uploaded.',
   invalid_upload_path: 'Upload path is invalid.',
   invalid_cursor: 'Invalid image pagination cursor.',
