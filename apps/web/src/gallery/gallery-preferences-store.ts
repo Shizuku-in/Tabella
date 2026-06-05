@@ -67,7 +67,7 @@ export const useGalleryPreferencesStore = create<GalleryPreferencesState>()(
       hoverInfo: { name: false, resolution: true, tags: false, favorite: true, rating: true, download: true },
       setHoverInfo: (value) => set({ hoverInfo: value }),
       
-      showResultsCount: true,
+      showResultsCount: false,
       setShowResultsCount: (value) => set({ showResultsCount: value }),
       
       galleryImageQuality: 'thumbnail',
