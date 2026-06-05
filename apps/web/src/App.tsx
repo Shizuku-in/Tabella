@@ -8,7 +8,7 @@ import { RequireAuth, RequireRole } from './auth/route-guards.tsx'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'
 import AppShell from './app-shell.tsx'
-import { GalleryUiProvider } from './gallery/gallery-ui-provider.tsx'
+
 import { AdminImportsPage } from './pages/admin-imports-page.tsx'
 import { GalleryPage } from './pages/gallery-page.tsx'
 import { LoginPage } from './pages/login-page.tsx'
@@ -56,7 +56,6 @@ function App() {
         <CssBaseline />
         <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <GalleryUiProvider>
             <BrowserRouter>
               <Routes>
                 <Route path="/login" element={<LoginPage />} />
@@ -78,7 +77,6 @@ function App() {
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </BrowserRouter>
-          </GalleryUiProvider>
         </AuthProvider>
       </QueryClientProvider>
       </LocalizationProvider>

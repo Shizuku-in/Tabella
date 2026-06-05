@@ -22,7 +22,8 @@
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-masonry-css": "^1.0.16",
-    "react-router-dom": "^7.9.6"
+    "react-router-dom": "^7.9.6",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

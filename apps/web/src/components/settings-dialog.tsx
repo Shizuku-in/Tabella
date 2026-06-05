@@ -19,7 +19,7 @@ import {
   Typography,
 } from '@mui/material'
 import { ExpandMore } from '@mui/icons-material'
-import { useGalleryUi } from '../gallery/gallery-ui-provider.tsx'
+import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 
 export interface SettingsDialogProps {
   open: boolean
@@ -48,7 +48,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     setHoverDownloadQuality,
     topBarConfig,
     setTopBarConfig,
-  } = useGalleryUi()
+  } = useGalleryPreferencesStore()
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>

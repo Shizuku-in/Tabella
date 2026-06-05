@@ -18,7 +18,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import dayjs, { Dayjs } from 'dayjs'
 import { useEffect, useState } from 'react'
 import { suggestTags } from '../lib/api.ts'
-import { useGalleryUi } from '../gallery/gallery-ui-provider.tsx'
+import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 
 export interface AdvancedSearchDialogProps {
   open: boolean
@@ -72,7 +72,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
     setAspectRatioMin,
     aspectRatioMax,
     setAspectRatioMax,
-  } = useGalleryUi()
+  } = useGallerySessionStore()
 
   // Local state for the dialog form
   const [localIncludeTags, setLocalIncludeTags] = useState<string[]>([])

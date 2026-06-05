@@ -47,7 +47,8 @@ import { Link as RouterLink, Outlet, useLocation } from 'react-router-dom'
 import { SettingsDialog } from './components/settings-dialog.tsx'
 import { AdvancedSearchDialog } from './components/advanced-search-dialog.tsx'
 import { useAuth } from './auth/auth-provider.tsx'
-import { useGalleryUi } from './gallery/gallery-ui-provider.tsx'
+import { useGalleryPreferencesStore } from './gallery/gallery-preferences-store.ts'
+import { useGallerySessionStore } from './gallery/gallery-session-store.ts'
 import type { GallerySort, LayoutMode, RatingFilter } from './types.ts'
 import { suggestTags } from './lib/api.ts'
 import { useServerEvents } from './hooks/use-server-events.ts'
@@ -81,9 +82,8 @@ const ratingOptions: Array<{ value: RatingFilter; label: string }> = [
 export default function AppShell({ mode, onToggleMode }: AppShellProps) {
   const location = useLocation()
   const { user, logout } = useAuth()
+  const { layoutMode, setLayoutMode, topBarConfig } = useGalleryPreferencesStore()
   const {
-    layoutMode,
-    setLayoutMode,
     searchTags,
     setSearchTags,
     sort,
@@ -94,11 +94,9 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     setFavoritesOnly,
     selectionMode,
     setSelectionMode,
-
     setSelectedIds,
     activeDownloadJobId,
     setActiveDownloadJobId,
-    topBarConfig,
     advancedIncludeTags,
     setAdvancedIncludeTags,
     excludeTags,
@@ -115,7 +113,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
     setAspectRatioMin,
     aspectRatioMax,
     setAspectRatioMax,
-  } = useGalleryUi()
+  } = useGallerySessionStore()
 
 
   const [searchVisible, setSearchVisible] = useState(() => searchTags.length > 0)

@@ -3,7 +3,8 @@ import { Box, Button, CircularProgress, Fade, IconButton, Paper, Stack, Tooltip,
 import { Close, Download, SelectAll } from '@mui/icons-material'
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { Masonry } from '@mui/lab'
-import { useGalleryUi } from '../gallery/gallery-ui-provider.tsx'
+import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
+import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { LightboxViewer } from '../components/lightbox-viewer.tsx'
 import { createDownloadJob, listImages, toggleFavorite } from '../lib/api.ts'
 import type { GalleryItem, LayoutMode } from '../types.ts'
@@ -13,7 +14,8 @@ import { ratingLabel } from '../lib/constants.ts'
 const PAGE_SIZE = 50
 
 export function GalleryPage() {
-  const { layoutMode, searchTags, sort, ratingFilter, favoritesOnly, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality, selectionMode, setSelectionMode, selectedIds, setSelectedIds, setActiveDownloadJobId, advancedIncludeTags, excludeTags, uploadedAfter, uploadedBefore, minWidth, minHeight, aspectRatioMin, aspectRatioMax, hoverDownloadQuality } = useGalleryUi()
+  const { layoutMode, masonryColumns, gridColumns, showMobileDetails, hoverInfo, showResultsCount, galleryImageQuality, hoverDownloadQuality } = useGalleryPreferencesStore()
+  const { searchTags, sort, ratingFilter, favoritesOnly, selectionMode, setSelectionMode, selectedIds, setSelectedIds, setActiveDownloadJobId, advancedIncludeTags, excludeTags, uploadedAfter, uploadedBefore, minWidth, minHeight, aspectRatioMin, aspectRatioMax } = useGallerySessionStore()
   const queryClient = useQueryClient()
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
     open: false,
