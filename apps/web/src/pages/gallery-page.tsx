@@ -160,7 +160,7 @@ export function GalleryPage() {
   const isEmpty = !showInitialLoading && items.length === 0
 
   const activeHoverInfo = selectionMode
-    ? { name: false, resolution: false, tags: false, loved: false, rating: false, download: false }
+    ? { name: false, resolution: false, tags: false, favorite: false, rating: false, download: false }
     : hoverInfo
 
   return (
@@ -227,6 +227,8 @@ export function GalleryPage() {
         }}
         onDelete={handleDelete}
         onUpdate={handleUpdate}
+        favoriteOverrides={favoriteOverrides}
+        onToggleFavorite={handleToggleFavorite}
       />
 
       <SelectionActionBar

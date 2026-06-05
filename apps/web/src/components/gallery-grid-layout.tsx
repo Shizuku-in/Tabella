@@ -35,7 +35,7 @@ export interface GalleryGridLayoutProps {
   masonryColumns: ColumnConfig
   gridColumns: ColumnConfig
   showMobileDetails: boolean
-  hoverInfo: { name: boolean; resolution: boolean; tags: boolean; loved: boolean; rating: boolean; download: boolean }
+  hoverInfo: { name: boolean; resolution: boolean; tags: boolean; favorite: boolean; rating: boolean; download: boolean }
   favoriteOverrides: Record<number, boolean>
   selectedIds: Set<number>
   galleryImageQuality: 'thumbnail' | 'sample' | 'original'

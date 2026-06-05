@@ -17,7 +17,7 @@ export interface HoverInfoConfig {
   name: boolean
   resolution: boolean
   tags: boolean
-  loved: boolean
+  favorite: boolean
   rating: boolean
   download: boolean
 }
@@ -64,7 +64,7 @@ export const useGalleryPreferencesStore = create<GalleryPreferencesState>()(
       showMobileDetails: true,
       setShowMobileDetails: (value) => set({ showMobileDetails: value }),
       
-      hoverInfo: { name: false, resolution: true, tags: false, loved: true, rating: true, download: true },
+      hoverInfo: { name: false, resolution: true, tags: false, favorite: true, rating: true, download: true },
       setHoverInfo: (value) => set({ hoverInfo: value }),
       
       showResultsCount: true,

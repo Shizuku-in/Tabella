@@ -28,6 +28,8 @@ import {
   InfoOutlined,
   DeleteOutline,
   LocalOfferOutlined,
+  FavoriteBorderOutlined,
+  FavoriteOutlined,
 } from '@mui/icons-material'
 import { forwardRef, useEffect, useState, useMemo } from 'react'
 import type { ReactElement, Ref } from 'react'
@@ -58,9 +60,11 @@ interface LightboxViewerProps {
   onIndexChange?: (newIndex: number) => void
   onDelete?: (imageId: number) => void
   onUpdate?: () => void
+  favoriteOverrides?: Record<number, boolean>
+  onToggleFavorite?: (imageId: number) => void
 }
 
-export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChange, onDelete, onUpdate }: LightboxViewerProps) {
+export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChange, onDelete, onUpdate, favoriteOverrides, onToggleFavorite }: LightboxViewerProps) {
   const { lightboxImageQuality, showLightboxTags } = useGalleryPreferencesStore(
     useShallow((state) => ({
       lightboxImageQuality: state.lightboxImageQuality,
@@ -89,6 +93,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
   const [hasChanges, setHasChanges] = useState(false)
 
   const item = items[currentIndex]
+  const isFavorite = item ? (favoriteOverrides?.[item.id] ?? item.favorite) : false
 
   useEffect(() => {
     if (open) {
@@ -360,6 +365,24 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
               onClick={handleDownloadClick}
             >
               <Download />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title={isFavorite ? "Remove Favorite" : "Favorite"} placement="bottom">
+            <IconButton
+              sx={{
+                color: isFavorite ? 'primary.main' : 'action.active',
+                bgcolor: 'background.paper',
+                '&:hover': { bgcolor: 'background.default' },
+              }}
+              onClick={(e) => {
+                e.stopPropagation()
+                if (item) {
+                  onToggleFavorite?.(item.id)
+                }
+              }}
+            >
+              {isFavorite ? <FavoriteOutlined /> : <FavoriteBorderOutlined />}
             </IconButton>
           </Tooltip>
 

@@ -226,7 +226,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               Hover Info
             </Typography>
             <FormGroup row>
-              {(['name', 'resolution', 'tags', 'loved', 'rating', 'download'] as const).map((key) => (
+              {(['name', 'resolution', 'tags', 'favorite', 'rating', 'download'] as const).map((key) => (
                 <FormControlLabel
                   key={key}
                   control={

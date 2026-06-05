@@ -10,7 +10,7 @@ export interface GalleryCardProps {
   item: GalleryItem
   layoutMode: LayoutMode
   showMobileDetails: boolean
-  hoverInfo: { name: boolean; resolution: boolean; tags: boolean; loved: boolean; rating: boolean; download: boolean }
+  hoverInfo: { name: boolean; resolution: boolean; tags: boolean; favorite: boolean; rating: boolean; download: boolean }
   isFavorite: boolean
   onToggleFavorite: () => void
   onClick: () => void
@@ -139,7 +139,7 @@ export function GalleryCard({
         </Stack>
       )}
 
-      {(hoverInfo.name || hoverInfo.resolution || hoverInfo.tags || hoverInfo.loved) && (
+      {(hoverInfo.name || hoverInfo.resolution || hoverInfo.tags || hoverInfo.favorite) && (
         <Box
           sx={{
             position: 'absolute',
@@ -225,7 +225,7 @@ export function GalleryCard({
                 <DownloadOutlined fontSize="small" />
               </IconButton>
             )}
-            {hoverInfo.loved && (
+            {hoverInfo.favorite && (
               <IconButton
                 size="small"
                 onClick={(e) => {
