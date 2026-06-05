@@ -15,7 +15,7 @@ import { alpha } from '@mui/material/styles'
 import { Navigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/auth-provider.tsx'
 import { FullscreenState } from '../components/fullscreen-state.tsx'
-import { ApiError } from '../lib/api.ts'
+import { getApiErrorMessage } from '../lib/api.ts'
 
 export function LoginPage() {
   const { status, login } = useAuth()
@@ -48,11 +48,7 @@ export function LoginPage() {
     try {
       await login({ username, password })
     } catch (error) {
-      if (error instanceof ApiError) {
-        setErrorMessage(error.message)
-      } else {
-        setErrorMessage('Sign in failed. Please try again.')
-      }
+      setErrorMessage(getApiErrorMessage(error, 'Sign in failed. Please try again.'))
     } finally {
       setSubmitting(false)
     }

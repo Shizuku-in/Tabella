@@ -50,6 +50,8 @@ struct JobStatusRow {
     created_at: time::OffsetDateTime,
     finished_at: Option<time::OffsetDateTime>,
     last_error: Option<String>,
+    error_code: Option<String>,
+    error_params: Option<serde_json::Value>,
 }
 
 #[derive(serde::Deserialize)]
@@ -101,7 +103,7 @@ async fn get_import_job(
 
     let job: Option<JobStatusRow> = sqlx::query_as(
         r#"
-        SELECT id, status, total_items, processed_items, succeeded_items, failed_items, created_at, finished_at, last_error
+        SELECT id, status, total_items, processed_items, succeeded_items, failed_items, created_at, finished_at, last_error, error_code, error_params
         FROM import_jobs
         WHERE id = $1
         "#,
@@ -111,7 +113,8 @@ async fn get_import_job(
     .await
     .map_err(|e| ApiError::internal(e.into()))?;
 
-    let job = job.ok_or_else(|| ApiError::not_found("Import job not found"))?;
+    let job =
+        job.ok_or_else(|| ApiError::not_found("import_job_not_found", "Import job not found"))?;
 
     Ok(Json(serde_json::json!({
         "id": job.id,
@@ -123,6 +126,8 @@ async fn get_import_job(
         "created_at": job.created_at,
         "finished_at": job.finished_at,
         "last_error": job.last_error,
+        "error_code": job.error_code,
+        "error_params": job.error_params,
     })))
 }
 
@@ -135,7 +140,7 @@ async fn list_import_jobs(
     let limit = 50i64;
     let rows = sqlx::query(
         r#"
-        SELECT id, status, source_type, total_items, processed_items, succeeded_items, failed_items, created_at
+        SELECT id, status, source_type, total_items, processed_items, succeeded_items, failed_items, created_at, last_error, error_code, error_params
         FROM import_jobs
         ORDER BY created_at DESC
         LIMIT $1
@@ -157,6 +162,9 @@ async fn list_import_jobs(
             "processedItems": row.try_get::<i32, _>("processed_items").unwrap_or_default(),
             "succeededItems": row.try_get::<i32, _>("succeeded_items").unwrap_or_default(),
             "failedItems": row.try_get::<i32, _>("failed_items").unwrap_or_default(),
+            "lastError": row.try_get::<Option<String>, _>("last_error").unwrap_or(None),
+            "errorCode": row.try_get::<Option<String>, _>("error_code").unwrap_or(None),
+            "errorParams": row.try_get::<Option<serde_json::Value>, _>("error_params").unwrap_or(None),
             "createdAt": row.try_get::<time::OffsetDateTime, _>("created_at")
                 .unwrap_or_else(|_| time::OffsetDateTime::now_utc())
                 .format(&time::format_description::well_known::Rfc3339)
@@ -229,7 +237,10 @@ async fn upload_import_files(
     }
 
     if !has_files {
-        return Err(ApiError::bad_request("no_files", "No files uploaded"));
+        return Err(ApiError::bad_request(
+            "no_files_uploaded",
+            "No files uploaded",
+        ));
     }
 
     let source_type = query.source_type.unwrap_or_else(|| "folder".to_string());
@@ -284,8 +295,12 @@ fn sanitize_upload_path(file_name: &str) -> Result<PathBuf, ApiError> {
 
 fn api_error_from_multipart(error: axum::extract::multipart::MultipartError) -> ApiError {
     match error.status() {
-        StatusCode::PAYLOAD_TOO_LARGE => ApiError::payload_too_large(error.body_text()),
-        StatusCode::BAD_REQUEST => ApiError::bad_request("invalid_multipart", error.body_text()),
+        StatusCode::PAYLOAD_TOO_LARGE => {
+            ApiError::payload_too_large("Uploaded payload is too large.")
+        }
+        StatusCode::BAD_REQUEST => {
+            ApiError::bad_request("invalid_multipart", "Uploaded data could not be processed.")
+        }
         _ => ApiError::internal(error.into()),
     }
 }

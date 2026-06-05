@@ -1,15 +1,110 @@
 import type { AuthUserResponse, GallerySort, Rating } from '../types.ts'
 
+export type ApiErrorParams = Record<string, unknown> | null
+
 export class ApiError extends Error {
   readonly status: number
   readonly code?: string
+  readonly params: ApiErrorParams
+  readonly fallbackMessage: string
 
-  constructor(status: number, message: string, code?: string) {
-    super(message)
+  constructor(status: number, fallbackMessage: string, code?: string, params: ApiErrorParams = null) {
+    super(fallbackMessage)
     this.name = 'ApiError'
     this.status = status
     this.code = code
+    this.params = params
+    this.fallbackMessage = fallbackMessage
   }
+}
+
+type ErrorMessageFormatter = string | ((params: Record<string, unknown> | undefined) => string)
+
+const ERROR_MESSAGE_MAP: Record<string, ErrorMessageFormatter> = {
+  authentication_required: 'Authentication required.',
+  admin_required: 'Admin privileges required.',
+  editor_required: 'Editor or admin privileges required.',
+  missing_credentials: 'Username and password are required.',
+  invalid_credentials: 'Invalid username or password.',
+  invalid_username: 'Username cannot be empty.',
+  duplicate_username: 'Username is already taken.',
+  missing_new_password: 'New password is required when current password is provided.',
+  missing_current_password: 'Current password is required to set a new password.',
+  invalid_password: 'Current password is incorrect.',
+  no_file_uploaded: 'No file was provided.',
+  invalid_multipart: 'Uploaded data could not be processed.',
+  payload_too_large: 'Uploaded payload is too large.',
+  invalid_settings: 'Server settings are invalid.',
+  role_change_not_allowed: 'You cannot change your own role.',
+  self_delete_not_allowed: 'You cannot delete your own account.',
+  user_not_found: 'User not found.',
+  image_not_found: 'Image not found.',
+  import_job_not_found: 'Import job not found.',
+  no_files_uploaded: 'No files uploaded.',
+  invalid_upload_path: 'Upload path is invalid.',
+  invalid_cursor: 'Invalid image pagination cursor.',
+  cursor_missing_imported_at: 'Image pagination cursor is missing imported_at.',
+  cursor_missing_filename: 'Image pagination cursor is missing filename.',
+  no_images_selected: 'No images selected.',
+  selected_images_not_found: 'Selected images not found.',
+  too_many_images_requested: (params) =>
+    `Cannot download more than ${readNumericParam(params, 'max_images') ?? 'the allowed number of'} images at once.`,
+  download_size_limit_exceeded: (params) =>
+    `Total size exceeds the maximum limit of ${readNumericParam(params, 'max_total_bytes') ?? 'the allowed number of'} bytes.`,
+  download_job_not_found: 'Download job not found.',
+  download_job_access_denied: 'You can only access your own download jobs.',
+  download_job_not_completed: 'The download job is not completed yet.',
+  download_archive_missing: 'The archive file no longer exists.',
+  archive_generation_failed: 'Download job failed.',
+  import_processing_failed: 'Import job failed.',
+  weak_password_too_short: 'Password must be at least 8 characters long.',
+  weak_password_missing_lowercase: 'Password must contain at least one lowercase letter.',
+  weak_password_missing_number: 'Password must contain at least one number.',
+  internal_error: 'Internal server error.',
+  network_error: 'Network error during upload.',
+  upload_aborted: 'Upload aborted.',
+}
+
+function readNumericParam(
+  params: Record<string, unknown> | undefined,
+  key: string
+): string | number | null {
+  const value = params?.[key]
+  return typeof value === 'number' || typeof value === 'string' ? value : null
+}
+
+function normalizeErrorParams(value: unknown): ApiErrorParams {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>
+  }
+  return null
+}
+
+export function formatApiErrorMessage(
+  code?: string,
+  params?: ApiErrorParams,
+  fallbackMessage = 'Request failed.'
+): string {
+  if (!code) return fallbackMessage
+  const formatter = ERROR_MESSAGE_MAP[code]
+  if (!formatter) return fallbackMessage
+  if (typeof formatter === 'function') {
+    return formatter(params ?? undefined)
+  }
+  return formatter
+}
+
+export function getApiErrorMessage(
+  error: unknown,
+  fallbackMessage = 'Request failed.'
+): string {
+  if (error instanceof ApiError) {
+    return formatApiErrorMessage(error.code, error.params, error.fallbackMessage || fallbackMessage)
+  }
+  if (error instanceof Error) {
+    return error.message
+  }
+  return fallbackMessage
 }
 
 export async function request<T>(input: string, init?: RequestInit): Promise<T> {
@@ -34,7 +129,12 @@ export async function request<T>(input: string, init?: RequestInit): Promise<T> 
   const body = isJson ? await response.json() : null
 
   if (!response.ok) {
-    throw new ApiError(response.status, body?.message ?? 'Request failed.', body?.error)
+    throw new ApiError(
+      response.status,
+      body?.message ?? 'Request failed.',
+      body?.error,
+      normalizeErrorParams(body?.params)
+    )
   }
 
   return body as T
@@ -87,22 +187,26 @@ export async function uploadWithProgress<T>(
         }
       } else {
         let errorMsg = 'Upload failed'
+        let errorCode: string | undefined
+        let errorParams: ApiErrorParams = null
         try {
           const errRes = JSON.parse(xhr.responseText)
           errorMsg = errRes.message || errorMsg
+          errorCode = errRes.error
+          errorParams = normalizeErrorParams(errRes.params)
         } catch {
           // ignore
         }
-        reject(new ApiError(xhr.status, errorMsg))
+        reject(new ApiError(xhr.status, errorMsg, errorCode, errorParams))
       }
     })
 
     xhr.addEventListener('error', () => {
-      reject(new ApiError(0, 'Network error during upload'))
+      reject(new ApiError(0, 'Network error during upload', 'network_error'))
     })
     
     xhr.addEventListener('abort', () => {
-      reject(new ApiError(0, 'Upload aborted'))
+      reject(new ApiError(0, 'Upload aborted', 'upload_aborted'))
     })
 
     xhr.open('POST', url)
@@ -169,6 +273,9 @@ export interface DownloadJobResponse {
   total_images: number
   total_bytes: number
   error_message: string | null
+  error_code?: string | null
+  error_params?: ApiErrorParams
+  error_detail?: string | null
 }
 
 export async function listImages(query: {

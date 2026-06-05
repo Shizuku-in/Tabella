@@ -5,7 +5,7 @@ import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { useShallow } from 'zustand/react/shallow'
 import { LightboxViewer } from '../components/lightbox-viewer.tsx'
-import { createDownloadJob, toggleFavorite } from '../lib/api.ts'
+import { createDownloadJob, getApiErrorMessage, toggleFavorite } from '../lib/api.ts'
 import { useGalleryQuery } from '../hooks/use-gallery-query.ts'
 import { GalleryHeader } from '../components/gallery-header.tsx'
 import { GalleryGridLayout } from '../components/gallery-grid-layout.tsx'
@@ -130,7 +130,7 @@ export function GalleryPage() {
       setSelectionMode(false)
     } catch (error) {
       console.error('Download error:', error)
-      const message = error instanceof Error ? error.message : 'Network error while starting download'
+      const message = getApiErrorMessage(error, 'Network error while starting download.')
       showSnackbar(`Failed to start download: ${message}`, 'error')
     }
   }

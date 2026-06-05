@@ -63,6 +63,10 @@ export interface ImportJobRow {
   processedItems: number
   succeededItems: number
   failedItems: number
+  lastError?: string | null
+  errorCode?: string | null
+  errorParams?: Record<string, unknown> | null
+  errorDetail?: string | null
   createdAt: string
 }
 

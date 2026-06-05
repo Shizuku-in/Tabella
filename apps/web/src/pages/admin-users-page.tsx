@@ -20,7 +20,7 @@ import {
 } from '@mui/material'
 import { AddOutlined, DeleteOutline, EditOutlined } from '@mui/icons-material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { request } from '../lib/api.ts'
+import { getApiErrorMessage, request } from '../lib/api.ts'
 import type { CreateUserDto, UpdateUserDto, UserRow } from '../types.ts'
 import { UserDialog } from '../components/user-dialog.tsx'
 import { useAuth } from '../auth/auth-provider.tsx'
@@ -62,7 +62,7 @@ export function AdminUsersPage() {
       showSnackbar('User created successfully.', 'success')
     },
     onError: (err) => {
-      showSnackbar('Failed to create user: ' + err.message, 'error')
+      showSnackbar(`Failed to create user: ${getApiErrorMessage(err, 'Request failed.')}`, 'error')
     },
   })
 
@@ -79,7 +79,7 @@ export function AdminUsersPage() {
       showSnackbar('User updated successfully.', 'success')
     },
     onError: (err) => {
-      showSnackbar('Failed to update user: ' + err.message, 'error')
+      showSnackbar(`Failed to update user: ${getApiErrorMessage(err, 'Request failed.')}`, 'error')
     },
   })
 
@@ -94,7 +94,7 @@ export function AdminUsersPage() {
       showSnackbar('User deleted successfully.', 'success')
     },
     onError: (err) => {
-      showSnackbar('Failed to delete user: ' + err.message, 'error')
+      showSnackbar(`Failed to delete user: ${getApiErrorMessage(err, 'Request failed.')}`, 'error')
     },
   })
 

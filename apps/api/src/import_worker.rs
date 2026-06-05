@@ -73,31 +73,41 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
     .await;
 
     // 3. Finalize the job
-    let final_status = match result {
+    let final_status = match &result {
         Ok(has_errors) => {
-            if has_errors {
+            if *has_errors {
                 "completed_with_errors"
             } else {
                 "completed"
             }
         }
-        Err(ref e) => {
+        Err(e) => {
             tracing::error!("Job {} failed: {:?}", job.id, e);
             "failed"
         }
     };
 
-    let error_msg = result.err().map(|e| e.to_string());
+    let (user_error_message, error_code, error_detail) = match result {
+        Ok(_) => (None, None, None),
+        Err(e) => (
+            Some("Import job failed.".to_string()),
+            Some("import_processing_failed"),
+            Some(e.to_string()),
+        ),
+    };
 
     sqlx::query(
         r#"
         UPDATE import_jobs
-        SET status = $1, finished_at = now(), updated_at = now(), last_error = $2
-        WHERE id = $3
+        SET status = $1, finished_at = now(), updated_at = now(), last_error = $2, error_code = $3, error_params = $4, error_detail = $5
+        WHERE id = $6
         "#,
     )
     .bind(final_status)
-    .bind(error_msg)
+    .bind(user_error_message)
+    .bind(error_code)
+    .bind(Option::<serde_json::Value>::None)
+    .bind(error_detail)
     .bind(job.id)
     .execute(&state.pool)
     .await?;

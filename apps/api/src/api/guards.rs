@@ -29,7 +29,7 @@ pub(crate) async fn require_admin(
 
     if user.role != UserRole::Admin {
         return Err(ApiError::forbidden(
-            "forbidden",
+            "admin_required",
             "Admin privileges required.",
         ));
     }
@@ -45,7 +45,7 @@ pub(crate) async fn require_editor(
 
     if user.role == UserRole::Viewer {
         return Err(ApiError::forbidden(
-            "forbidden",
+            "editor_required",
             "Editor or admin privileges required.",
         ));
     }

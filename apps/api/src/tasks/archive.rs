@@ -41,10 +41,13 @@ pub(crate) async fn process_archive_job(state: AppState, task: ArchiveTask) {
             let _ = sqlx::query(
                 r#"
                 UPDATE download_jobs
-                SET status = 'failed', error_message = $1
-                WHERE id = $2
+                SET status = 'failed', error_message = $1, error_code = $2, error_params = $3, error_detail = $4
+                WHERE id = $5
                 "#,
             )
+            .bind("Download job failed.")
+            .bind("archive_generation_failed")
+            .bind(Option::<serde_json::Value>::None)
             .bind(e.to_string())
             .bind(job_id)
             .execute(&state.pool)

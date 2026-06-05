@@ -284,7 +284,10 @@ fn push_image_cursor_filter(
     match sort {
         ImageSort::Newest => {
             let imported_at = cursor.imported_at.ok_or_else(|| {
-                ApiError::bad_request("invalid_cursor", "Missing imported_at in image cursor.")
+                ApiError::bad_request(
+                    "cursor_missing_imported_at",
+                    "Missing imported_at in image cursor.",
+                )
             })?;
             builder.push(" AND (i.imported_at, i.id) < (");
             builder.push_bind(imported_at);
@@ -294,7 +297,10 @@ fn push_image_cursor_filter(
         }
         ImageSort::Oldest => {
             let imported_at = cursor.imported_at.ok_or_else(|| {
-                ApiError::bad_request("invalid_cursor", "Missing imported_at in image cursor.")
+                ApiError::bad_request(
+                    "cursor_missing_imported_at",
+                    "Missing imported_at in image cursor.",
+                )
             })?;
             builder.push(" AND (i.imported_at, i.id) > (");
             builder.push_bind(imported_at);
@@ -308,7 +314,10 @@ fn push_image_cursor_filter(
                 .clone()
                 .filter(|value| !value.is_empty())
                 .ok_or_else(|| {
-                    ApiError::bad_request("invalid_cursor", "Missing filename in image cursor.")
+                    ApiError::bad_request(
+                        "cursor_missing_filename",
+                        "Missing filename in image cursor.",
+                    )
                 })?;
             builder.push(" AND (lower(i.original_filename), i.id) > (");
             builder.push_bind(filename);
@@ -322,7 +331,10 @@ fn push_image_cursor_filter(
                 .clone()
                 .filter(|value| !value.is_empty())
                 .ok_or_else(|| {
-                    ApiError::bad_request("invalid_cursor", "Missing filename in image cursor.")
+                    ApiError::bad_request(
+                        "cursor_missing_filename",
+                        "Missing filename in image cursor.",
+                    )
                 })?;
             builder.push(" AND (lower(i.original_filename), i.id) < (");
             builder.push_bind(filename);
@@ -455,7 +467,7 @@ async fn delete_image(
     .fetch_optional(&state.pool)
     .await
     .map_err(|e| ApiError::internal(e.into()))?
-    .ok_or_else(|| ApiError::not_found("Image not found."))?;
+    .ok_or_else(|| ApiError::not_found("image_not_found", "Image not found."))?;
 
     sqlx::query("DELETE FROM images WHERE id = $1")
         .bind(image_id)

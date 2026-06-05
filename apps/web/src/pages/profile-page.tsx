@@ -15,7 +15,7 @@ import {
 import { Edit, Save } from '@mui/icons-material'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../auth/auth-provider.tsx'
-import { request, uploadWithProgress } from '../lib/api.ts'
+import { getApiErrorMessage, request, uploadWithProgress } from '../lib/api.ts'
 import type { SessionUser } from '../types.ts'
 
 interface ProfileFieldErrors {
@@ -136,9 +136,8 @@ export function ProfilePage() {
           }
         }
       })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      showSnackbar('Failed to update profile: ' + err.message, 'error')
+    } catch (error) {
+      showSnackbar(`Failed to update profile: ${getApiErrorMessage(error, 'Request failed.')}`, 'error')
     }
   }
 

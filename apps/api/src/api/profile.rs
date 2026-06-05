@@ -149,10 +149,7 @@ async fn update_profile(
             if let sqlx::Error::Database(ref db_err) = err
                 && db_err.constraint() == Some("users_normalized_username_key")
             {
-                return ApiError::bad_request(
-                    "duplicate_username",
-                    "Username is already taken",
-                );
+                return ApiError::bad_request("duplicate_username", "Username is already taken");
             }
             ApiError::internal(err.into())
         })?;
@@ -228,8 +225,8 @@ async fn upload_avatar(
         }
     }
 
-    let url =
-        avatar_url.ok_or_else(|| ApiError::bad_request("no_file", "No avatar file provided"))?;
+    let url = avatar_url
+        .ok_or_else(|| ApiError::bad_request("no_file_uploaded", "No avatar file provided"))?;
 
     sqlx::query!(
         "update users set avatar_url = $1, updated_at = now() where id = $2",
@@ -247,8 +244,12 @@ async fn upload_avatar(
 
 fn api_error_from_multipart(error: axum::extract::multipart::MultipartError) -> ApiError {
     match error.status() {
-        StatusCode::PAYLOAD_TOO_LARGE => ApiError::payload_too_large(error.body_text()),
-        StatusCode::BAD_REQUEST => ApiError::bad_request("invalid_multipart", error.body_text()),
+        StatusCode::PAYLOAD_TOO_LARGE => {
+            ApiError::payload_too_large("Uploaded payload is too large.")
+        }
+        StatusCode::BAD_REQUEST => {
+            ApiError::bad_request("invalid_multipart", "Uploaded data could not be processed.")
+        }
         _ => ApiError::internal(error.into()),
     }
 }

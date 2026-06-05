@@ -3,15 +3,36 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
 };
+use serde_json::Value;
 use serde_json::json;
 
 #[derive(Debug)]
 pub(crate) enum ApiError {
-    BadRequest { code: &'static str, message: String },
-    Unauthorized { code: &'static str, message: String },
-    Forbidden { code: &'static str, message: String },
-    PayloadTooLarge { message: String },
-    NotFound { code: &'static str, message: String },
+    BadRequest {
+        code: &'static str,
+        message: String,
+        params: Option<Value>,
+    },
+    Unauthorized {
+        code: &'static str,
+        message: String,
+        params: Option<Value>,
+    },
+    Forbidden {
+        code: &'static str,
+        message: String,
+        params: Option<Value>,
+    },
+    PayloadTooLarge {
+        code: &'static str,
+        message: String,
+        params: Option<Value>,
+    },
+    NotFound {
+        code: &'static str,
+        message: String,
+        params: Option<Value>,
+    },
     Internal(anyhow::Error),
 }
 
@@ -20,6 +41,19 @@ impl ApiError {
         Self::BadRequest {
             code,
             message: message.into(),
+            params: None,
+        }
+    }
+
+    pub(crate) fn bad_request_with_params(
+        code: &'static str,
+        message: impl Into<String>,
+        params: Value,
+    ) -> Self {
+        Self::BadRequest {
+            code,
+            message: message.into(),
+            params: Some(params),
         }
     }
 
@@ -27,6 +61,7 @@ impl ApiError {
         Self::Unauthorized {
             code,
             message: message.into(),
+            params: None,
         }
     }
 
@@ -34,19 +69,23 @@ impl ApiError {
         Self::Forbidden {
             code,
             message: message.into(),
+            params: None,
         }
     }
 
     pub(crate) fn payload_too_large(message: impl Into<String>) -> Self {
         Self::PayloadTooLarge {
+            code: "payload_too_large",
             message: message.into(),
+            params: None,
         }
     }
 
-    pub(crate) fn not_found(message: impl Into<String>) -> Self {
+    pub(crate) fn not_found(code: &'static str, message: impl Into<String>) -> Self {
         Self::NotFound {
-            code: "not_found",
+            code,
             message: message.into(),
+            params: None,
         }
     }
 
@@ -58,29 +97,49 @@ impl ApiError {
 impl IntoResponse for ApiError {
     fn into_response(self) -> Response {
         match self {
-            Self::BadRequest { code, message } => (
+            Self::BadRequest {
+                code,
+                message,
+                params,
+            } => (
                 StatusCode::BAD_REQUEST,
-                Json(json!({ "error": code, "message": message })),
+                Json(json!({ "error": code, "message": message, "params": params })),
             )
                 .into_response(),
-            Self::Unauthorized { code, message } => (
+            Self::Unauthorized {
+                code,
+                message,
+                params,
+            } => (
                 StatusCode::UNAUTHORIZED,
-                Json(json!({ "error": code, "message": message })),
+                Json(json!({ "error": code, "message": message, "params": params })),
             )
                 .into_response(),
-            Self::Forbidden { code, message } => (
+            Self::Forbidden {
+                code,
+                message,
+                params,
+            } => (
                 StatusCode::FORBIDDEN,
-                Json(json!({ "error": code, "message": message })),
+                Json(json!({ "error": code, "message": message, "params": params })),
             )
                 .into_response(),
-            Self::PayloadTooLarge { message } => (
+            Self::PayloadTooLarge {
+                code,
+                message,
+                params,
+            } => (
                 StatusCode::PAYLOAD_TOO_LARGE,
-                Json(json!({ "error": "payload_too_large", "message": message })),
+                Json(json!({ "error": code, "message": message, "params": params })),
             )
                 .into_response(),
-            Self::NotFound { code, message } => (
+            Self::NotFound {
+                code,
+                message,
+                params,
+            } => (
                 StatusCode::NOT_FOUND,
-                Json(json!({ "error": code, "message": message })),
+                Json(json!({ "error": code, "message": message, "params": params })),
             )
                 .into_response(),
 
@@ -90,7 +149,8 @@ impl IntoResponse for ApiError {
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({
                         "error": "internal_error",
-                        "message": "Internal server error."
+                        "message": "Internal server error.",
+                        "params": Value::Null
                     })),
                 )
                     .into_response()

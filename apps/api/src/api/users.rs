@@ -69,8 +69,7 @@ pub(crate) async fn create_user(
 
     validate_password(&payload.password)?;
 
-    let password_hash =
-        hash_password(&payload.password).map_err(ApiError::internal)?;
+    let password_hash = hash_password(&payload.password).map_err(ApiError::internal)?;
 
     let role_str = match payload.role {
         UserRole::Admin => "admin",
@@ -167,7 +166,7 @@ pub(crate) async fn update_user(
         .map_err(|e| ApiError::internal(e.into()))?;
 
     if result.rows_affected() == 0 {
-        return Err(ApiError::not_found("User not found"));
+        return Err(ApiError::not_found("user_not_found", "User not found"));
     }
 
     Ok(StatusCode::OK)
@@ -193,7 +192,7 @@ pub(crate) async fn delete_user(
         .map_err(|e| ApiError::internal(e.into()))?;
 
     if result.rows_affected() == 0 {
-        return Err(ApiError::not_found("User not found"));
+        return Err(ApiError::not_found("user_not_found", "User not found"));
     }
 
     Ok(StatusCode::NO_CONTENT)
@@ -215,19 +214,19 @@ pub(crate) fn routes(state: AppState) -> axum::Router {
 fn validate_password(password: &str) -> Result<(), ApiError> {
     if password.chars().count() < 8 {
         return Err(ApiError::bad_request(
-            "weak_password",
+            "weak_password_too_short",
             "Password must be at least 8 characters long",
         ));
     }
     if !password.chars().any(|c| c.is_ascii_lowercase()) {
         return Err(ApiError::bad_request(
-            "weak_password",
+            "weak_password_missing_lowercase",
             "Password must contain at least one lowercase letter",
         ));
     }
     if !password.chars().any(|c| c.is_ascii_digit()) {
         return Err(ApiError::bad_request(
-            "weak_password",
+            "weak_password_missing_number",
             "Password must contain at least one number",
         ));
     }

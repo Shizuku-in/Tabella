@@ -12,7 +12,7 @@ import {
   Alert,
 } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ApiError, request } from '../lib/api.ts'
+import { getApiErrorMessage, request } from '../lib/api.ts'
 import { Save } from '@mui/icons-material'
 
 interface ServerSettings {
@@ -94,7 +94,7 @@ export function AdminServerPage() {
     },
     onError: (error) => {
       setSnackbarSeverity('error')
-      setSnackbarMessage(error instanceof ApiError ? error.message : 'Failed to update server settings.')
+      setSnackbarMessage(getApiErrorMessage(error, 'Failed to update server settings.'))
       setSnackbarOpen(true)
     },
   })
@@ -125,7 +125,7 @@ export function AdminServerPage() {
         updateMutation.mutate(parseFormState(settings))
       } catch (error) {
         setSnackbarSeverity('error')
-        setSnackbarMessage(error instanceof Error ? error.message : 'Failed to validate server settings.')
+        setSnackbarMessage(getApiErrorMessage(error, 'Failed to validate server settings.'))
         setSnackbarOpen(true)
       }
     }

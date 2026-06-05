@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { useServerEvents } from './use-server-events.ts'
 import { useShallow } from 'zustand/react/shallow'
+import { formatApiErrorMessage } from '../lib/api.ts'
 
 export function useDownloadTracker() {
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +35,13 @@ export function useDownloadTracker() {
         document.body.removeChild(a)
       } else if (statusData.status === 'failed') {
         setActiveDownloadJobId(null)
-        setError(statusData.error_message ?? 'Download job failed.')
+        setError(
+          formatApiErrorMessage(
+            statusData.error_code ?? undefined,
+            statusData.error_params ?? null,
+            statusData.error_message ?? 'Download job failed.'
+          )
+        )
       }
     } catch (e) {
       console.error('Failed to check download job:', e)

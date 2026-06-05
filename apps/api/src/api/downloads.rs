@@ -8,6 +8,7 @@ use axum::{
 };
 use axum_extra::extract::CookieJar;
 use serde::Serialize;
+use serde_json::{Value, json};
 use time::OffsetDateTime;
 use tokio_util::io::ReaderStream;
 use tracing::error;
@@ -45,6 +46,8 @@ pub(crate) struct DownloadJobResponse {
     pub total_images: i32,
     pub total_bytes: i64,
     pub error_message: Option<String>,
+    pub error_code: Option<String>,
+    pub error_params: Option<Value>,
 }
 
 async fn create_download_job(
@@ -57,18 +60,19 @@ async fn create_download_job(
 
     if request.image_ids.is_empty() {
         return Err(ApiError::bad_request(
-            "invalid_request",
+            "no_images_selected",
             "No images selected",
         ));
     }
 
     if request.image_ids.len() > settings.max_download_images {
-        return Err(ApiError::bad_request(
-            "limit_exceeded",
+        return Err(ApiError::bad_request_with_params(
+            "too_many_images_requested",
             format!(
                 "Cannot download more than {} images at once.",
                 settings.max_download_images
             ),
+            json!({ "max_images": settings.max_download_images }),
         ));
     }
 
@@ -88,7 +92,7 @@ async fn create_download_job(
 
     if records.is_empty() {
         return Err(ApiError::bad_request(
-            "invalid_request",
+            "selected_images_not_found",
             "Selected images not found",
         ));
     }
@@ -108,12 +112,13 @@ async fn create_download_job(
     }
 
     if total_bytes as u64 > settings.max_download_total_bytes {
-        return Err(ApiError::bad_request(
-            "limit_exceeded",
+        return Err(ApiError::bad_request_with_params(
+            "download_size_limit_exceeded",
             format!(
                 "Total size exceeds the maximum limit of {} bytes.",
                 settings.max_download_total_bytes
             ),
+            json!({ "max_total_bytes": settings.max_download_total_bytes }),
         ));
     }
 
@@ -150,6 +155,8 @@ async fn create_download_job(
         total_images: records.len() as i32,
         total_bytes,
         error_message: None,
+        error_code: None,
+        error_params: None,
     }))
 }
 
@@ -241,7 +248,7 @@ async fn get_download_job(
 
     let record = sqlx::query(
         r#"
-        SELECT id, user_id, status::TEXT as status, total_images, total_bytes, error_message
+        SELECT id, user_id, status::TEXT as status, total_images, total_bytes, error_message, error_code, error_params
         FROM download_jobs
         WHERE id = $1
         "#,
@@ -251,12 +258,13 @@ async fn get_download_job(
     .await
     .map_err(|e| ApiError::internal(e.into()))?;
 
-    let record = record.ok_or_else(|| ApiError::not_found("Download job not found"))?;
+    let record = record
+        .ok_or_else(|| ApiError::not_found("download_job_not_found", "Download job not found"))?;
     let record_user_id: i64 = sqlx::Row::try_get(&record, "user_id").unwrap();
 
     if record_user_id != user.id {
         return Err(ApiError::unauthorized(
-            "unauthorized",
+            "download_job_access_denied",
             "You can only view your own download jobs",
         ));
     }
@@ -269,6 +277,8 @@ async fn get_download_job(
         total_images: sqlx::Row::try_get(&record, "total_images").unwrap(),
         total_bytes: sqlx::Row::try_get(&record, "total_bytes").unwrap(),
         error_message: sqlx::Row::try_get(&record, "error_message").unwrap(),
+        error_code: sqlx::Row::try_get(&record, "error_code").unwrap(),
+        error_params: sqlx::Row::try_get(&record, "error_params").unwrap(),
     }))
 }
 
@@ -291,12 +301,13 @@ async fn download_job_file(
     .await
     .map_err(|e| ApiError::internal(e.into()))?;
 
-    let record = record.ok_or_else(|| ApiError::not_found("Download job not found"))?;
+    let record = record
+        .ok_or_else(|| ApiError::not_found("download_job_not_found", "Download job not found"))?;
     let record_user_id: i64 = sqlx::Row::try_get(&record, "user_id").unwrap();
 
     if record_user_id != user.id {
         return Err(ApiError::unauthorized(
-            "unauthorized",
+            "download_job_access_denied",
             "You can only download your own files",
         ));
     }
@@ -304,7 +315,7 @@ async fn download_job_file(
     let record_status: Option<String> = sqlx::Row::try_get(&record, "status").unwrap();
     if record_status.as_deref() != Some("completed") {
         return Err(ApiError::bad_request(
-            "invalid_state",
+            "download_job_not_completed",
             "The download job is not completed yet",
         ));
     }
@@ -316,7 +327,10 @@ async fn download_job_file(
 
     let file = tokio::fs::File::open(&abs_path).await.map_err(|e| {
         error!(%e, "Failed to open download zip file");
-        ApiError::not_found("The archive file no longer exists")
+        ApiError::not_found(
+            "download_archive_missing",
+            "The archive file no longer exists",
+        )
     })?;
 
     let stream = ReaderStream::new(file);

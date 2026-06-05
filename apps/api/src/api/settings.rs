@@ -33,7 +33,7 @@ async fn update_settings(
 
     new_settings
         .validate()
-        .map_err(|error| ApiError::bad_request("invalid_settings", error.to_string()))?;
+        .map_err(|_| ApiError::bad_request("invalid_settings", "Server settings are invalid."))?;
 
     new_settings
         .save(&state.pool)

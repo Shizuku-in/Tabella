@@ -23,7 +23,7 @@ import {
 } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRef, useState, useCallback } from 'react'
-import { request, uploadWithProgress } from '../lib/api.ts'
+import { getApiErrorMessage, request, uploadWithProgress } from '../lib/api.ts'
 import type { ImportJobRow, ImportJobStatus } from '../types.ts'
 import { useAuth } from '../auth/auth-provider.tsx'
 import { useServerEvents } from '../hooks/use-server-events.ts'
@@ -86,7 +86,7 @@ export function AdminImportsPage() {
       jobsQuery.refetch()
     },
     onError: (err) => {
-      showSnackbar('Failed to start job: ' + err.message, 'error')
+      showSnackbar(`Failed to start job: ${getApiErrorMessage(err, 'Request failed.')}`, 'error')
     }
   })
 
@@ -143,7 +143,7 @@ export function AdminImportsPage() {
       jobsQuery.refetch()
     },
     onError: (err) => {
-      showSnackbar('Failed to upload: ' + err.message, 'error')
+      showSnackbar(`Failed to upload: ${getApiErrorMessage(err, 'Upload failed.')}`, 'error')
     }
   })
 
