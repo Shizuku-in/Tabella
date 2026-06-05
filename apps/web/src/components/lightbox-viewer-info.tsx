@@ -1,4 +1,5 @@
 import { Save } from '@mui/icons-material'
+import type { ReactNode } from 'react'
 import {
   Box,
   Slide,
@@ -15,8 +16,8 @@ import {
   Avatar,
   Popper,
   Grow,
-  PopperProps,
 } from '@mui/material'
+import type { PopperProps } from '@mui/material'
 import { alpha, useTheme } from '@mui/material/styles'
 import type { GalleryItem, Rating } from '../types'
 import { getTagColor } from '../lib/tags.ts'
@@ -26,7 +27,7 @@ const CustomPopper = function (props: PopperProps) {
     <Popper {...props} transition placement="bottom-start" style={{ zIndex: 1300 }}>
       {({ TransitionProps }) => (
         <Grow {...TransitionProps} timeout={200}>
-          <Box sx={{ transformOrigin: 'top left' }}>{props.children}</Box>
+          <Box sx={{ transformOrigin: 'top left' }}>{props.children as ReactNode}</Box>
         </Grow>
       )}
     </Popper>

@@ -1,6 +1,8 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useRef, useEffect } from 'react'
-import { Box, Tooltip, IconButton, Autocomplete, TextField, Chip, Drawer, useTheme, useMediaQuery, Stack, Popper, Grow, PopperProps } from '@mui/material'
+import type { ReactNode } from 'react'
+import { Box, Tooltip, IconButton, Autocomplete, TextField, Chip, Drawer, useTheme, useMediaQuery, Stack, Popper, Grow } from '@mui/material'
+import type { PopperProps } from '@mui/material'
 import { Search, ArrowBack } from '@mui/icons-material'
 import { alpha } from '@mui/material/styles'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
@@ -13,7 +15,7 @@ const CustomPopper = function (props: PopperProps) {
     <Popper {...props} transition placement="bottom-start">
       {({ TransitionProps }) => (
         <Grow {...TransitionProps} timeout={200}>
-          <Box sx={{ transformOrigin: 'top left' }}>{props.children}</Box>
+          <Box sx={{ transformOrigin: 'top left' }}>{props.children as ReactNode}</Box>
         </Grow>
       )}
     </Popper>
