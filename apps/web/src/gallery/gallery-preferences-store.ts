@@ -64,7 +64,7 @@ export const useGalleryPreferencesStore = create<GalleryPreferencesState>()(
       showMobileDetails: true,
       setShowMobileDetails: (value) => set({ showMobileDetails: value }),
       
-      hoverInfo: { name: true, resolution: true, tags: true, loved: true, rating: true, download: true },
+      hoverInfo: { name: false, resolution: true, tags: false, loved: true, rating: true, download: true },
       setHoverInfo: (value) => set({ hoverInfo: value }),
       
       showResultsCount: true,
