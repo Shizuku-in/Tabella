@@ -82,7 +82,7 @@ export const useGalleryPreferencesStore = create<GalleryPreferencesState>()(
       hoverDownloadQuality: 'original',
       setHoverDownloadQuality: (value) => set({ hoverDownloadQuality: value }),
       
-      topBarConfig: { sort: true, layout: true, rating: true, favorites: true, selectMultiple: true, search: true, advancedSearch: true, themeToggle: true },
+      topBarConfig: { sort: true, layout: true, rating: false, favorites: false, selectMultiple: true, search: true, advancedSearch: false, themeToggle: true },
       setTopBarConfig: (value) => set({ topBarConfig: value }),
     }),
     {
