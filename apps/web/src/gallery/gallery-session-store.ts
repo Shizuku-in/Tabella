@@ -39,7 +39,33 @@ interface GallerySessionState {
 
 export const useGallerySessionStore = create<GallerySessionState>((set) => ({
   searchTags: [],
-  setSearchTags: (value) => set({ searchTags: value }),
+  setSearchTags: (value) => set((state) => {
+    const isAdvancedActive =
+      state.advancedIncludeTags.length > 0 ||
+      state.excludeTags.length > 0 ||
+      state.uploadedAfter !== null ||
+      state.uploadedBefore !== null ||
+      state.minWidth !== null ||
+      state.minHeight !== null ||
+      state.aspectRatioMin !== null ||
+      state.aspectRatioMax !== null
+
+    if (value.length > 0 && isAdvancedActive) {
+      // When basic search is activated, clear advanced search to avoid conflicting filters
+      return {
+        searchTags: value,
+        advancedIncludeTags: [],
+        excludeTags: [],
+        uploadedAfter: null,
+        uploadedBefore: null,
+        minWidth: null,
+        minHeight: null,
+        aspectRatioMin: null,
+        aspectRatioMax: null,
+      }
+    }
+    return { searchTags: value }
+  }),
   
   sort: 'newest',
   setSort: (value) => set({ sort: value }),

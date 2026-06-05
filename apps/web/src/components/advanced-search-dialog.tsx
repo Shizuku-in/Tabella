@@ -20,6 +20,7 @@ import { useEffect, useState } from 'react'
 import { suggestTags } from '../lib/api.ts'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { useShallow } from 'zustand/react/shallow'
+import { getTagColor } from '../lib/tags.ts'
 
 export interface AdvancedSearchDialogProps {
   open: boolean
@@ -45,13 +46,7 @@ const hideSpinButton = {
   },
 }
 
-function getTagColor(tag: string, theme: any) {
-  if (tag.includes('character:')) return theme.palette.success.main
-  if (tag.includes('artist:')) return theme.palette.error.main
-  if (tag.includes('copyright:')) return theme.palette.warning.main
-  if (tag.includes('meta:')) return theme.palette.info.main
-  return theme.palette.primary.main
-}
+
 
 export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProps) {
   const {
