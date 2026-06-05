@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useRef, useEffect } from 'react'
-import { Box, Tooltip, IconButton, Autocomplete, TextField, Chip, Drawer, useTheme, useMediaQuery, Stack, Popper, Grow } from '@mui/material'
+import { Box, Tooltip, IconButton, Autocomplete, TextField, Chip, Drawer, useTheme, useMediaQuery, Stack, Popper, Grow, PopperProps } from '@mui/material'
 import { Search, ArrowBack } from '@mui/icons-material'
 import { alpha } from '@mui/material/styles'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
@@ -8,7 +8,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { suggestTags } from '../lib/api.ts'
 import { getTagColor } from '../lib/tags.ts'
 
-const CustomPopper = function (props: any) {
+const CustomPopper = function (props: PopperProps) {
   return (
     <Popper {...props} transition placement="bottom-start">
       {({ TransitionProps }) => (

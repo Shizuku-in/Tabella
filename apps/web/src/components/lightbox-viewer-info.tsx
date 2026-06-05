@@ -15,12 +15,13 @@ import {
   Avatar,
   Popper,
   Grow,
+  PopperProps,
 } from '@mui/material'
 import { alpha, useTheme } from '@mui/material/styles'
 import type { GalleryItem, Rating } from '../types'
 import { getTagColor } from '../lib/tags.ts'
 
-const CustomPopper = function (props: any) {
+const CustomPopper = function (props: PopperProps) {
   return (
     <Popper {...props} transition placement="bottom-start" style={{ zIndex: 1300 }}>
       {({ TransitionProps }) => (
