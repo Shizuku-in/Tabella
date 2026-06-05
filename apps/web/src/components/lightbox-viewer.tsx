@@ -202,7 +202,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
   }
 
   const formatSizeStr = (bytes: number) => {
-    if (!bytes) return '未知'
+    if (!bytes) return 'Unknown'
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + 'KB'
     return (bytes / (1024 * 1024)).toFixed(2) + 'MB'
   }

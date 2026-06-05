@@ -16,7 +16,9 @@ pub(crate) async fn require_user(
         .await
         .context("failed to resolve current session")
         .map_err(ApiError::internal)?
-        .ok_or_else(|| ApiError::unauthorized("authentication_required", "需要先登录后才能访问。"))
+        .ok_or_else(|| {
+            ApiError::unauthorized("authentication_required", "Authentication required.")
+        })
 }
 
 pub(crate) async fn require_admin(
@@ -26,7 +28,10 @@ pub(crate) async fn require_admin(
     let user = require_user(state, jar).await?;
 
     if user.role != UserRole::Admin {
-        return Err(ApiError::forbidden("forbidden", "当前账号没有管理员权限。"));
+        return Err(ApiError::forbidden(
+            "forbidden",
+            "Admin privileges required.",
+        ));
     }
 
     Ok(user)
@@ -39,7 +44,10 @@ pub(crate) async fn require_editor(
     let user = require_user(state, jar).await?;
 
     if user.role == UserRole::Viewer {
-        return Err(ApiError::forbidden("forbidden", "需要编辑者或管理员权限。"));
+        return Err(ApiError::forbidden(
+            "forbidden",
+            "Editor or admin privileges required.",
+        ));
     }
 
     Ok(user)

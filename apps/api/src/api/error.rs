@@ -90,7 +90,7 @@ impl IntoResponse for ApiError {
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({
                         "error": "internal_error",
-                        "message": "服务器内部错误。"
+                        "message": "Internal server error."
                     })),
                 )
                     .into_response()

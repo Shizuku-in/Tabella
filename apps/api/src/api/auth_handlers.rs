@@ -42,7 +42,7 @@ async fn login(
     if username.is_empty() || password.is_empty() {
         return Err(ApiError::bad_request(
             "missing_credentials",
-            "用户名和密码不能为空。",
+            "Username and password are required.",
         ));
     }
 
@@ -53,7 +53,7 @@ async fn login(
     else {
         return Err(ApiError::unauthorized(
             "invalid_credentials",
-            "用户名或密码错误。",
+            "Invalid username or password.",
         ));
     };
 
