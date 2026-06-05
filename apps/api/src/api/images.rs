@@ -272,8 +272,12 @@ fn normalize_tag_filter(tag: &str) -> Option<String> {
 }
 
 fn decode_image_cursor(raw: &str) -> Result<ImageListCursor, ApiError> {
-    serde_json::from_str(raw)
-        .map_err(|_| ApiError::bad_request("invalid_cursor", "Invalid image pagination cursor."))
+    serde_json::from_str(raw).map_err(|_| {
+        ApiError::bad_request(
+            crate::api::error_codes::INVALID_CURSOR,
+            "Invalid image pagination cursor.",
+        )
+    })
 }
 
 fn push_image_cursor_filter(
@@ -285,7 +289,7 @@ fn push_image_cursor_filter(
         ImageSort::Newest => {
             let imported_at = cursor.imported_at.ok_or_else(|| {
                 ApiError::bad_request(
-                    "cursor_missing_imported_at",
+                    crate::api::error_codes::CURSOR_MISSING_IMPORTED_AT,
                     "Missing imported_at in image cursor.",
                 )
             })?;
@@ -298,7 +302,7 @@ fn push_image_cursor_filter(
         ImageSort::Oldest => {
             let imported_at = cursor.imported_at.ok_or_else(|| {
                 ApiError::bad_request(
-                    "cursor_missing_imported_at",
+                    crate::api::error_codes::CURSOR_MISSING_IMPORTED_AT,
                     "Missing imported_at in image cursor.",
                 )
             })?;
@@ -315,7 +319,7 @@ fn push_image_cursor_filter(
                 .filter(|value| !value.is_empty())
                 .ok_or_else(|| {
                     ApiError::bad_request(
-                        "cursor_missing_filename",
+                        crate::api::error_codes::CURSOR_MISSING_FILENAME,
                         "Missing filename in image cursor.",
                     )
                 })?;
@@ -332,7 +336,7 @@ fn push_image_cursor_filter(
                 .filter(|value| !value.is_empty())
                 .ok_or_else(|| {
                     ApiError::bad_request(
-                        "cursor_missing_filename",
+                        crate::api::error_codes::CURSOR_MISSING_FILENAME,
                         "Missing filename in image cursor.",
                     )
                 })?;
@@ -467,7 +471,9 @@ async fn delete_image(
     .fetch_optional(&state.pool)
     .await
     .map_err(|e| ApiError::internal(e.into()))?
-    .ok_or_else(|| ApiError::not_found("image_not_found", "Image not found."))?;
+    .ok_or_else(|| {
+        ApiError::not_found(crate::api::error_codes::IMAGE_NOT_FOUND, "Image not found.")
+    })?;
 
     sqlx::query("DELETE FROM images WHERE id = $1")
         .bind(image_id)

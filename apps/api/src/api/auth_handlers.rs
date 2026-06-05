@@ -41,7 +41,7 @@ async fn login(
 
     if username.is_empty() || password.is_empty() {
         return Err(ApiError::bad_request(
-            "missing_credentials",
+            crate::api::error_codes::MISSING_CREDENTIALS,
             "Username and password are required.",
         ));
     }
@@ -52,7 +52,7 @@ async fn login(
         .map_err(ApiError::internal)?
     else {
         return Err(ApiError::unauthorized(
-            "invalid_credentials",
+            crate::api::error_codes::INVALID_CREDENTIALS,
             "Invalid username or password.",
         ));
     };

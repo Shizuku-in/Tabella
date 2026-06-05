@@ -31,9 +31,12 @@ async fn update_settings(
 ) -> Result<Json<DynamicConfig>, ApiError> {
     require_admin(&state, &jar).await?;
 
-    new_settings
-        .validate()
-        .map_err(|_| ApiError::bad_request("invalid_settings", "Server settings are invalid."))?;
+    new_settings.validate().map_err(|_| {
+        ApiError::bad_request(
+            crate::api::error_codes::INVALID_SETTINGS,
+            "Server settings are invalid.",
+        )
+    })?;
 
     new_settings
         .save(&state.pool)

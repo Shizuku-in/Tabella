@@ -17,7 +17,10 @@ pub(crate) async fn require_user(
         .context("failed to resolve current session")
         .map_err(ApiError::internal)?
         .ok_or_else(|| {
-            ApiError::unauthorized("authentication_required", "Authentication required.")
+            ApiError::unauthorized(
+                crate::api::error_codes::AUTHENTICATION_REQUIRED,
+                "Authentication required.",
+            )
         })
 }
 
@@ -29,7 +32,7 @@ pub(crate) async fn require_admin(
 
     if user.role != UserRole::Admin {
         return Err(ApiError::forbidden(
-            "admin_required",
+            crate::api::error_codes::ADMIN_REQUIRED,
             "Admin privileges required.",
         ));
     }
@@ -45,7 +48,7 @@ pub(crate) async fn require_editor(
 
     if user.role == UserRole::Viewer {
         return Err(ApiError::forbidden(
-            "editor_required",
+            crate::api::error_codes::EDITOR_REQUIRED,
             "Editor or admin privileges required.",
         ));
     }

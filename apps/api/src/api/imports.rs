@@ -113,8 +113,12 @@ async fn get_import_job(
     .await
     .map_err(|e| ApiError::internal(e.into()))?;
 
-    let job =
-        job.ok_or_else(|| ApiError::not_found("import_job_not_found", "Import job not found"))?;
+    let job = job.ok_or_else(|| {
+        ApiError::not_found(
+            crate::api::error_codes::IMPORT_JOB_NOT_FOUND,
+            "Import job not found",
+        )
+    })?;
 
     Ok(Json(serde_json::json!({
         "id": job.id,
@@ -238,7 +242,7 @@ async fn upload_import_files(
 
     if !has_files {
         return Err(ApiError::bad_request(
-            "no_files_uploaded",
+            crate::api::error_codes::NO_FILES_UPLOADED,
             "No files uploaded",
         ));
     }
@@ -276,7 +280,7 @@ fn sanitize_upload_path(file_name: &str) -> Result<PathBuf, ApiError> {
             Component::CurDir => {}
             Component::ParentDir | Component::RootDir | Component::Prefix(_) => {
                 return Err(ApiError::bad_request(
-                    "invalid_upload_path",
+                    crate::api::error_codes::INVALID_UPLOAD_PATH,
                     "Upload path must stay inside the server staging directory.",
                 ));
             }
@@ -285,7 +289,7 @@ fn sanitize_upload_path(file_name: &str) -> Result<PathBuf, ApiError> {
 
     if sanitized.as_os_str().is_empty() {
         return Err(ApiError::bad_request(
-            "invalid_upload_path",
+            crate::api::error_codes::INVALID_UPLOAD_PATH,
             "Upload path must include a file name.",
         ));
     }
@@ -298,9 +302,10 @@ fn api_error_from_multipart(error: axum::extract::multipart::MultipartError) -> 
         StatusCode::PAYLOAD_TOO_LARGE => {
             ApiError::payload_too_large("Uploaded payload is too large.")
         }
-        StatusCode::BAD_REQUEST => {
-            ApiError::bad_request("invalid_multipart", "Uploaded data could not be processed.")
-        }
+        StatusCode::BAD_REQUEST => ApiError::bad_request(
+            crate::api::error_codes::INVALID_MULTIPART,
+            "Uploaded data could not be processed.",
+        ),
         _ => ApiError::internal(error.into()),
     }
 }

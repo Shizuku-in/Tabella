@@ -60,14 +60,14 @@ async fn create_download_job(
 
     if request.image_ids.is_empty() {
         return Err(ApiError::bad_request(
-            "no_images_selected",
+            crate::api::error_codes::NO_IMAGES_SELECTED,
             "No images selected",
         ));
     }
 
     if request.image_ids.len() > settings.max_download_images {
         return Err(ApiError::bad_request_with_params(
-            "too_many_images_requested",
+            crate::api::error_codes::TOO_MANY_IMAGES_REQUESTED,
             format!(
                 "Cannot download more than {} images at once.",
                 settings.max_download_images
@@ -92,7 +92,7 @@ async fn create_download_job(
 
     if records.is_empty() {
         return Err(ApiError::bad_request(
-            "selected_images_not_found",
+            crate::api::error_codes::SELECTED_IMAGES_NOT_FOUND,
             "Selected images not found",
         ));
     }
@@ -113,7 +113,7 @@ async fn create_download_job(
 
     if total_bytes as u64 > settings.max_download_total_bytes {
         return Err(ApiError::bad_request_with_params(
-            "download_size_limit_exceeded",
+            crate::api::error_codes::DOWNLOAD_SIZE_LIMIT_EXCEEDED,
             format!(
                 "Total size exceeds the maximum limit of {} bytes.",
                 settings.max_download_total_bytes
@@ -258,13 +258,17 @@ async fn get_download_job(
     .await
     .map_err(|e| ApiError::internal(e.into()))?;
 
-    let record = record
-        .ok_or_else(|| ApiError::not_found("download_job_not_found", "Download job not found"))?;
+    let record = record.ok_or_else(|| {
+        ApiError::not_found(
+            crate::api::error_codes::DOWNLOAD_JOB_NOT_FOUND,
+            "Download job not found",
+        )
+    })?;
     let record_user_id: i64 = sqlx::Row::try_get(&record, "user_id").unwrap();
 
     if record_user_id != user.id {
         return Err(ApiError::unauthorized(
-            "download_job_access_denied",
+            crate::api::error_codes::DOWNLOAD_JOB_ACCESS_DENIED,
             "You can only view your own download jobs",
         ));
     }
@@ -301,13 +305,17 @@ async fn download_job_file(
     .await
     .map_err(|e| ApiError::internal(e.into()))?;
 
-    let record = record
-        .ok_or_else(|| ApiError::not_found("download_job_not_found", "Download job not found"))?;
+    let record = record.ok_or_else(|| {
+        ApiError::not_found(
+            crate::api::error_codes::DOWNLOAD_JOB_NOT_FOUND,
+            "Download job not found",
+        )
+    })?;
     let record_user_id: i64 = sqlx::Row::try_get(&record, "user_id").unwrap();
 
     if record_user_id != user.id {
         return Err(ApiError::unauthorized(
-            "download_job_access_denied",
+            crate::api::error_codes::DOWNLOAD_JOB_ACCESS_DENIED,
             "You can only download your own files",
         ));
     }
@@ -315,7 +323,7 @@ async fn download_job_file(
     let record_status: Option<String> = sqlx::Row::try_get(&record, "status").unwrap();
     if record_status.as_deref() != Some("completed") {
         return Err(ApiError::bad_request(
-            "download_job_not_completed",
+            crate::api::error_codes::DOWNLOAD_JOB_NOT_COMPLETED,
             "The download job is not completed yet",
         ));
     }
@@ -328,7 +336,7 @@ async fn download_job_file(
     let file = tokio::fs::File::open(&abs_path).await.map_err(|e| {
         error!(%e, "Failed to open download zip file");
         ApiError::not_found(
-            "download_archive_missing",
+            crate::api::error_codes::DOWNLOAD_ARCHIVE_MISSING,
             "The archive file no longer exists",
         )
     })?;

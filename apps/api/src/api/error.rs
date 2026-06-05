@@ -75,7 +75,7 @@ impl ApiError {
 
     pub(crate) fn payload_too_large(message: impl Into<String>) -> Self {
         Self::PayloadTooLarge {
-            code: "payload_too_large",
+            code: crate::api::error_codes::PAYLOAD_TOO_LARGE,
             message: message.into(),
             params: None,
         }
@@ -148,7 +148,7 @@ impl IntoResponse for ApiError {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     Json(json!({
-                        "error": "internal_error",
+                        "error": crate::api::error_codes::INTERNAL_ERROR,
                         "message": "Internal server error.",
                         "params": Value::Null
                     })),

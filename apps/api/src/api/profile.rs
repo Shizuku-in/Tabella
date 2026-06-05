@@ -79,14 +79,14 @@ async fn update_profile(
 
     if current_password.is_some() && new_password.is_none() {
         return Err(ApiError::bad_request(
-            "missing_new_password",
+            crate::api::error_codes::MISSING_NEW_PASSWORD,
             "New password is required when current password is provided",
         ));
     }
 
     if new_password.is_some() && current_password.is_none() {
         return Err(ApiError::bad_request(
-            "missing_current_password",
+            crate::api::error_codes::MISSING_CURRENT_PASSWORD,
             "Current password is required to set a new password",
         ));
     }
@@ -98,7 +98,7 @@ async fn update_profile(
         let normalized = normalize_username(&username);
         if normalized.is_empty() {
             return Err(ApiError::bad_request(
-                "invalid_username",
+                crate::api::error_codes::INVALID_USERNAME,
                 "Username cannot be empty",
             ));
         }
@@ -121,7 +121,7 @@ async fn update_profile(
             .map_err(ApiError::internal)?
         {
             return Err(ApiError::bad_request(
-                "invalid_password",
+                crate::api::error_codes::INVALID_PASSWORD,
                 "Current password is incorrect",
             ));
         }
@@ -149,7 +149,10 @@ async fn update_profile(
             if let sqlx::Error::Database(ref db_err) = err
                 && db_err.constraint() == Some("users_normalized_username_key")
             {
-                return ApiError::bad_request("duplicate_username", "Username is already taken");
+                return ApiError::bad_request(
+                    crate::api::error_codes::DUPLICATE_USERNAME,
+                    "Username is already taken",
+                );
             }
             ApiError::internal(err.into())
         })?;
@@ -225,8 +228,12 @@ async fn upload_avatar(
         }
     }
 
-    let url = avatar_url
-        .ok_or_else(|| ApiError::bad_request("no_file_uploaded", "No avatar file provided"))?;
+    let url = avatar_url.ok_or_else(|| {
+        ApiError::bad_request(
+            crate::api::error_codes::NO_FILE_UPLOADED,
+            "No avatar file provided",
+        )
+    })?;
 
     sqlx::query!(
         "update users set avatar_url = $1, updated_at = now() where id = $2",
@@ -247,9 +254,10 @@ fn api_error_from_multipart(error: axum::extract::multipart::MultipartError) -> 
         StatusCode::PAYLOAD_TOO_LARGE => {
             ApiError::payload_too_large("Uploaded payload is too large.")
         }
-        StatusCode::BAD_REQUEST => {
-            ApiError::bad_request("invalid_multipart", "Uploaded data could not be processed.")
-        }
+        StatusCode::BAD_REQUEST => ApiError::bad_request(
+            crate::api::error_codes::INVALID_MULTIPART,
+            "Uploaded data could not be processed.",
+        ),
         _ => ApiError::internal(error.into()),
     }
 }

@@ -62,7 +62,7 @@ pub(crate) async fn create_user(
     let normalized = normalize_username(&payload.username);
     if normalized.is_empty() {
         return Err(ApiError::bad_request(
-            "invalid_username",
+            crate::api::error_codes::INVALID_USERNAME,
             "Username cannot be empty",
         ));
     }
@@ -94,7 +94,10 @@ pub(crate) async fn create_user(
         if let sqlx::Error::Database(ref db_err) = err
             && db_err.constraint() == Some("users_normalized_username_key")
         {
-            return ApiError::bad_request("duplicate_username", "Username is already taken");
+            return ApiError::bad_request(
+                crate::api::error_codes::DUPLICATE_USERNAME,
+                "Username is already taken",
+            );
         }
         ApiError::internal(err.into())
     })?;
@@ -124,7 +127,7 @@ pub(crate) async fn update_user(
         && *new_role != admin.role
     {
         return Err(ApiError::bad_request(
-            "role_change_not_allowed",
+            crate::api::error_codes::ROLE_CHANGE_NOT_ALLOWED,
             "You cannot change your own role",
         ));
     }
@@ -166,7 +169,10 @@ pub(crate) async fn update_user(
         .map_err(|e| ApiError::internal(e.into()))?;
 
     if result.rows_affected() == 0 {
-        return Err(ApiError::not_found("user_not_found", "User not found"));
+        return Err(ApiError::not_found(
+            crate::api::error_codes::USER_NOT_FOUND,
+            "User not found",
+        ));
     }
 
     Ok(StatusCode::OK)
@@ -181,7 +187,7 @@ pub(crate) async fn delete_user(
 
     if id == admin.id {
         return Err(ApiError::bad_request(
-            "self_delete_not_allowed",
+            crate::api::error_codes::SELF_DELETE_NOT_ALLOWED,
             "You cannot delete your own account",
         ));
     }
@@ -192,7 +198,10 @@ pub(crate) async fn delete_user(
         .map_err(|e| ApiError::internal(e.into()))?;
 
     if result.rows_affected() == 0 {
-        return Err(ApiError::not_found("user_not_found", "User not found"));
+        return Err(ApiError::not_found(
+            crate::api::error_codes::USER_NOT_FOUND,
+            "User not found",
+        ));
     }
 
     Ok(StatusCode::NO_CONTENT)
@@ -214,19 +223,19 @@ pub(crate) fn routes(state: AppState) -> axum::Router {
 fn validate_password(password: &str) -> Result<(), ApiError> {
     if password.chars().count() < 8 {
         return Err(ApiError::bad_request(
-            "weak_password_too_short",
+            crate::api::error_codes::WEAK_PASSWORD_TOO_SHORT,
             "Password must be at least 8 characters long",
         ));
     }
     if !password.chars().any(|c| c.is_ascii_lowercase()) {
         return Err(ApiError::bad_request(
-            "weak_password_missing_lowercase",
+            crate::api::error_codes::WEAK_PASSWORD_MISSING_LOWERCASE,
             "Password must contain at least one lowercase letter",
         ));
     }
     if !password.chars().any(|c| c.is_ascii_digit()) {
         return Err(ApiError::bad_request(
-            "weak_password_missing_number",
+            crate::api::error_codes::WEAK_PASSWORD_MISSING_NUMBER,
             "Password must contain at least one number",
         ));
     }

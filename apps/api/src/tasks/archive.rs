@@ -46,7 +46,7 @@ pub(crate) async fn process_archive_job(state: AppState, task: ArchiveTask) {
                 "#,
             )
             .bind("Download job failed.")
-            .bind("archive_generation_failed")
+            .bind(crate::api::error_codes::ARCHIVE_GENERATION_FAILED)
             .bind(Option::<serde_json::Value>::None)
             .bind(e.to_string())
             .bind(job_id)

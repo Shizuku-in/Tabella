@@ -406,12 +406,15 @@ fn classify_import_error(error: &anyhow::Error) -> (&'static str, &'static str) 
     if let Some(import_error) = error.downcast_ref::<ImportJobError>() {
         match import_error {
             ImportJobError::NoImportableFiles => (
-                "no_importable_files",
+                crate::api::error_codes::NO_IMPORTABLE_FILES,
                 "No supported image files were found in the import source.",
             ),
         }
     } else {
-        ("import_processing_failed", "Import job failed.")
+        (
+            crate::api::error_codes::IMPORT_PROCESSING_FAILED,
+            "Import job failed.",
+        )
     }
 }
 
@@ -620,7 +623,7 @@ mod tests {
     fn classify_import_error_maps_no_importable_files() {
         let error = anyhow!(ImportJobError::NoImportableFiles);
         let (code, message) = classify_import_error(&error);
-        assert_eq!(code, "no_importable_files");
+        assert_eq!(code, crate::api::error_codes::NO_IMPORTABLE_FILES);
         assert_eq!(
             message,
             "No supported image files were found in the import source."

@@ -1,6 +1,7 @@
 mod auth_handlers;
 mod downloads;
 mod error;
+pub mod error_codes;
 mod events;
 mod guards;
 mod health;
