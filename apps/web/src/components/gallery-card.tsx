@@ -40,7 +40,7 @@ export function GalleryCard({
       onClick={onClick}
       sx={{
         position: 'relative',
-        display: 'inline-block',
+        display: 'block',
         width: '100%',
         overflow: 'hidden',
         cursor: 'pointer',
