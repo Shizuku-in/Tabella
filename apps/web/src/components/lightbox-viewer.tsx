@@ -589,7 +589,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
                   display: 'flex',
                   flexWrap: 'wrap',
                   gap: 1,
-                  maxHeight: '40vh',
+                  maxHeight: '25vh',
                   overflowY: 'auto',
                   // Hide scrollbar but keep functionality
                   msOverflowStyle: 'none',
