@@ -1,8 +1,35 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'prompt',
+      includeAssets: ['favicon/favicon.ico', 'favicon/apple-touch-icon.png'],
+      manifest: {
+        name: 'Tabella',
+        short_name: 'Tabella',
+        description: 'Advanced Media Gallery',
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
+        display: 'standalone',
+        icons: [
+          {
+            src: '/favicon/android-chrome-192x192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/favicon/android-chrome-512x512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          }
+        ]
+      }
+    })
+  ],
   build: {
     rollupOptions: {
       output: {

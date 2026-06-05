@@ -17,6 +17,7 @@ import { AdminServerPage } from './pages/admin-server-page.tsx'
 import { ProfilePage } from './pages/profile-page.tsx'
 import { NotFoundPage } from './pages/not-found-page.tsx'
 import { buildTheme } from './theme.ts'
+import { ReloadPrompt } from './components/ReloadPrompt.tsx'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -77,6 +78,7 @@ function App() {
                 <Route path="*" element={<NotFoundPage />} />
               </Routes>
             </BrowserRouter>
+            <ReloadPrompt />
         </AuthProvider>
       </QueryClientProvider>
       </LocalizationProvider>
