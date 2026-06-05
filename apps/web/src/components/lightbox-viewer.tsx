@@ -186,6 +186,30 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
     }
   }
 
+  useEffect(() => {
+    if (!open) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input (like the tags field)
+      if (document.activeElement?.tagName === 'INPUT' || document.activeElement?.tagName === 'TEXTAREA') {
+        return
+      }
+
+      if (e.key === 'ArrowRight') {
+        if (currentIndex < items.length - 1) {
+          setCurrentIndex((prev) => prev + 1)
+        }
+      } else if (e.key === 'ArrowLeft') {
+        if (currentIndex > 0) {
+          setCurrentIndex((prev) => prev - 1)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [open, currentIndex, items.length])
+
   const handleDownloadClick = (event: React.MouseEvent<HTMLElement>) => {
     event.stopPropagation()
     setDownloadAnchorEl(event.currentTarget)
