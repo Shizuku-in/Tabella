@@ -45,7 +45,7 @@ export function NotFoundPage() {
           startIcon={<HomeOutlined />}
           sx={{ mt: 2, borderRadius: 1, textTransform: 'none', px: 4 }}
         >
-          Back to Home
+          Back
         </Button>
       </Stack>
     </Box>
