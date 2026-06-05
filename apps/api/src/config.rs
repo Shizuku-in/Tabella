@@ -207,6 +207,10 @@ mod tests {
             session_ttl_hours: defaults.session_ttl_hours,
             secure_cookies: defaults.secure_cookies,
             import_progress_batch_size: defaults.import_progress_batch_size,
+            thumbnail_size: DynamicConfig::default_thumbnail_size(),
+            thumbnail_quality: DynamicConfig::default_thumbnail_quality(),
+            sample_size: DynamicConfig::default_sample_size(),
+            sample_quality: DynamicConfig::default_sample_quality(),
         };
 
         config.session_ttl_hours = 0;

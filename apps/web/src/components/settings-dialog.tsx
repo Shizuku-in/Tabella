@@ -250,7 +250,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
 
           <Box>
             <Typography variant="subtitle2" gutterBottom>
-              Quick Download Quality
+              Download Quality (Bulk & Batch)
             </Typography>
             <RadioGroup
               row

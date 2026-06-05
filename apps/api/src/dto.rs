@@ -167,8 +167,24 @@ pub(crate) struct ListImagesResponse {
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum DownloadQuality {
+    Thumbnail,
+    Sample,
+    Original,
+}
+
+impl Default for DownloadQuality {
+    fn default() -> Self {
+        Self::Original
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct DownloadJobRequest {
     pub(crate) image_ids: Vec<i64>,
+    #[serde(default)]
+    pub(crate) quality: DownloadQuality,
 }
 
 fn deserialize_csv_or_repeated<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>

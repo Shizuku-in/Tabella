@@ -569,6 +569,9 @@ mod tests {
             tags: vec![String::from("artist:umi")],
             imported_at: time::OffsetDateTime::from_unix_timestamp(1_717_312_000).unwrap(),
             sort_filename: String::from("cover.jpg"),
+            uploader_id: None,
+            uploader_username: None,
+            uploader_avatar_url: None,
         };
 
         let encoded = encode_image_cursor(ImageSort::FilenameAsc, &row).unwrap();

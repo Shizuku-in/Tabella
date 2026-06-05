@@ -141,6 +141,33 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
   const [tagInput, setTagInput] = useState('')
   const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
 
+  const checkDownloadJobStatus = useCallback(async (jobId: string) => {
+    try {
+      const response = await fetch(`/api/download-jobs/${jobId}`)
+      if (!response.ok) {
+        setActiveDownloadJobId(null)
+        return
+      }
+
+      const statusData = await response.json()
+      if (statusData.status === 'completed') {
+        setActiveDownloadJobId(null)
+
+        const a = document.createElement('a')
+        a.href = `/api/download-jobs/${jobId}/file`
+        a.download = ''
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+      } else if (statusData.status === 'failed') {
+        setActiveDownloadJobId(null)
+        setErrorSnackbar(statusData.error_message ?? 'Download job failed.')
+      }
+    } catch (e) {
+      console.error('Failed to check download job:', e)
+    }
+  }, [setActiveDownloadJobId])
+
   useEffect(() => {
     if (!tagInput.trim()) {
       setTagSuggestions([])
@@ -173,33 +200,20 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
 
   useServerEvents<{ id: unknown }>('download_job_updated', useCallback(async (data) => {
     if (!activeDownloadJobId || data.id !== activeDownloadJobId) return
+    await checkDownloadJobStatus(activeDownloadJobId)
+  }, [activeDownloadJobId, checkDownloadJobStatus]))
 
-    try {
-      const response = await fetch(`/api/download-jobs/${activeDownloadJobId}`)
-      if (!response.ok) {
-        setActiveDownloadJobId(null)
-        return
-      }
+  useEffect(() => {
+    if (!activeDownloadJobId) return
 
-      const statusData = await response.json()
-      if (statusData.status === 'completed') {
-        setActiveDownloadJobId(null)
+    void checkDownloadJobStatus(activeDownloadJobId)
 
-        // Trigger file download
-        const a = document.createElement('a')
-        a.href = `/api/download-jobs/${activeDownloadJobId}/file`
-        a.download = '' // Let backend dictate filename
-        document.body.appendChild(a)
-        a.click()
-        document.body.removeChild(a)
-      } else if (statusData.status === 'failed') {
-        setActiveDownloadJobId(null)
-        setErrorSnackbar(statusData.error_message ?? 'Download job failed.')
-      }
-    } catch (e) {
-      console.error('Failed to check download job:', e)
-    }
-  }, [activeDownloadJobId, setActiveDownloadJobId]))
+    const timer = window.setInterval(() => {
+      void checkDownloadJobStatus(activeDownloadJobId)
+    }, 3000)
+
+    return () => window.clearInterval(timer)
+  }, [activeDownloadJobId, checkDownloadJobStatus])
 
   useEffect(() => {
     if (searchVisible) {

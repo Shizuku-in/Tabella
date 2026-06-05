@@ -161,6 +161,16 @@ export interface BackendListImagesResponse {
   next_cursor: string | null
 }
 
+export type DownloadQuality = 'thumbnail' | 'sample' | 'original'
+
+export interface DownloadJobResponse {
+  id: string
+  status: string
+  total_images: number
+  total_bytes: number
+  error_message: string | null
+}
+
 export async function listImages(query: {
   cursor?: string | null
   limit?: number
@@ -230,4 +240,14 @@ export async function suggestTags(query: string, limit?: number): Promise<string
   if (limit) params.set('limit', limit.toString())
   const res = await request<{ items: string[] }>(`/api/tags/suggest?${params}`)
   return res.items
+}
+
+export async function createDownloadJob(data: {
+  image_ids: number[]
+  quality: DownloadQuality
+}): Promise<DownloadJobResponse> {
+  return request<DownloadJobResponse>('/api/download-jobs', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  })
 }

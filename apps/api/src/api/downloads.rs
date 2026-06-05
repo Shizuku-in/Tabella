@@ -16,7 +16,7 @@ use uuid::Uuid;
 use crate::{
     AppState,
     config::DynamicConfig,
-    dto::DownloadJobRequest,
+    dto::{DownloadJobRequest, DownloadQuality},
     tasks::archive::{ArchiveTask, process_archive_job},
 };
 
@@ -28,6 +28,14 @@ pub(crate) fn routes(state: AppState) -> Router {
         .route("/api/download-jobs/{job_id}", get(get_download_job))
         .route("/api/download-jobs/{job_id}/file", get(download_job_file))
         .with_state(state)
+}
+
+#[derive(Debug, Clone, sqlx::FromRow)]
+struct DownloadImageRow {
+    original_path: String,
+    preview_path: String,
+    thumbnail_path: String,
+    original_filename: String,
 }
 
 #[derive(Serialize)]
@@ -66,9 +74,9 @@ async fn create_download_job(
 
     // Query images from DB to get their sizes and paths
     let query_ids = request.image_ids;
-    let records = sqlx::query(
+    let records: Vec<DownloadImageRow> = sqlx::query_as(
         r#"
-        SELECT id, original_path, original_filename
+        SELECT original_path, preview_path, thumbnail_path, original_filename
         FROM images
         WHERE id = ANY($1)
         "#,
@@ -89,14 +97,14 @@ async fn create_download_job(
     let mut image_paths = Vec::new();
 
     for record in &records {
-        let original_path: String = sqlx::Row::try_get(record, "original_path").unwrap_or_default();
-        let original_filename: String =
-            sqlx::Row::try_get(record, "original_filename").unwrap_or_default();
-        let abs_path = state.config.media_root.join(&original_path);
+        let abs_path = download_source_path(&state.config.media_root, record, &request.quality);
         if let Ok(metadata) = std::fs::metadata(&abs_path) {
             total_bytes += metadata.len() as i64;
         }
-        image_paths.push((abs_path.to_string_lossy().to_string(), original_filename));
+        image_paths.push((
+            abs_path.to_string_lossy().to_string(),
+            archive_filename(record, &request.quality),
+        ));
     }
 
     if total_bytes as u64 > settings.max_download_total_bytes {
@@ -143,6 +151,85 @@ async fn create_download_job(
         total_bytes,
         error_message: None,
     }))
+}
+
+fn download_source_path(
+    media_root: &std::path::Path,
+    record: &DownloadImageRow,
+    quality: &DownloadQuality,
+) -> std::path::PathBuf {
+    let relative_path = match quality {
+        DownloadQuality::Thumbnail => &record.thumbnail_path,
+        DownloadQuality::Sample => &record.preview_path,
+        DownloadQuality::Original => &record.original_path,
+    };
+
+    media_root.join(relative_path)
+}
+
+fn archive_filename(record: &DownloadImageRow, quality: &DownloadQuality) -> String {
+    match quality {
+        DownloadQuality::Original => record.original_filename.clone(),
+        DownloadQuality::Thumbnail => {
+            derived_archive_filename(&record.original_filename, "_thumb", &record.thumbnail_path)
+        }
+        DownloadQuality::Sample => {
+            derived_archive_filename(&record.original_filename, "_sample", &record.preview_path)
+        }
+    }
+}
+
+fn derived_archive_filename(original_filename: &str, suffix: &str, stored_path: &str) -> String {
+    let original_path = std::path::Path::new(original_filename);
+    let stem = original_path
+        .file_stem()
+        .and_then(|value| value.to_str())
+        .filter(|value| !value.is_empty())
+        .unwrap_or("image");
+    let extension = std::path::Path::new(stored_path)
+        .extension()
+        .and_then(|value| value.to_str())
+        .filter(|value| !value.is_empty())
+        .unwrap_or("bin");
+
+    format!("{stem}{suffix}.{extension}")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{DownloadImageRow, archive_filename, derived_archive_filename};
+    use crate::dto::DownloadQuality;
+
+    #[test]
+    fn derived_archive_filename_uses_original_stem_and_stored_extension() {
+        assert_eq!(
+            derived_archive_filename("cover.jpg", "_sample", "samples/hash.webp"),
+            "cover_sample.webp"
+        );
+    }
+
+    #[test]
+    fn archive_filename_keeps_original_name_for_original_quality() {
+        let row = DownloadImageRow {
+            original_path: String::from("originals/cover.jpg"),
+            preview_path: String::from("samples/hash.webp"),
+            thumbnail_path: String::from("thumbnails/hash.webp"),
+            original_filename: String::from("cover.jpg"),
+        };
+
+        assert_eq!(
+            archive_filename(&row, &DownloadQuality::Original),
+            "cover.jpg"
+        );
+        assert_eq!(
+            archive_filename(&row, &DownloadQuality::Sample),
+            "cover_sample.webp"
+        );
+        assert_eq!(
+            archive_filename(&row, &DownloadQuality::Thumbnail),
+            "cover_thumb.webp"
+        );
+    }
 }
 
 async fn get_download_job(

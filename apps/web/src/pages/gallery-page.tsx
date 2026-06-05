@@ -5,7 +5,7 @@ import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query'
 import { Masonry } from '@mui/lab'
 import { useGalleryUi } from '../gallery/gallery-ui-provider.tsx'
 import { LightboxViewer } from '../components/lightbox-viewer.tsx'
-import { listImages, toggleFavorite } from '../lib/api.ts'
+import { createDownloadJob, listImages, toggleFavorite } from '../lib/api.ts'
 import type { GalleryItem, LayoutMode } from '../types.ts'
 import { GalleryCard } from '../components/gallery-card.tsx'
 import { ratingLabel } from '../lib/constants.ts'
@@ -184,24 +184,16 @@ export function GalleryPage() {
     if (selectedIds.size === 0) return
 
     try {
-      const response = await fetch('/api/download-jobs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image_ids: Array.from(selectedIds) }),
+      const job = await createDownloadJob({
+        image_ids: Array.from(selectedIds),
+        quality: hoverDownloadQuality,
       })
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}))
-        showSnackbar(`Failed to start download: ${err.message || response.statusText}`, 'error')
-        return
-      }
-
-      const job = await response.json()
       setActiveDownloadJobId(job.id)
       setSelectionMode(false)
     } catch (error) {
       console.error('Download error:', error)
-      showSnackbar('Network error while starting download', 'error')
+      const message = error instanceof Error ? error.message : 'Network error while starting download'
+      showSnackbar(`Failed to start download: ${message}`, 'error')
     }
   }
 
