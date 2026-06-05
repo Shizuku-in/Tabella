@@ -224,12 +224,6 @@ fn validate_password(password: &str) -> Result<(), ApiError> {
             "Password must contain at least one lowercase letter",
         ));
     }
-    if !password.chars().any(|c| c.is_ascii_uppercase()) {
-        return Err(ApiError::bad_request(
-            "weak_password",
-            "Password must contain at least one uppercase letter",
-        ));
-    }
     if !password.chars().any(|c| c.is_ascii_digit()) {
         return Err(ApiError::bad_request(
             "weak_password",
