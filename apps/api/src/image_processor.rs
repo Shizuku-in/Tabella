@@ -35,6 +35,7 @@ pub(crate) fn process_image(
     source_path: &Path,
     media_root: &Path,
     sha256: &str,
+    config: &crate::config::DynamicConfig,
 ) -> Result<ImageMetadata> {
     let img = image::open(source_path).context("failed to open image")?;
     let (width, height) = img.dimensions();
@@ -51,14 +52,18 @@ pub(crate) fn process_image(
     let thumbnail_full_path = thumbnails_dir.join(&thumbnail_filename);
     let sample_full_path = samples_dir.join(&sample_filename);
 
-    // 1. Generate Thumbnail (Max edge 500px, WebP, Quality 75)
-    let thumbnail_img = img.resize(500, 500, image::imageops::FilterType::Lanczos3);
-    encode_webp(&thumbnail_img, &thumbnail_full_path, 75.0)
+    // 1. Generate Thumbnail
+    let thumbnail_img = img.resize(config.thumbnail_size, config.thumbnail_size, image::imageops::FilterType::Lanczos3);
+    encode_webp(&thumbnail_img, &thumbnail_full_path, config.thumbnail_quality)
         .context("failed to encode thumbnail webp")?;
 
-    // 2. Generate Sample (Original resolution, WebP, Quality 80)
-    // We don't resize, just encode to WebP
-    encode_webp(&img, &sample_full_path, 80.0).context("failed to encode sample webp")?;
+    // 2. Generate Sample
+    if config.sample_size > 0 {
+        let sample_img = img.resize(config.sample_size, config.sample_size, image::imageops::FilterType::Lanczos3);
+        encode_webp(&sample_img, &sample_full_path, config.sample_quality).context("failed to encode sample webp")?;
+    } else {
+        encode_webp(&img, &sample_full_path, config.sample_quality).context("failed to encode sample webp")?;
+    }
 
     Ok(ImageMetadata {
         width,

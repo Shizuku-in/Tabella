@@ -327,8 +327,10 @@ async fn run_import_job(
     let originals_dir = config.media_root.join("originals");
     std::fs::create_dir_all(&originals_dir)?;
 
+    let dyn_config = crate::config::DynamicConfig::load(pool, config).await;
+
     for (index, file_path) in files_to_process.into_iter().enumerate() {
-        match process_single_file(&file_path, &originals_dir, pool, config, uploader_id).await {
+        match process_single_file(&file_path, &originals_dir, pool, config, &dyn_config, uploader_id).await {
             Ok(true) => succeeded += 1,  // Success
             Ok(false) => succeeded += 1, // Skipped (already exists), user wants it counted as succeeded
             Err(e) => {
@@ -364,6 +366,7 @@ async fn process_single_file(
     originals_dir: &Path,
     pool: &PgPool,
     config: &Config,
+    dyn_config: &crate::config::DynamicConfig,
     uploader_id: Option<i64>,
 ) -> Result<bool> {
     // 1. Compute SHA256
@@ -386,7 +389,7 @@ async fn process_single_file(
     }
 
     // 3. Process image (generate thumbnail and sample)
-    let metadata = process_image(file_path, &config.media_root, &sha256)?;
+    let metadata = crate::image_processor::process_image(file_path, &config.media_root, &sha256, dyn_config)?;
 
     // 3.5 Read metadata JSON if exists
     let mut tags_to_insert: Vec<ParsedTag> = Vec::new();

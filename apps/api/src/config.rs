@@ -17,11 +17,31 @@ pub(crate) struct DynamicConfig {
     pub(crate) secure_cookies: bool,
     #[serde(default = "DynamicConfig::default_import_progress_batch_size")]
     pub(crate) import_progress_batch_size: usize,
+    #[serde(default = "DynamicConfig::default_thumbnail_size")]
+    pub(crate) thumbnail_size: u32,
+    #[serde(default = "DynamicConfig::default_thumbnail_quality")]
+    pub(crate) thumbnail_quality: f32,
+    #[serde(default = "DynamicConfig::default_sample_size")]
+    pub(crate) sample_size: u32,
+    #[serde(default = "DynamicConfig::default_sample_quality")]
+    pub(crate) sample_quality: f32,
 }
 
 impl DynamicConfig {
     fn default_import_progress_batch_size() -> usize {
         10
+    }
+    fn default_thumbnail_size() -> u32 {
+        500
+    }
+    fn default_thumbnail_quality() -> f32 {
+        75.0
+    }
+    fn default_sample_size() -> u32 {
+        0
+    }
+    fn default_sample_quality() -> f32 {
+        80.0
     }
 
     pub async fn load(pool: &PgPool, fallback: &Config) -> Self {
@@ -46,6 +66,10 @@ impl DynamicConfig {
             session_ttl_hours: fallback.session_ttl_hours,
             secure_cookies: fallback.secure_cookies,
             import_progress_batch_size: fallback.import_progress_batch_size,
+            thumbnail_size: Self::default_thumbnail_size(),
+            thumbnail_quality: Self::default_thumbnail_quality(),
+            sample_size: Self::default_sample_size(),
+            sample_quality: Self::default_sample_quality(),
         }
     }
 
@@ -64,6 +88,18 @@ impl DynamicConfig {
         }
         if self.import_progress_batch_size == 0 {
             bail!("import_progress_batch_size must be greater than 0");
+        }
+        if self.thumbnail_size < 100 || self.thumbnail_size > 4000 {
+            bail!("thumbnail_size must be between 100 and 4000");
+        }
+        if self.thumbnail_quality < 1.0 || self.thumbnail_quality > 100.0 {
+            bail!("thumbnail_quality must be between 1.0 and 100.0");
+        }
+        if self.sample_size != 0 && (self.sample_size < 100 || self.sample_size > 16000) {
+            bail!("sample_size must be 0 (original) or between 100 and 16000");
+        }
+        if self.sample_quality < 1.0 || self.sample_quality > 100.0 {
+            bail!("sample_quality must be between 1.0 and 100.0");
         }
 
         Ok(())
