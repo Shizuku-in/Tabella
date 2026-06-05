@@ -10,7 +10,7 @@ use walkdir::WalkDir;
 use crate::AppState;
 use crate::ServerEvent;
 use crate::config::{Config, DynamicConfig};
-use crate::image_processor::{compute_sha256, process_image};
+use crate::image_processor::compute_sha256;
 use crate::tags::{ParsedTag, parse_tag};
 
 pub(crate) async fn start_worker(state: AppState) {
@@ -330,7 +330,16 @@ async fn run_import_job(
     let dyn_config = crate::config::DynamicConfig::load(pool, config).await;
 
     for (index, file_path) in files_to_process.into_iter().enumerate() {
-        match process_single_file(&file_path, &originals_dir, pool, config, &dyn_config, uploader_id).await {
+        match process_single_file(
+            &file_path,
+            &originals_dir,
+            pool,
+            config,
+            &dyn_config,
+            uploader_id,
+        )
+        .await
+        {
             Ok(true) => succeeded += 1,  // Success
             Ok(false) => succeeded += 1, // Skipped (already exists), user wants it counted as succeeded
             Err(e) => {
@@ -389,7 +398,8 @@ async fn process_single_file(
     }
 
     // 3. Process image (generate thumbnail and sample)
-    let metadata = crate::image_processor::process_image(file_path, &config.media_root, &sha256, dyn_config)?;
+    let metadata =
+        crate::image_processor::process_image(file_path, &config.media_root, &sha256, dyn_config)?;
 
     // 3.5 Read metadata JSON if exists
     let mut tags_to_insert: Vec<ParsedTag> = Vec::new();

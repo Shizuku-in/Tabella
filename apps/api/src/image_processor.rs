@@ -53,16 +53,30 @@ pub(crate) fn process_image(
     let sample_full_path = samples_dir.join(&sample_filename);
 
     // 1. Generate Thumbnail
-    let thumbnail_img = img.resize(config.thumbnail_size, config.thumbnail_size, image::imageops::FilterType::Lanczos3);
-    encode_webp(&thumbnail_img, &thumbnail_full_path, config.thumbnail_quality)
-        .context("failed to encode thumbnail webp")?;
+    let thumbnail_img = img.resize(
+        config.thumbnail_size,
+        config.thumbnail_size,
+        image::imageops::FilterType::Lanczos3,
+    );
+    encode_webp(
+        &thumbnail_img,
+        &thumbnail_full_path,
+        config.thumbnail_quality,
+    )
+    .context("failed to encode thumbnail webp")?;
 
     // 2. Generate Sample
     if config.sample_size > 0 {
-        let sample_img = img.resize(config.sample_size, config.sample_size, image::imageops::FilterType::Lanczos3);
-        encode_webp(&sample_img, &sample_full_path, config.sample_quality).context("failed to encode sample webp")?;
+        let sample_img = img.resize(
+            config.sample_size,
+            config.sample_size,
+            image::imageops::FilterType::Lanczos3,
+        );
+        encode_webp(&sample_img, &sample_full_path, config.sample_quality)
+            .context("failed to encode sample webp")?;
     } else {
-        encode_webp(&img, &sample_full_path, config.sample_quality).context("failed to encode sample webp")?;
+        encode_webp(&img, &sample_full_path, config.sample_quality)
+            .context("failed to encode sample webp")?;
     }
 
     Ok(ImageMetadata {
