@@ -51,12 +51,11 @@ impl DynamicConfig {
             .ok()
             .flatten();
 
-        if let Some(row) = row {
-            if let Ok(value) = row.try_get::<serde_json::Value, _>("value") {
-                if let Ok(config) = serde_json::from_value::<DynamicConfig>(value) {
-                    return config;
-                }
-            }
+        if let Some(row) = row
+            && let Ok(value) = row.try_get::<serde_json::Value, _>("value")
+            && let Ok(config) = serde_json::from_value::<DynamicConfig>(value)
+        {
+            return config;
         }
 
         Self {

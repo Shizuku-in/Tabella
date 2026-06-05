@@ -470,10 +470,10 @@ async fn delete_image(
     ];
 
     for path in &paths {
-        if let Err(e) = tokio::fs::remove_file(path).await {
-            if e.kind() != std::io::ErrorKind::NotFound {
-                tracing::warn!(path = ?path, error = ?e, "failed to delete image file");
-            }
+        if let Err(e) = tokio::fs::remove_file(path).await
+            && e.kind() != std::io::ErrorKind::NotFound
+        {
+            tracing::warn!(path = ?path, error = ?e, "failed to delete image file");
         }
     }
 

@@ -166,18 +166,13 @@ pub(crate) struct ListImagesResponse {
     pub(crate) next_cursor: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum DownloadQuality {
     Thumbnail,
     Sample,
+    #[default]
     Original,
-}
-
-impl Default for DownloadQuality {
-    fn default() -> Self {
-        Self::Original
-    }
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize)]

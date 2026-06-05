@@ -70,7 +70,7 @@ pub(crate) async fn create_user(
     validate_password(&payload.password)?;
 
     let password_hash =
-        hash_password(&payload.password).map_err(|e| ApiError::internal(e.into()))?;
+        hash_password(&payload.password).map_err(ApiError::internal)?;
 
     let role_str = match payload.role {
         UserRole::Admin => "admin",
@@ -92,10 +92,10 @@ pub(crate) async fn create_user(
     .fetch_one(&state.pool)
     .await
     .map_err(|err| {
-        if let sqlx::Error::Database(ref db_err) = err {
-            if db_err.constraint() == Some("users_normalized_username_key") {
-                return ApiError::bad_request("duplicate_username", "Username is already taken");
-            }
+        if let sqlx::Error::Database(ref db_err) = err
+            && db_err.constraint() == Some("users_normalized_username_key")
+        {
+            return ApiError::bad_request("duplicate_username", "Username is already taken");
         }
         ApiError::internal(err.into())
     })?;
@@ -120,13 +120,14 @@ pub(crate) async fn update_user(
 ) -> Result<StatusCode, ApiError> {
     let admin = require_admin(&state, &jar).await?;
 
-    if let Some(ref new_role) = payload.role {
-        if id == admin.id && *new_role != admin.role {
-            return Err(ApiError::bad_request(
-                "role_change_not_allowed",
-                "You cannot change your own role",
-            ));
-        }
+    if let Some(ref new_role) = payload.role
+        && id == admin.id
+        && *new_role != admin.role
+    {
+        return Err(ApiError::bad_request(
+            "role_change_not_allowed",
+            "You cannot change your own role",
+        ));
     }
 
     let mut query_builder = sqlx::QueryBuilder::new("update users set updated_at = now()");
@@ -146,7 +147,7 @@ pub(crate) async fn update_user(
 
     if let Some(password) = payload.password {
         validate_password(&password)?;
-        let password_hash = hash_password(&password).map_err(|e| ApiError::internal(e.into()))?;
+        let password_hash = hash_password(&password).map_err(ApiError::internal)?;
         query_builder.push(", password_hash = ");
         query_builder.push_bind(password_hash);
         has_updates = true;

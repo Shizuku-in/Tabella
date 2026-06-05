@@ -118,7 +118,7 @@ async fn update_profile(
                 .map_err(|e| ApiError::internal(e.into()))?;
 
         if !crate::auth::verify_password(&current_password, &current_hash)
-            .map_err(|e| ApiError::internal(e.into()))?
+            .map_err(ApiError::internal)?
         {
             return Err(ApiError::bad_request(
                 "invalid_password",
@@ -126,7 +126,7 @@ async fn update_profile(
             ));
         }
 
-        let new_hash = hash_password(&new_password).map_err(|e| ApiError::internal(e.into()))?;
+        let new_hash = hash_password(&new_password).map_err(ApiError::internal)?;
 
         query_builder.push(", password_hash = ");
         query_builder.push_bind(new_hash);
@@ -146,13 +146,13 @@ async fn update_profile(
         .fetch_one(&state.pool)
         .await
         .map_err(|err| {
-            if let sqlx::Error::Database(ref db_err) = err {
-                if db_err.constraint() == Some("users_normalized_username_key") {
-                    return ApiError::bad_request(
-                        "duplicate_username",
-                        "Username is already taken",
-                    );
-                }
+            if let sqlx::Error::Database(ref db_err) = err
+                && db_err.constraint() == Some("users_normalized_username_key")
+            {
+                return ApiError::bad_request(
+                    "duplicate_username",
+                    "Username is already taken",
+                );
             }
             ApiError::internal(err.into())
         })?;

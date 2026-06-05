@@ -110,6 +110,7 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
     Ok(true)
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn run_import_job(
     job_id: Uuid,
     source_path_str: &str,
@@ -226,10 +227,10 @@ async fn run_import_job(
                 if (*file.name()).ends_with('/') {
                     std::fs::create_dir_all(&outpath)?;
                 } else {
-                    if let Some(p) = outpath.parent() {
-                        if !p.exists() {
-                            std::fs::create_dir_all(p)?;
-                        }
+                    if let Some(p) = outpath.parent()
+                        && !p.exists()
+                    {
+                        std::fs::create_dir_all(p)?;
                     }
                     let mut outfile = std::fs::File::create(&outpath)?;
                     std::io::copy(&mut file, &mut outfile)?;
@@ -517,10 +518,10 @@ fn read_sidecar_metadata(file_path: &Path) -> Option<SidecarImportMetadata> {
     let mut tags = Vec::new();
     if let Some(tags_arr) = json_val.get("tags").and_then(|value| value.as_array()) {
         for tag_val in tags_arr {
-            if let Some(tag_str) = tag_val.as_str() {
-                if let Some(tag) = parse_tag(tag_str) {
-                    tags.push(tag);
-                }
+            if let Some(tag_str) = tag_val.as_str()
+                && let Some(tag) = parse_tag(tag_str)
+            {
+                tags.push(tag);
             }
         }
     }
