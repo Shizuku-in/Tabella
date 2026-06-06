@@ -1,7 +1,7 @@
 # Stage 1: Build the React frontend
 FROM node:24.15.0-slim AS frontend-builder
 WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
+RUN corepack enable && corepack prepare pnpm@11.5.2 --activate
 
 # Copy workspace files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
