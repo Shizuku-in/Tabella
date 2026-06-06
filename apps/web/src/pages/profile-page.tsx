@@ -162,6 +162,8 @@ export function ProfilePage() {
     }
   }
 
+  const hasChanges = username !== user?.username || Boolean(currentPassword) || Boolean(newPassword) || Boolean(avatarFile)
+
   return (
     <Stack spacing={4} sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
       <Typography variant="h5">Profile Settings</Typography>
@@ -311,7 +313,7 @@ export function ProfilePage() {
                   type="submit"
                   variant="outlined"
                   startIcon={<Save />}
-                  disabled={profileMutation.isPending || avatarMutation.isPending}
+                  disabled={!hasChanges || profileMutation.isPending || avatarMutation.isPending}
                 >
                   Save
                 </Button>
