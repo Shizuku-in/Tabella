@@ -4,7 +4,7 @@ services:
     container_name: tabella
     restart: unless-stopped
     ports:
-      - "8787:8787"
+      - '8787:8787'
     environment:
       - DATABASE_URL=postgres://tabella:tabella_secret@db/tabella
       - TABELLA_LISTEN_ADDR=0.0.0.0:8787
@@ -32,7 +32,7 @@ services:
     volumes:
       - tabella-db-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tabella -d tabella"]
+      test: ['CMD-SHELL', 'pg_isready -U tabella -d tabella']
       interval: 5s
       timeout: 5s
       retries: 5

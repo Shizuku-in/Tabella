@@ -1,9 +1,10 @@
-import { useState } from 'react'
-import { Box, Container } from '@mui/material'
 import type { PaletteMode } from '@mui/material'
+import { Box, Container } from '@mui/material'
+import { useState } from 'react'
 import { Outlet } from 'react-router-dom'
-import { SettingsDialog } from './components/settings-dialog.tsx'
+
 import { AdvancedSearchDialog } from './components/advanced-search-dialog.tsx'
+import { SettingsDialog } from './components/settings-dialog.tsx'
 import { TopNavigation } from './components/top-navigation.tsx'
 
 interface AppShellProps {
@@ -25,8 +26,11 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
       />
 
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
-      
-      <AdvancedSearchDialog open={advancedSearchOpen} onClose={() => setAdvancedSearchOpen(false)} />
+
+      <AdvancedSearchDialog
+        open={advancedSearchOpen}
+        onClose={() => setAdvancedSearchOpen(false)}
+      />
 
       <Container
         maxWidth={false}

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
+import { useEffect, useMemo, useRef } from 'react'
 import { useShallow } from 'zustand/react/shallow'
+
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { listImages } from '../lib/api.ts'
 import type { GalleryItem } from '../types.ts'
@@ -35,7 +36,7 @@ export function useGalleryQuery() {
       minHeight: state.minHeight,
       aspectRatioMin: state.aspectRatioMin,
       aspectRatioMax: state.aspectRatioMax,
-    }))
+    })),
   )
 
   const hasBasicSearch = searchTags.length > 0
@@ -95,7 +96,7 @@ export function useGalleryQuery() {
               sourceUrl: item.source_url || undefined,
               note: item.note || undefined,
               uploader: item.uploader || undefined,
-            }) as GalleryItem
+            }) as GalleryItem,
         ),
         nextCursor: response.next_cursor,
       }
@@ -106,7 +107,7 @@ export function useGalleryQuery() {
 
   const items = useMemo(
     () => galleryQuery.data?.pages.flatMap((page) => page.items) ?? [],
-    [galleryQuery.data]
+    [galleryQuery.data],
   )
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
@@ -128,7 +129,7 @@ export function useGalleryQuery() {
       },
       {
         rootMargin: '960px 0px 960px 0px',
-      }
+      },
     )
 
     observer.observe(target)

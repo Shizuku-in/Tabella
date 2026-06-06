@@ -1,7 +1,8 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
+
 import { FullscreenState } from '../components/fullscreen-state.tsx'
-import { useAuth } from './auth-provider.tsx'
 import type { UserRole } from '../types.ts'
+import { useAuth } from './auth-provider.tsx'
 
 export function RequireAuth() {
   const { status } = useAuth()
@@ -9,10 +10,7 @@ export function RequireAuth() {
 
   if (status === 'loading') {
     return (
-      <FullscreenState
-        title="Checking session"
-        description="Restoring the current login state."
-      />
+      <FullscreenState title="Checking session" description="Restoring the current login state." />
     )
   }
 
@@ -34,12 +32,7 @@ export function RequireRole({ role }: { role: UserRole }) {
   const { status, user } = useAuth()
 
   if (status === 'loading') {
-    return (
-      <FullscreenState
-        title="Checking access"
-        description="Verifying account permissions."
-      />
-    )
+    return <FullscreenState title="Checking access" description="Verifying account permissions." />
   }
 
   if (!user || ROLE_WEIGHT[user.role] < ROLE_WEIGHT[role]) {

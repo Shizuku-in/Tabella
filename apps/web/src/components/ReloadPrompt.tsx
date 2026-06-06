@@ -1,5 +1,5 @@
+import { Alert, AlertTitle, Button, Snackbar } from '@mui/material'
 import { useRegisterSW } from 'virtual:pwa-register/react'
-import { Snackbar, Button, Alert, AlertTitle } from '@mui/material'
 
 export function ReloadPrompt() {
   const {

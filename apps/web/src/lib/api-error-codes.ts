@@ -40,6 +40,6 @@ export const API_ERROR_CODES = {
   INTERNAL_ERROR: 'internal_error',
   NETWORK_ERROR: 'network_error',
   UPLOAD_ABORTED: 'upload_aborted',
-} as const;
+} as const
 
-export type ApiErrorCode = typeof API_ERROR_CODES[keyof typeof API_ERROR_CODES];
+export type ApiErrorCode = (typeof API_ERROR_CODES)[keyof typeof API_ERROR_CODES]

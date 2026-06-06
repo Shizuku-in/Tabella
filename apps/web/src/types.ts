@@ -38,7 +38,6 @@ export interface GalleryItem {
   }
 }
 
-
 export interface GalleryPageResult {
   items: GalleryItem[]
   nextCursor: string | null

@@ -1,6 +1,6 @@
 # Docker Deployment Guide
 
-Deploys *Tabella* Docker Compose using the repository's existing [`docker-compose.yml`](../docker-compose.yml) and [`Dockerfile`](../Dockerfile).
+Deploys _Tabella_ Docker Compose using the repository's existing [`docker-compose.yml`](../docker-compose.yml) and [`Dockerfile`](../Dockerfile).
 
 ## Overview
 

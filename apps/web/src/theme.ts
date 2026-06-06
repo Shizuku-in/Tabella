@@ -1,24 +1,24 @@
-import { alpha, createTheme } from '@mui/material/styles'
 import type { PaletteMode } from '@mui/material'
+import { alpha, createTheme } from '@mui/material/styles'
 
 declare module '@mui/material/styles' {
   interface Palette {
     tags: {
-      parody: string;
-      character: string;
-      artist: string;
-      general: string;
-      unprefixed: string;
-    };
+      parody: string
+      character: string
+      artist: string
+      general: string
+      unprefixed: string
+    }
   }
   interface PaletteOptions {
     tags?: {
-      parody: string;
-      character: string;
-      artist: string;
-      general: string;
-      unprefixed: string;
-    };
+      parody: string
+      character: string
+      artist: string
+      general: string
+      unprefixed: string
+    }
   }
 }
 export function buildTheme(mode: PaletteMode) {

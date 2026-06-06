@@ -1,15 +1,16 @@
-import { useState } from 'react'
-import { Box, Stack, CircularProgress, Typography, Alert, Snackbar } from '@mui/material'
+import { Alert, Box, CircularProgress, Snackbar, Stack, Typography } from '@mui/material'
 import { useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+import { useShallow } from 'zustand/react/shallow'
+
+import { GalleryGridLayout } from '../components/gallery-grid-layout.tsx'
+import { GalleryHeader } from '../components/gallery-header.tsx'
+import { LightboxViewer } from '../components/lightbox-viewer.tsx'
+import { SelectionActionBar } from '../components/selection-action-bar.tsx'
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
-import { useShallow } from 'zustand/react/shallow'
-import { LightboxViewer } from '../components/lightbox-viewer.tsx'
-import { createDownloadJob, getApiErrorMessage, toggleFavorite } from '../lib/api.ts'
 import { useGalleryQuery } from '../hooks/use-gallery-query.ts'
-import { GalleryHeader } from '../components/gallery-header.tsx'
-import { GalleryGridLayout } from '../components/gallery-grid-layout.tsx'
-import { SelectionActionBar } from '../components/selection-action-bar.tsx'
+import { createDownloadJob, getApiErrorMessage, toggleFavorite } from '../lib/api.ts'
 
 export function GalleryPage() {
   const {
@@ -31,29 +32,28 @@ export function GalleryPage() {
       showResultsCount: state.showResultsCount,
       galleryImageQuality: state.galleryImageQuality,
       hoverDownloadQuality: state.hoverDownloadQuality,
-    }))
+    })),
   )
-  
-  const {
-    selectionMode,
-    setSelectionMode,
-    selectedIds,
-    setSelectedIds,
-    setActiveDownloadJobId,
-  } = useGallerySessionStore(
-    useShallow((state) => ({
-      selectionMode: state.selectionMode,
-      setSelectionMode: state.setSelectionMode,
-      selectedIds: state.selectedIds,
-      setSelectedIds: state.setSelectedIds,
-      setActiveDownloadJobId: state.setActiveDownloadJobId,
-    }))
-  )
+
+  const { selectionMode, setSelectionMode, selectedIds, setSelectedIds, setActiveDownloadJobId } =
+    useGallerySessionStore(
+      useShallow((state) => ({
+        selectionMode: state.selectionMode,
+        setSelectionMode: state.setSelectionMode,
+        selectedIds: state.selectedIds,
+        setSelectedIds: state.setSelectedIds,
+        setActiveDownloadJobId: state.setActiveDownloadJobId,
+      })),
+    )
 
   const queryClient = useQueryClient()
   const { items, galleryQuery, loadMoreRef } = useGalleryQuery()
 
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean
+    message: string
+    severity: 'success' | 'error'
+  }>({
     open: false,
     message: '',
     severity: 'success',
@@ -160,7 +160,14 @@ export function GalleryPage() {
   const isEmpty = !showInitialLoading && items.length === 0
 
   const activeHoverInfo = selectionMode
-    ? { name: false, resolution: false, tags: false, favorite: false, rating: false, download: false }
+    ? {
+        name: false,
+        resolution: false,
+        tags: false,
+        favorite: false,
+        rating: false,
+        download: false,
+      }
     : hoverInfo
 
   return (
@@ -178,12 +185,16 @@ export function GalleryPage() {
           <CircularProgress size={28} />
         </Box>
       ) : isEmpty ? (
-        <Box sx={{ minHeight: 320, display: 'grid', placeItems: 'center', color: 'text.secondary' }}>
+        <Box
+          sx={{ minHeight: 320, display: 'grid', placeItems: 'center', color: 'text.secondary' }}
+        >
           <Stack spacing={0.75} sx={{ alignItems: 'center', textAlign: 'center' }}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
               No matching images
             </Typography>
-            <Typography variant="body2">Try clearing the search or relaxing the rating filter.</Typography>
+            <Typography variant="body2">
+              Try clearing the search or relaxing the rating filter.
+            </Typography>
           </Stack>
         </Box>
       ) : (
@@ -203,7 +214,10 @@ export function GalleryPage() {
             onToggleFavorite={handleToggleFavorite}
           />
 
-          <Box ref={loadMoreRef} sx={{ minHeight: 42, display: 'grid', placeItems: 'center', color: 'text.secondary' }}>
+          <Box
+            ref={loadMoreRef}
+            sx={{ minHeight: 42, display: 'grid', placeItems: 'center', color: 'text.secondary' }}
+          >
             {galleryQuery.isFetchingNextPage ? (
               <CircularProgress size={22} />
             ) : galleryQuery.hasNextPage ? (
@@ -221,7 +235,11 @@ export function GalleryPage() {
         items={items}
         initialIndex={selectedImageIndex ?? 0}
         onIndexChange={(newIndex) => {
-          if (newIndex >= items.length - 3 && galleryQuery.hasNextPage && !galleryQuery.isFetchingNextPage) {
+          if (
+            newIndex >= items.length - 3 &&
+            galleryQuery.hasNextPage &&
+            !galleryQuery.isFetchingNextPage
+          ) {
             void galleryQuery.fetchNextPage()
           }
         }}

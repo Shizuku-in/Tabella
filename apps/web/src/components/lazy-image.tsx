@@ -1,6 +1,6 @@
-import { useState } from 'react'
-import { Box, CircularProgress, keyframes } from '@mui/material'
 import { BrokenImage } from '@mui/icons-material'
+import { Box, CircularProgress, keyframes } from '@mui/material'
+import { useState } from 'react'
 
 const slideUpFadeIn = keyframes`
   from {
@@ -40,7 +40,7 @@ export function LazyImage({ src, alt, aspectRatio, className }: LazyImageProps) 
       {status === 'loading' && (
         <CircularProgress size={32} sx={{ color: 'text.secondary', position: 'absolute' }} />
       )}
-      
+
       {status === 'error' && (
         <Box
           sx={{
@@ -70,7 +70,10 @@ export function LazyImage({ src, alt, aspectRatio, className }: LazyImageProps) 
             height: '100%',
             objectFit: 'cover',
             opacity: status === 'loaded' ? 1 : 0,
-            animation: status === 'loaded' ? `${slideUpFadeIn} 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards` : 'none',
+            animation:
+              status === 'loaded'
+                ? `${slideUpFadeIn} 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) forwards`
+                : 'none',
           }}
         />
       )}

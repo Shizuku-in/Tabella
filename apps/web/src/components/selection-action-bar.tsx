@@ -1,5 +1,5 @@
-import { Fade, Paper, Stack, IconButton, Typography, Tooltip, Button } from '@mui/material'
 import { Close, Download, SelectAll } from '@mui/icons-material'
+import { Button, Fade, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material'
 
 export interface SelectionActionBarProps {
   selectionMode: boolean
@@ -41,7 +41,7 @@ export function SelectionActionBar({
           <IconButton size="small" onClick={onClose} edge="start">
             <Close />
           </IconButton>
-          
+
           <Typography variant="body2" sx={{ fontWeight: 600, flex: 1, px: 1 }}>
             {selectedCount} Selected
           </Typography>

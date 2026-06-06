@@ -1,8 +1,9 @@
 import { Stack, Typography } from '@mui/material'
-import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
-import { useShallow } from 'zustand/react/shallow'
-import { ratingLabel } from '../lib/constants.ts'
 import { useMemo } from 'react'
+import { useShallow } from 'zustand/react/shallow'
+
+import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
+import { ratingLabel } from '../lib/constants.ts'
 
 function sortLabel(sort: string) {
   switch (sort) {
@@ -23,13 +24,17 @@ export interface GalleryHeaderProps {
   isFetchingNextPage: boolean
 }
 
-export function GalleryHeader({ itemCount, isInitialLoading, isFetchingNextPage }: GalleryHeaderProps) {
+export function GalleryHeader({
+  itemCount,
+  isInitialLoading,
+  isFetchingNextPage,
+}: GalleryHeaderProps) {
   const { searchTags, ratingFilter, sort } = useGallerySessionStore(
     useShallow((state) => ({
       searchTags: state.searchTags,
       ratingFilter: state.ratingFilter,
       sort: state.sort,
-    }))
+    })),
   )
 
   const activeFilterLabels = useMemo(() => {
@@ -64,16 +69,16 @@ export function GalleryHeader({ itemCount, isInitialLoading, isFetchingNextPage 
         {isFetchingNextPage ? ' · Loading more' : ''}
       </Typography>
       <Typography
- variant="caption"
- 
- sx={{ color: 'text.secondary', 
- display: 'block',
- maxWidth: '100%',
- whiteSpace: 'nowrap',
- overflow: 'hidden',
- textOverflow: 'ellipsis',
- }}
->
+        variant="caption"
+        sx={{
+          color: 'text.secondary',
+          display: 'block',
+          maxWidth: '100%',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
         {activeFilterLabels.join(' · ')}
       </Typography>
     </Stack>

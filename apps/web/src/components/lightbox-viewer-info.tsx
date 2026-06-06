@@ -1,26 +1,27 @@
 import { Save } from '@mui/icons-material'
-import type { ReactNode } from 'react'
+import type { PopperProps } from '@mui/material'
 import {
+  Autocomplete,
+  Avatar,
   Box,
+  Button,
+  Chip,
+  Divider,
+  FormControl,
+  Grow,
+  MenuItem,
+  Popper,
+  Select,
   Slide,
   Stack,
-  Chip,
-  Typography,
-  Autocomplete,
   TextField,
-  Divider,
-  Select,
-  MenuItem,
-  FormControl,
-  Button,
-  Avatar,
-  Popper,
-  Grow,
+  Typography,
 } from '@mui/material'
-import type { PopperProps } from '@mui/material'
 import { alpha, useTheme } from '@mui/material/styles'
-import type { GalleryItem, Rating } from '../types'
+import type { ReactNode } from 'react'
+
 import { getTagColor } from '../lib/tags.ts'
+import type { GalleryItem, Rating } from '../types'
 
 const CustomPopper = function (props: PopperProps) {
   return (
@@ -37,15 +38,17 @@ const CustomPopper = function (props: PopperProps) {
 function MetaRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <Box>
-      <Typography variant="caption" sx={{ color: 'text.secondary' }}>{label}</Typography>
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+        {label}
+      </Typography>
       <Typography
- variant="body2"
- sx={{
- color: 'text.primary',
- wordBreak: 'break-all',
- ...(mono ? { fontFamily: 'monospace', fontSize: '0.7rem' } : {}),
- }}
->
+        variant="body2"
+        sx={{
+          color: 'text.primary',
+          wordBreak: 'break-all',
+          ...(mono ? { fontFamily: 'monospace', fontSize: '0.7rem' } : {}),
+        }}
+      >
         {value}
       </Typography>
     </Box>
@@ -126,11 +129,16 @@ export function LightboxViewerInfo({
             <MetaRow label="Dimensions" value={`${item.width} × ${item.height}`} />
             <MetaRow label="File size" value={formatSizeStr(item.fileSize || 0)} />
             {item.sha256 && <MetaRow label="SHA256" value={item.sha256} />}
-            {item.importedAt && <MetaRow label="Imported" value={new Date(item.importedAt).toLocaleString()} />}
+            {item.importedAt && (
+              <MetaRow label="Imported" value={new Date(item.importedAt).toLocaleString()} />
+            )}
             {item.sourceUrl && <MetaRow label="Source" value={item.sourceUrl} />}
             {item.uploader && (
               <Box sx={{ mt: 1 }}>
-                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
+                <Typography
+                  variant="caption"
+                  sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}
+                >
                   Uploader
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -161,8 +169,12 @@ export function LightboxViewerInfo({
               onChange={(e) => handleRatingChange(e.target.value as Rating)}
               sx={{
                 color: 'text.primary',
-                '& .MuiOutlinedInput-notchedOutline': { borderColor: alpha(theme.palette.text.primary, 0.23) },
-                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: theme.palette.text.primary },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  borderColor: alpha(theme.palette.text.primary, 0.23),
+                },
+                '&:hover .MuiOutlinedInput-notchedOutline': {
+                  borderColor: theme.palette.text.primary,
+                },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: 'primary.main' },
                 '& .MuiSvgIcon-root': { color: 'text.primary' },
               }}
@@ -226,7 +238,7 @@ export function LightboxViewerInfo({
             renderInput={(params) => (
               <TextField
                 {...params}
-                placeholder={editTags.length === 0 ? "Add tag (namespace:name)" : ""}
+                placeholder={editTags.length === 0 ? 'Add tag (namespace:name)' : ''}
                 size="small"
                 sx={{
                   '& .MuiOutlinedInput-root': {
@@ -235,7 +247,9 @@ export function LightboxViewerInfo({
                     '&:hover fieldset': { borderColor: theme.palette.text.primary },
                     '&.Mui-focused fieldset': { borderColor: 'primary.main' },
                   },
-                  '& .MuiInputBase-input::placeholder': { color: alpha(theme.palette.text.primary, 0.5) },
+                  '& .MuiInputBase-input::placeholder': {
+                    color: alpha(theme.palette.text.primary, 0.5),
+                  },
                 }}
               />
             )}
@@ -253,10 +267,10 @@ export function LightboxViewerInfo({
 
         {/* Save button */}
         <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
-          <Button 
-            variant="outlined" 
-            fullWidth 
-            disabled={!hasChanges || isSaving} 
+          <Button
+            variant="outlined"
+            fullWidth
+            disabled={!hasChanges || isSaving}
             onClick={handleSave}
             startIcon={<Save />}
           >

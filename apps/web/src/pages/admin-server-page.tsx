@@ -1,19 +1,20 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useState, useEffect, Fragment } from 'react'
+import { Save } from '@mui/icons-material'
 import {
+  Alert,
   Button,
+  FormControlLabel,
   Paper,
+  Snackbar,
   Stack,
+  Switch,
   TextField,
   Typography,
-  Switch,
-  FormControlLabel,
-  Snackbar,
-  Alert,
 } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Fragment, useEffect, useState } from 'react'
+
 import { getApiErrorMessage, request } from '../lib/api.ts'
-import { Save } from '@mui/icons-material'
 
 interface ServerSettings {
   max_download_images: number
@@ -99,7 +100,10 @@ export function AdminServerPage() {
     },
   })
 
-  const handleNumberChange = (field: keyof Omit<ServerSettingsForm, 'secure_cookies'>, value: string) => {
+  const handleNumberChange = (
+    field: keyof Omit<ServerSettingsForm, 'secure_cookies'>,
+    value: string,
+  ) => {
     setSettings((prev) => (prev ? { ...prev, [field]: value } : prev))
     setIsDirty(true)
     if (errors[field]) {
@@ -136,7 +140,11 @@ export function AdminServerPage() {
   }
 
   if (settingsQuery.isError) {
-    return <Typography color="error" sx={{ p: 4 }}>Failed to load server settings.</Typography>
+    return (
+      <Typography color="error" sx={{ p: 4 }}>
+        Failed to load server settings.
+      </Typography>
+    )
   }
 
   return (
@@ -164,15 +172,19 @@ export function AdminServerPage() {
               '& input[type=number]': {
                 MozAppearance: 'textfield',
               },
-              '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
-                WebkitAppearance: 'none',
-                margin: 0,
-              },
+              '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button':
+                {
+                  WebkitAppearance: 'none',
+                  margin: 0,
+                },
             }}
           >
             <Stack spacing={4}>
               <Stack spacing={3}>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}>
+                <Typography
+                  variant="h6"
+                  sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}
+                >
                   Downloads
                 </Typography>
                 <TextField
@@ -182,7 +194,10 @@ export function AdminServerPage() {
                   value={settings.max_download_images}
                   onChange={(e) => handleNumberChange('max_download_images', e.target.value)}
                   error={Boolean(errors.max_download_images)}
-                  helperText={errors.max_download_images ?? "Maximum number of images allowed in a single archive download."}
+                  helperText={
+                    errors.max_download_images ??
+                    'Maximum number of images allowed in a single archive download.'
+                  }
                   fullWidth
                 />
                 <TextField
@@ -192,7 +207,10 @@ export function AdminServerPage() {
                   value={settings.max_download_total_bytes}
                   onChange={(e) => handleNumberChange('max_download_total_bytes', e.target.value)}
                   error={Boolean(errors.max_download_total_bytes)}
-                  helperText={errors.max_download_total_bytes ?? "Maximum total file size allowed in a single archive download."}
+                  helperText={
+                    errors.max_download_total_bytes ??
+                    'Maximum total file size allowed in a single archive download.'
+                  }
                   fullWidth
                 />
                 <TextField
@@ -202,13 +220,19 @@ export function AdminServerPage() {
                   value={settings.download_retention_hours}
                   onChange={(e) => handleNumberChange('download_retention_hours', e.target.value)}
                   error={Boolean(errors.download_retention_hours)}
-                  helperText={errors.download_retention_hours ?? "How long generated archives are kept before being automatically deleted."}
+                  helperText={
+                    errors.download_retention_hours ??
+                    'How long generated archives are kept before being automatically deleted.'
+                  }
                   fullWidth
                 />
               </Stack>
 
               <Stack spacing={3}>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}>
+                <Typography
+                  variant="h6"
+                  sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}
+                >
                   Imports
                 </Typography>
                 <TextField
@@ -218,13 +242,19 @@ export function AdminServerPage() {
                   value={settings.import_progress_batch_size}
                   onChange={(e) => handleNumberChange('import_progress_batch_size', e.target.value)}
                   error={Boolean(errors.import_progress_batch_size)}
-                  helperText={errors.import_progress_batch_size ?? "How many files to process before updating progress in the database. Lower values give more frequent UI updates but higher DB load."}
+                  helperText={
+                    errors.import_progress_batch_size ??
+                    'How many files to process before updating progress in the database. Lower values give more frequent UI updates but higher DB load.'
+                  }
                   fullWidth
                 />
               </Stack>
 
               <Stack spacing={3}>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}>
+                <Typography
+                  variant="h6"
+                  sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}
+                >
                   Image Processing
                 </Typography>
                 <TextField
@@ -234,7 +264,10 @@ export function AdminServerPage() {
                   value={settings.thumbnail_size}
                   onChange={(e) => handleNumberChange('thumbnail_size', e.target.value)}
                   error={Boolean(errors.thumbnail_size)}
-                  helperText={errors.thumbnail_size ?? "Maximum dimension (width or height) for generated thumbnails. Default is 500."}
+                  helperText={
+                    errors.thumbnail_size ??
+                    'Maximum dimension (width or height) for generated thumbnails. Default is 500.'
+                  }
                   fullWidth
                 />
                 <TextField
@@ -244,7 +277,10 @@ export function AdminServerPage() {
                   value={settings.thumbnail_quality}
                   onChange={(e) => handleNumberChange('thumbnail_quality', e.target.value)}
                   error={Boolean(errors.thumbnail_quality)}
-                  helperText={errors.thumbnail_quality ?? "WebP compression quality for thumbnails (1.0 - 100.0). Default is 75."}
+                  helperText={
+                    errors.thumbnail_quality ??
+                    'WebP compression quality for thumbnails (1.0 - 100.0). Default is 75.'
+                  }
                   fullWidth
                 />
                 <TextField
@@ -254,7 +290,10 @@ export function AdminServerPage() {
                   value={settings.sample_size}
                   onChange={(e) => handleNumberChange('sample_size', e.target.value)}
                   error={Boolean(errors.sample_size)}
-                  helperText={errors.sample_size ?? "Maximum dimension for sample images. Set to 0 to keep the original resolution. Default is 0."}
+                  helperText={
+                    errors.sample_size ??
+                    'Maximum dimension for sample images. Set to 0 to keep the original resolution. Default is 0.'
+                  }
                   fullWidth
                 />
                 <TextField
@@ -264,13 +303,19 @@ export function AdminServerPage() {
                   value={settings.sample_quality}
                   onChange={(e) => handleNumberChange('sample_quality', e.target.value)}
                   error={Boolean(errors.sample_quality)}
-                  helperText={errors.sample_quality ?? "WebP compression quality for samples (1.0 - 100.0). Default is 80."}
+                  helperText={
+                    errors.sample_quality ??
+                    'WebP compression quality for samples (1.0 - 100.0). Default is 80.'
+                  }
                   fullWidth
                 />
               </Stack>
 
               <Stack spacing={3}>
-                <Typography variant="h6" sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}>
+                <Typography
+                  variant="h6"
+                  sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}
+                >
                   Security & Sessions
                 </Typography>
                 <TextField
@@ -280,7 +325,10 @@ export function AdminServerPage() {
                   value={settings.session_ttl_hours}
                   onChange={(e) => handleNumberChange('session_ttl_hours', e.target.value)}
                   error={Boolean(errors.session_ttl_hours)}
-                  helperText={errors.session_ttl_hours ?? "How long a user session remains valid before requiring re-login."}
+                  helperText={
+                    errors.session_ttl_hours ??
+                    'How long a user session remains valid before requiring re-login.'
+                  }
                   fullWidth
                 />
                 <FormControlLabel
@@ -311,7 +359,11 @@ export function AdminServerPage() {
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity={snackbarSeverity} onClose={() => setSnackbarOpen(false)} sx={{ width: '100%' }}>
+        <Alert
+          severity={snackbarSeverity}
+          onClose={() => setSnackbarOpen(false)}
+          sx={{ width: '100%' }}
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>
@@ -364,7 +416,13 @@ function validateServerSettingsFields(settings: ServerSettingsForm): ServerSetti
     return undefined
   }
 
-  const validateIntegerRange = (value: string, label: string, min: number, max: number, allowZero = false) => {
+  const validateIntegerRange = (
+    value: string,
+    label: string,
+    min: number,
+    max: number,
+    allowZero = false,
+  ) => {
     const trimmed = value.trim()
     if (!/^\d+$/.test(trimmed)) {
       return `${label} must be an integer.`
@@ -401,13 +459,21 @@ function validateServerSettingsFields(settings: ServerSettingsForm): ServerSetti
   const sessionTtl = validatePositiveInteger(settings.session_ttl_hours, 'Session TTL')
   if (sessionTtl) errors.session_ttl_hours = sessionTtl
 
-  const batchSize = validatePositiveInteger(settings.import_progress_batch_size, 'Import progress batch size')
+  const batchSize = validatePositiveInteger(
+    settings.import_progress_batch_size,
+    'Import progress batch size',
+  )
   if (batchSize) errors.import_progress_batch_size = batchSize
 
   const thumbSize = validateIntegerRange(settings.thumbnail_size, 'Thumbnail size', 100, 4000)
   if (thumbSize) errors.thumbnail_size = thumbSize
 
-  const thumbQuality = validateFloatRange(settings.thumbnail_quality, 'Thumbnail quality', 1.0, 100.0)
+  const thumbQuality = validateFloatRange(
+    settings.thumbnail_quality,
+    'Thumbnail quality',
+    1.0,
+    100.0,
+  )
   if (thumbQuality) errors.thumbnail_quality = thumbQuality
 
   const sampleSize = validateIntegerRange(settings.sample_size, 'Sample size', 100, 16000, true)

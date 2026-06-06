@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext } from 'react'
-import type { ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { ReactNode } from 'react'
+import { createContext, useContext } from 'react'
+
 import { getMe, login as loginRequest, logout as logoutRequest } from '../lib/api.ts'
 import type { AuthStatus, SessionUser } from '../types.ts'
 
@@ -31,11 +32,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   })
 
   const user = meQuery.data?.user ?? null
-  const status: AuthStatus = meQuery.isPending
-    ? 'loading'
-    : user
-      ? 'authenticated'
-      : 'anonymous'
+  const status: AuthStatus = meQuery.isPending ? 'loading' : user ? 'authenticated' : 'anonymous'
 
   const value: AuthContextValue = {
     status,

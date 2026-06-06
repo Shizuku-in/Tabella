@@ -1,32 +1,44 @@
-import { CloudUploadOutlined, Done, Error as ErrorIcon, PlayArrowOutlined, WarningAmberOutlined } from '@mui/icons-material'
+import {
+  CloudUploadOutlined,
+  Done,
+  Error as ErrorIcon,
+  PlayArrowOutlined,
+  WarningAmberOutlined,
+} from '@mui/icons-material'
 import UploadOutlinedIcon from '@mui/icons-material/UploadOutlined'
 import {
+  Alert,
   Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  LinearProgress,
   type LinearProgressProps,
   Paper,
+  Snackbar,
   Stack,
-  Typography,
-  TextField,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
-  CircularProgress,
-  LinearProgress,
-  Alert,
-  Snackbar,
+  TextField,
+  Typography,
 } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useRef, useState, useCallback } from 'react'
-import { formatApiErrorMessage, getApiErrorMessage, request, uploadWithProgress } from '../lib/api.ts'
-import type { ImportJobRow, ImportJobStatus } from '../types.ts'
+import { useCallback, useRef, useState } from 'react'
+
 import { useAuth } from '../auth/auth-provider.tsx'
 import { useServerEvents } from '../hooks/use-server-events.ts'
+import {
+  formatApiErrorMessage,
+  getApiErrorMessage,
+  request,
+  uploadWithProgress,
+} from '../lib/api.ts'
+import type { ImportJobRow, ImportJobStatus } from '../types.ts'
 
 interface LocalUploadJob {
   id: string
@@ -47,7 +59,11 @@ export function AdminImportsPage() {
   const folderInputRef = useRef<HTMLInputElement>(null)
   const queryClient = useQueryClient()
 
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean
+    message: string
+    severity: 'success' | 'error'
+  }>({
     open: false,
     message: '',
     severity: 'success',
@@ -58,12 +74,15 @@ export function AdminImportsPage() {
   }
 
   const handleCloseSnackbar = () => {
-    setSnackbar(prev => ({ ...prev, open: false }))
+    setSnackbar((prev) => ({ ...prev, open: false }))
   }
 
-  useServerEvents('import_job_updated', useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['importJobs'] })
-  }, [queryClient]))
+  useServerEvents(
+    'import_job_updated',
+    useCallback(() => {
+      queryClient.invalidateQueries({ queryKey: ['importJobs'] })
+    }, [queryClient]),
+  )
 
   const jobsQuery = useQuery({
     queryKey: ['importJobs'],
@@ -87,20 +106,20 @@ export function AdminImportsPage() {
     },
     onError: (err) => {
       showSnackbar(`Failed to start job: ${getApiErrorMessage(err, 'Request failed.')}`, 'error')
-    }
+    },
   })
 
   const uploadMutation = useMutation({
-    mutationFn: async ({ files, sourceType }: { files: File[], sourceType: string }) => {
+    mutationFn: async ({ files, sourceType }: { files: File[]; sourceType: string }) => {
       const formData = new FormData()
       for (let i = 0; i < files.length; i++) {
         const file = files[i]
         const path = file.webkitRelativePath || file.name
         formData.append('files', file, path)
       }
-      
+
       const tempId = 'upload_' + Date.now() + Math.floor(Math.random() * 1000)
-      setActiveUploads(prev => ({
+      setActiveUploads((prev) => ({
         ...prev,
         [tempId]: {
           id: tempId,
@@ -109,8 +128,8 @@ export function AdminImportsPage() {
           progress: 0,
           totalItems: files.length,
           processedItems: 0,
-          createdAt: new Date().toISOString()
-        }
+          createdAt: new Date().toISOString(),
+        },
       }))
 
       try {
@@ -118,15 +137,15 @@ export function AdminImportsPage() {
           `/api/admin/imports/upload?type=${sourceType}`,
           formData,
           (percent: number) => {
-            setActiveUploads(prev => ({
+            setActiveUploads((prev) => ({
               ...prev,
-              [tempId]: { ...prev[tempId], progress: percent }
+              [tempId]: { ...prev[tempId], progress: percent },
             }))
-          }
+          },
         )
         return { tempId, data: result }
       } catch (err) {
-        setActiveUploads(prev => {
+        setActiveUploads((prev) => {
           const newState = { ...prev }
           delete newState[tempId]
           return newState
@@ -135,7 +154,7 @@ export function AdminImportsPage() {
       }
     },
     onSuccess: (res) => {
-      setActiveUploads(prev => {
+      setActiveUploads((prev) => {
         const newState = { ...prev }
         delete newState[res.tempId]
         return newState
@@ -144,7 +163,7 @@ export function AdminImportsPage() {
     },
     onError: (err) => {
       showSnackbar(`Failed to upload: ${getApiErrorMessage(err, 'Upload failed.')}`, 'error')
-    }
+    },
   })
 
   const handlePackageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,40 +190,40 @@ export function AdminImportsPage() {
         sx={{ justifyContent: 'flex-start' }}
       >
         <Stack direction="row" spacing={1}>
-          <input 
-            type="file" 
-            ref={packageInputRef} 
-            accept=".zip,.7z" 
-            style={{ display: 'none' }} 
+          <input
+            type="file"
+            ref={packageInputRef}
+            accept=".zip,.7z"
+            style={{ display: 'none' }}
             onChange={handlePackageSelect}
           />
-          <input 
-            type="file" 
-            ref={folderInputRef} 
+          <input
+            type="file"
+            ref={folderInputRef}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            {...{ webkitdirectory: "true", directory: "true" } as any}
-            style={{ display: 'none' }} 
+            {...({ webkitdirectory: 'true', directory: 'true' } as any)}
+            style={{ display: 'none' }}
             onChange={handleFolderSelect}
             multiple
           />
-          <Button 
-            variant="outlined" 
+          <Button
+            variant="outlined"
             startIcon={<UploadOutlinedIcon />}
             onClick={() => packageInputRef.current?.click()}
             disabled={uploadMutation.isPending}
           >
             Package
           </Button>
-          <Button 
-            variant="outlined" 
+          <Button
+            variant="outlined"
             startIcon={<UploadOutlinedIcon />}
             onClick={() => folderInputRef.current?.click()}
             disabled={uploadMutation.isPending}
           >
             Folder
           </Button>
-          <Button 
-            variant="outlined" 
+          <Button
+            variant="outlined"
             startIcon={<CloudUploadOutlined />}
             onClick={() => setServerDialogOpen(true)}
             disabled={user?.role !== 'admin'}
@@ -224,33 +243,58 @@ export function AdminImportsPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {Object.values(activeUploads).reverse().map((job) => (
-              <TableRow key={job.id}>
-                <TableCell>Uploading...</TableCell>
-                <TableCell>{new Date(job.createdAt).toLocaleString()}</TableCell>
-                <TableCell>
-                  <Stack direction="row" spacing={2} sx={{ width: '100%', maxWidth: 500, alignItems: 'center' }}>
-                    <CircularProgress variant="determinate" value={job.progress} size={24} color="info" />
-                    <Stack sx={{ flex: 1 }}>
-                      <Stack direction="row" sx={{ mb: 0.5, columnGap: 1, justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                        <Typography variant="body2" sx={{ color: 'info.main', fontWeight: 500 }}>
-                          Uploading ({job.progress}%)
-                        </Typography>
-                        <Typography variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}>
-                          {job.sourceType === 'package' ? 'Archive file' : `${job.totalItems} files`}
-                        </Typography>
+            {Object.values(activeUploads)
+              .reverse()
+              .map((job) => (
+                <TableRow key={job.id}>
+                  <TableCell>Uploading...</TableCell>
+                  <TableCell>{new Date(job.createdAt).toLocaleString()}</TableCell>
+                  <TableCell>
+                    <Stack
+                      direction="row"
+                      spacing={2}
+                      sx={{ width: '100%', maxWidth: 500, alignItems: 'center' }}
+                    >
+                      <CircularProgress
+                        variant="determinate"
+                        value={job.progress}
+                        size={24}
+                        color="info"
+                      />
+                      <Stack sx={{ flex: 1 }}>
+                        <Stack
+                          direction="row"
+                          sx={{
+                            mb: 0.5,
+                            columnGap: 1,
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <Typography variant="body2" sx={{ color: 'info.main', fontWeight: 500 }}>
+                            Uploading ({job.progress}%)
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}
+                          >
+                            {job.sourceType === 'package'
+                              ? 'Archive file'
+                              : `${job.totalItems} files`}
+                          </Typography>
+                        </Stack>
+                        <LinearProgress variant="determinate" value={job.progress} color="info" />
                       </Stack>
-                      <LinearProgress variant="determinate" value={job.progress} color="info" />
                     </Stack>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                </TableRow>
+              ))}
             {jobsQuery.data?.items.map((job) => {
               let icon = <CircularProgress size={24} color="secondary" />
               let color = 'secondary.main'
               let progressColor: LinearProgressProps['color'] = 'secondary'
-              const isCompleted = job.status === 'completed' || job.status === 'completed_with_errors'
+              const isCompleted =
+                job.status === 'completed' || job.status === 'completed_with_errors'
               const hasStructuredError =
                 (job.status === 'failed' || job.status === 'completed_with_errors') &&
                 Boolean(job.errorCode || job.lastError)
@@ -259,7 +303,7 @@ export function AdminImportsPage() {
                 label = formatApiErrorMessage(
                   job.errorCode ?? undefined,
                   job.errorParams ?? null,
-                  job.lastError ?? label
+                  job.lastError ?? label,
                 )
               }
 
@@ -276,7 +320,7 @@ export function AdminImportsPage() {
                 color = 'error.main'
                 progressColor = 'error'
               }
-               
+
               let progressPercent = 0
               if (isCompleted) {
                 progressPercent = 100
@@ -285,34 +329,51 @@ export function AdminImportsPage() {
               }
               const showProgressBar =
                 !hasStructuredError && job.status !== 'queued' && job.status !== 'failed'
-              const progressVariant = isCompleted || job.totalItems > 0 ? 'determinate' : 'indeterminate'
+              const progressVariant =
+                isCompleted || job.totalItems > 0 ? 'determinate' : 'indeterminate'
 
               return (
                 <TableRow key={job.id}>
                   <TableCell>{job.id.substring(0, 8)}</TableCell>
                   <TableCell>{new Date(job.createdAt).toLocaleString()}</TableCell>
                   <TableCell>
-                    <Stack direction="row" spacing={2} sx={{ width: '100%', maxWidth: 500, alignItems: 'center' }}>
+                    <Stack
+                      direction="row"
+                      spacing={2}
+                      sx={{ width: '100%', maxWidth: 500, alignItems: 'center' }}
+                    >
                       {icon}
                       <Stack sx={{ flex: 1 }}>
-                        <Stack direction="row" sx={{ mb: 0.5, columnGap: 1, justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                          <Typography variant="body2" sx={{ color, textTransform: 'capitalize', fontWeight: 500 }}>
+                        <Stack
+                          direction="row"
+                          sx={{
+                            mb: 0.5,
+                            columnGap: 1,
+                            justifyContent: 'space-between',
+                            flexWrap: 'wrap',
+                          }}
+                        >
+                          <Typography
+                            variant="body2"
+                            sx={{ color, textTransform: 'capitalize', fontWeight: 500 }}
+                          >
                             {label}
                           </Typography>
                           {!hasStructuredError && job.totalItems > 0 && (
-                            <Typography variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}>
-                              {job.status === 'extracting' && job.sourceType === 'package' ? (
-                                `Extracted ${job.processedItems} / ${job.totalItems}`
-                              ) : (
-                                `${job.processedItems} / ${job.totalItems} (${progressPercent}%)`
-                              )}
+                            <Typography
+                              variant="caption"
+                              sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}
+                            >
+                              {job.status === 'extracting' && job.sourceType === 'package'
+                                ? `Extracted ${job.processedItems} / ${job.totalItems}`
+                                : `${job.processedItems} / ${job.totalItems} (${progressPercent}%)`}
                             </Typography>
                           )}
                         </Stack>
                         {showProgressBar && (
-                          <LinearProgress 
+                          <LinearProgress
                             variant={progressVariant}
-                            value={progressPercent} 
+                            value={progressPercent}
                             color={progressColor}
                           />
                         )}
@@ -333,16 +394,21 @@ export function AdminImportsPage() {
         </Table>
       </Paper>
 
-      <Dialog open={serverDialogOpen} onClose={() => setServerDialogOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog
+        open={serverDialogOpen}
+        onClose={() => setServerDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle>Server Import</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
             Scan a directory directly on the server's filesystem.
           </Typography>
-          <TextField 
-            label="Server Directory Path" 
-            variant="outlined" 
-            size="small" 
+          <TextField
+            label="Server Directory Path"
+            variant="outlined"
+            size="small"
             fullWidth
             value={serverPath}
             onChange={(e) => setServerPath(e.target.value)}
@@ -350,8 +416,8 @@ export function AdminImportsPage() {
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 0 }}>
           <Button onClick={() => setServerDialogOpen(false)}>Cancel</Button>
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             color="primary"
             startIcon={<PlayArrowOutlined />}
             onClick={() => startJobMutation.mutate(serverPath)}

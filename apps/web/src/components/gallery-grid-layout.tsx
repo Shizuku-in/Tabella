@@ -1,8 +1,9 @@
-import { Box } from '@mui/material'
 import { Masonry } from '@mui/lab'
-import { GalleryCard } from './gallery-card.tsx'
-import type { GalleryItem, LayoutMode } from '../types.ts'
+import { Box } from '@mui/material'
+
 import type { ColumnConfig } from '../gallery/gallery-preferences-store.ts'
+import type { GalleryItem, LayoutMode } from '../types.ts'
+import { GalleryCard } from './gallery-card.tsx'
 
 const galleryLayoutStyles: Record<LayoutMode, object> = {
   grid: {
@@ -35,7 +36,14 @@ export interface GalleryGridLayoutProps {
   masonryColumns: ColumnConfig
   gridColumns: ColumnConfig
   showMobileDetails: boolean
-  hoverInfo: { name: boolean; resolution: boolean; tags: boolean; favorite: boolean; rating: boolean; download: boolean }
+  hoverInfo: {
+    name: boolean
+    resolution: boolean
+    tags: boolean
+    favorite: boolean
+    rating: boolean
+    download: boolean
+  }
   favoriteOverrides: Record<number, boolean>
   selectedIds: Set<number>
   galleryImageQuality: 'thumbnail' | 'sample' | 'original'

@@ -1,38 +1,39 @@
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Stack,
-  Tooltip,
-  IconButton,
-  Badge,
-  CircularProgress,
-  Snackbar,
-  Alert,
-} from '@mui/material'
-import {
-  Troubleshoot,
-  DownloadOutlined,
   DarkModeOutlined,
+  DownloadOutlined,
   LightModeOutlined,
   SettingsOutlined,
+  Troubleshoot,
 } from '@mui/icons-material'
-import { alpha } from '@mui/material/styles'
 import type { PaletteMode } from '@mui/material'
+import {
+  Alert,
+  AppBar,
+  Badge,
+  CircularProgress,
+  IconButton,
+  Snackbar,
+  Stack,
+  Toolbar,
+  Tooltip,
+  Typography,
+} from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
+import { useShallow } from 'zustand/react/shallow'
+
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
-import { useShallow } from 'zustand/react/shallow'
+import { useDownloadTracker } from '../hooks/use-download-tracker.ts'
 import { SearchBar } from './search-bar.tsx'
 import {
-  SortControl,
+  FavoritesControl,
   LayoutControl,
   RatingControl,
-  FavoritesControl,
   SelectMultipleControl,
+  SortControl,
   UserControl,
 } from './top-bar-controls.tsx'
-import { useDownloadTracker } from '../hooks/use-download-tracker.ts'
 
 export interface TopNavigationProps {
   mode: PaletteMode
@@ -77,7 +78,7 @@ export function TopNavigation({
       minHeight: state.minHeight,
       aspectRatioMin: state.aspectRatioMin,
       aspectRatioMax: state.aspectRatioMax,
-    }))
+    })),
   )
 
   const { isDownloading, error, clearError } = useDownloadTracker()
@@ -94,191 +95,192 @@ export function TopNavigation({
 
   const hasBasicSearch = searchTags.length > 0
   const showSearchControl = !isAdvancedSearchActive && (topBarConfig.search || hasBasicSearch)
-  const showAdvancedSearchControl = !hasBasicSearch && (topBarConfig.advancedSearch || Boolean(isAdvancedSearchActive))
+  const showAdvancedSearchControl =
+    !hasBasicSearch && (topBarConfig.advancedSearch || Boolean(isAdvancedSearchActive))
 
   return (
     <>
       <AppBar
-      position="sticky"
-      elevation={0}
-      sx={{
-        bgcolor: (theme) => alpha(theme.palette.background.paper, 0.86),
-        color: 'text.primary',
-      }}
-    >
-      <Toolbar
+        position="sticky"
+        elevation={0}
         sx={{
-          minHeight: { xs: 50, sm: 52 },
-          py: 0,
-          px: { xs: 1, sm: 1.5 },
-          gap: 1,
-          justifyContent: 'space-between',
+          bgcolor: (theme) => alpha(theme.palette.background.paper, 0.86),
+          color: 'text.primary',
         }}
       >
-        <Stack
-          direction="row"
-          spacing={0.25}
-          sx={{ minWidth: 0, flex: 1, overflow: 'hidden', alignItems: 'center' }}
+        <Toolbar
+          sx={{
+            minHeight: { xs: 50, sm: 52 },
+            py: 0,
+            px: { xs: 1, sm: 1.5 },
+            gap: 1,
+            justifyContent: 'space-between',
+          }}
         >
-          <Typography
- component={RouterLink}
- to="/"
- variant="h5"
- sx={{
- flexShrink: 0,
- color: 'text.primary',
- fontFamily: '"Google Sans Code", monospace',
- fontStyle: 'italic',
- fontWeight: 700,
- textDecoration: 'none',
- mr: 0.75,
- fontSize: { xs: '1.08rem', md: '1.18rem' },
- lineHeight: 1,
- }}
->
-            Tabella
-          </Typography>
-
-          {isAdminImportsRoute && (
+          <Stack
+            direction="row"
+            spacing={0.25}
+            sx={{ minWidth: 0, flex: 1, overflow: 'hidden', alignItems: 'center' }}
+          >
             <Typography
- sx={{
- color: 'text.secondary',
- fontFamily: '"Google Sans Code", monospace',
- fontWeight: 500,
- fontSize: '0.95rem',
- ml: 0.5,
- mr: 1,
- fontStyle: 'italic',
- }}
->
-              /Imports
+              component={RouterLink}
+              to="/"
+              variant="h5"
+              sx={{
+                flexShrink: 0,
+                color: 'text.primary',
+                fontFamily: '"Google Sans Code", monospace',
+                fontStyle: 'italic',
+                fontWeight: 700,
+                textDecoration: 'none',
+                mr: 0.75,
+                fontSize: { xs: '1.08rem', md: '1.18rem' },
+                lineHeight: 1,
+              }}
+            >
+              Tabella
             </Typography>
-          )}
 
-          {isAdminUsersRoute && (
-            <Typography
- sx={{
- color: 'text.secondary',
- fontFamily: '"Google Sans Code", monospace',
- fontWeight: 500,
- fontSize: '0.95rem',
- ml: 0.5,
- mr: 1,
- fontStyle: 'italic',
- }}
->
-              /Users
-            </Typography>
-          )}
+            {isAdminImportsRoute && (
+              <Typography
+                sx={{
+                  color: 'text.secondary',
+                  fontFamily: '"Google Sans Code", monospace',
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                  ml: 0.5,
+                  mr: 1,
+                  fontStyle: 'italic',
+                }}
+              >
+                /Imports
+              </Typography>
+            )}
 
-          {isAdminServerRoute && (
-            <Typography
- sx={{
- color: 'text.secondary',
- fontFamily: '"Google Sans Code", monospace',
- fontWeight: 500,
- fontSize: '0.95rem',
- ml: 0.5,
- mr: 1,
- fontStyle: 'italic',
- }}
->
-              /Server
-            </Typography>
-          )}
+            {isAdminUsersRoute && (
+              <Typography
+                sx={{
+                  color: 'text.secondary',
+                  fontFamily: '"Google Sans Code", monospace',
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                  ml: 0.5,
+                  mr: 1,
+                  fontStyle: 'italic',
+                }}
+              >
+                /Users
+              </Typography>
+            )}
 
-          {isProfileRoute && (
-            <Typography
- sx={{
- color: 'text.secondary',
- fontFamily: '"Google Sans Code", monospace',
- fontWeight: 500,
- fontSize: '0.95rem',
- ml: 0.5,
- mr: 1,
- fontStyle: 'italic',
- }}
->
-              /Profile
-            </Typography>
-          )}
+            {isAdminServerRoute && (
+              <Typography
+                sx={{
+                  color: 'text.secondary',
+                  fontFamily: '"Google Sans Code", monospace',
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                  ml: 0.5,
+                  mr: 1,
+                  fontStyle: 'italic',
+                }}
+              >
+                /Server
+              </Typography>
+            )}
 
-          {isGalleryRoute ? (
-            <>
-              {topBarConfig.sort && <SortControl />}
-              {topBarConfig.layout && <LayoutControl />}
-              {topBarConfig.rating && <RatingControl />}
-              {topBarConfig.favorites && <FavoritesControl />}
-              {topBarConfig.selectMultiple && <SelectMultipleControl />}
+            {isProfileRoute && (
+              <Typography
+                sx={{
+                  color: 'text.secondary',
+                  fontFamily: '"Google Sans Code", monospace',
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                  ml: 0.5,
+                  mr: 1,
+                  fontStyle: 'italic',
+                }}
+              >
+                /Profile
+              </Typography>
+            )}
 
-              {showSearchControl && <SearchBar />}
+            {isGalleryRoute ? (
+              <>
+                {topBarConfig.sort && <SortControl />}
+                {topBarConfig.layout && <LayoutControl />}
+                {topBarConfig.rating && <RatingControl />}
+                {topBarConfig.favorites && <FavoritesControl />}
+                {topBarConfig.selectMultiple && <SelectMultipleControl />}
 
-              {showAdvancedSearchControl && (
-                <Tooltip title="Advanced Search">
-                  <IconButton
-                    color={isAdvancedSearchActive ? 'primary' : 'default'}
-                    onClick={onOpenAdvancedSearch}
-                    sx={{ p: 0.75, borderRadius: '50%' }}
+                {showSearchControl && <SearchBar />}
+
+                {showAdvancedSearchControl && (
+                  <Tooltip title="Advanced Search">
+                    <IconButton
+                      color={isAdvancedSearchActive ? 'primary' : 'default'}
+                      onClick={onOpenAdvancedSearch}
+                      sx={{ p: 0.75, borderRadius: '50%' }}
+                    >
+                      <Troubleshoot fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+              </>
+            ) : null}
+          </Stack>
+
+          <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0, alignItems: 'center' }}>
+            {isDownloading && (
+              <Tooltip title="Downloading archive...">
+                <IconButton color="primary" sx={{ p: 0.75, borderRadius: '50%' }}>
+                  <Badge
+                    overlap="circular"
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    badgeContent={
+                      <CircularProgress
+                        size={12}
+                        thickness={5}
+                        sx={{ color: 'primary.main', position: 'absolute', right: -2, bottom: -2 }}
+                      />
+                    }
                   >
-                    <Troubleshoot fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              )}
-            </>
-          ) : null}
-        </Stack>
+                    <DownloadOutlined fontSize="small" />
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+            )}
 
-        <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0, alignItems: 'center' }}>
-          {isDownloading && (
-            <Tooltip title="Downloading archive...">
-              <IconButton color="primary" sx={{ p: 0.75, borderRadius: '50%' }}>
-                <Badge
-                  overlap="circular"
-                  anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                  badgeContent={
-                    <CircularProgress
-                      size={12}
-                      thickness={5}
-                      sx={{ color: 'primary.main', position: 'absolute', right: -2, bottom: -2 }}
-                    />
-                  }
+            {topBarConfig.themeToggle && (
+              <Tooltip title={mode === 'light' ? 'Dark mode' : 'Light mode'}>
+                <IconButton
+                  color="default"
+                  onClick={onToggleMode}
+                  aria-label="toggle color mode"
+                  sx={{ p: 0.75, borderRadius: '50%' }}
                 >
-                  <DownloadOutlined fontSize="small" />
-                </Badge>
-              </IconButton>
-            </Tooltip>
-          )}
+                  {mode === 'light' ? (
+                    <LightModeOutlined fontSize="small" />
+                  ) : (
+                    <DarkModeOutlined fontSize="small" />
+                  )}
+                </IconButton>
+              </Tooltip>
+            )}
 
-          {topBarConfig.themeToggle && (
-            <Tooltip title={mode === 'light' ? 'Dark mode' : 'Light mode'}>
+            <Tooltip title="Settings">
               <IconButton
                 color="default"
-                onClick={onToggleMode}
-                aria-label="toggle color mode"
+                onClick={onOpenSettings}
+                aria-label="settings"
                 sx={{ p: 0.75, borderRadius: '50%' }}
               >
-                {mode === 'light' ? (
-                  <LightModeOutlined fontSize="small" />
-                ) : (
-                  <DarkModeOutlined fontSize="small" />
-                )}
+                <SettingsOutlined fontSize="small" />
               </IconButton>
             </Tooltip>
-          )}
 
-          <Tooltip title="Settings">
-            <IconButton
-              color="default"
-              onClick={onOpenSettings}
-              aria-label="settings"
-              sx={{ p: 0.75, borderRadius: '50%' }}
-            >
-              <SettingsOutlined fontSize="small" />
-            </IconButton>
-          </Tooltip>
-
-          <UserControl />
-        </Stack>
+            <UserControl />
+          </Stack>
         </Toolbar>
       </AppBar>
 

@@ -1,26 +1,27 @@
-import { useState, startTransition } from 'react'
-import { IconButton, Menu, MenuItem, Tooltip, Stack, Typography, Avatar } from '@mui/material'
 import {
-  Sort,
+  AdminPanelSettingsOutlined,
   ArtTrack,
-  StarBorderOutlined,
-  StarOutlined,
+  CheckCircle,
+  CheckCircleOutlined,
   FavoriteBorderOutlined,
   FavoriteOutlined,
-  CheckCircleOutlined,
-  CheckCircle,
-  PersonOutlined,
   GroupOutlined,
-  PlaylistAdd,
-  AdminPanelSettingsOutlined,
-  LogoutOutlined,
   InfoOutlined,
+  LogoutOutlined,
+  PersonOutlined,
+  PlaylistAdd,
+  Sort,
+  StarBorderOutlined,
+  StarOutlined,
 } from '@mui/icons-material'
+import { Avatar, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material'
+import { startTransition, useState } from 'react'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
+import { useShallow } from 'zustand/react/shallow'
+
+import { useAuth } from '../auth/auth-provider.tsx'
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
-import { useShallow } from 'zustand/react/shallow'
-import { useAuth } from '../auth/auth-provider.tsx'
 import type { GallerySort, LayoutMode, RatingFilter } from '../types.ts'
 import { AboutDialog } from './about-dialog.tsx'
 
@@ -34,7 +35,7 @@ const sortOptions: Array<{ value: GallerySort; label: string }> = [
 export function SortControl() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const { sort, setSort } = useGallerySessionStore(
-    useShallow((state) => ({ sort: state.sort, setSort: state.setSort }))
+    useShallow((state) => ({ sort: state.sort, setSort: state.setSort })),
   )
 
   return (
@@ -81,7 +82,7 @@ const layoutOptions: Array<{ value: LayoutMode; label: string }> = [
 export function LayoutControl() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const { layoutMode, setLayoutMode } = useGalleryPreferencesStore(
-    useShallow((state) => ({ layoutMode: state.layoutMode, setLayoutMode: state.setLayoutMode }))
+    useShallow((state) => ({ layoutMode: state.layoutMode, setLayoutMode: state.setLayoutMode })),
   )
 
   return (
@@ -131,7 +132,10 @@ const ratingOptions: Array<{ value: RatingFilter; label: string }> = [
 export function RatingControl() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const { ratingFilter, setRatingFilter } = useGallerySessionStore(
-    useShallow((state) => ({ ratingFilter: state.ratingFilter, setRatingFilter: state.setRatingFilter }))
+    useShallow((state) => ({
+      ratingFilter: state.ratingFilter,
+      setRatingFilter: state.setRatingFilter,
+    })),
   )
 
   return (
@@ -142,7 +146,11 @@ export function RatingControl() {
           onClick={(event) => setAnchorEl(event.currentTarget)}
           sx={{ p: 0.75, borderRadius: '50%' }}
         >
-          {ratingFilter !== 'all' ? <StarOutlined fontSize="small" /> : <StarBorderOutlined fontSize="small" />}
+          {ratingFilter !== 'all' ? (
+            <StarOutlined fontSize="small" />
+          ) : (
+            <StarBorderOutlined fontSize="small" />
+          )}
         </IconButton>
       </Tooltip>
       <Menu
@@ -171,7 +179,10 @@ export function RatingControl() {
 
 export function FavoritesControl() {
   const { favoritesOnly, setFavoritesOnly } = useGallerySessionStore(
-    useShallow((state) => ({ favoritesOnly: state.favoritesOnly, setFavoritesOnly: state.setFavoritesOnly }))
+    useShallow((state) => ({
+      favoritesOnly: state.favoritesOnly,
+      setFavoritesOnly: state.setFavoritesOnly,
+    })),
   )
 
   return (
@@ -181,7 +192,11 @@ export function FavoritesControl() {
         onClick={() => setFavoritesOnly(!favoritesOnly)}
         sx={{ p: 0.75, borderRadius: '50%' }}
       >
-        {favoritesOnly ? <FavoriteOutlined fontSize="small" /> : <FavoriteBorderOutlined fontSize="small" />}
+        {favoritesOnly ? (
+          <FavoriteOutlined fontSize="small" />
+        ) : (
+          <FavoriteBorderOutlined fontSize="small" />
+        )}
       </IconButton>
     </Tooltip>
   )
@@ -189,7 +204,10 @@ export function FavoritesControl() {
 
 export function SelectMultipleControl() {
   const { selectionMode, setSelectionMode } = useGallerySessionStore(
-    useShallow((state) => ({ selectionMode: state.selectionMode, setSelectionMode: state.setSelectionMode }))
+    useShallow((state) => ({
+      selectionMode: state.selectionMode,
+      setSelectionMode: state.setSelectionMode,
+    })),
   )
 
   return (
@@ -199,7 +217,11 @@ export function SelectMultipleControl() {
         onClick={() => setSelectionMode(!selectionMode)}
         sx={{ p: 0.75, borderRadius: '50%' }}
       >
-        {selectionMode ? <CheckCircle fontSize="small" /> : <CheckCircleOutlined fontSize="small" />}
+        {selectionMode ? (
+          <CheckCircle fontSize="small" />
+        ) : (
+          <CheckCircleOutlined fontSize="small" />
+        )}
       </IconButton>
     </Tooltip>
   )
@@ -308,7 +330,12 @@ export function UserControl() {
           </MenuItem>
         )}
 
-        <MenuItem onClick={() => { setAnchorEl(null); setAboutOpen(true); }}>
+        <MenuItem
+          onClick={() => {
+            setAnchorEl(null)
+            setAboutOpen(true)
+          }}
+        >
           <InfoOutlined fontSize="small" sx={{ mr: 1 }} />
           About
         </MenuItem>

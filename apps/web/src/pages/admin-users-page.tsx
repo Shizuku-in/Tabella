@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { AddOutlined, DeleteOutlined, EditOutlined } from '@mui/icons-material'
 import {
   Alert,
   Button,
@@ -9,8 +9,8 @@ import {
   DialogTitle,
   IconButton,
   Paper,
-  Stack,
   Snackbar,
+  Stack,
   Table,
   TableBody,
   TableCell,
@@ -18,12 +18,13 @@ import {
   TableRow,
   Typography,
 } from '@mui/material'
-import { AddOutlined, DeleteOutlined, EditOutlined } from '@mui/icons-material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
+
+import { useAuth } from '../auth/auth-provider.tsx'
+import { UserDialog } from '../components/user-dialog.tsx'
 import { getApiErrorMessage, request } from '../lib/api.ts'
 import type { CreateUserDto, UpdateUserDto, UserRow } from '../types.ts'
-import { UserDialog } from '../components/user-dialog.tsx'
-import { useAuth } from '../auth/auth-provider.tsx'
 
 export function AdminUsersPage() {
   const { user: currentUser } = useAuth()
@@ -32,7 +33,11 @@ export function AdminUsersPage() {
   const [editingUser, setEditingUser] = useState<UserRow | null>(null)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [userToDelete, setUserToDelete] = useState<UserRow | null>(null)
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean
+    message: string
+    severity: 'success' | 'error'
+  }>({
     open: false,
     message: '',
     severity: 'success',
@@ -98,7 +103,6 @@ export function AdminUsersPage() {
     },
   })
 
-
   const handleCreateClick = () => {
     setEditingUser(null)
     setDialogOpen(true)
@@ -133,12 +137,10 @@ export function AdminUsersPage() {
   return (
     <Stack spacing={3}>
       <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h6" sx={{ display: 'none' }}>Users</Typography>
-        <Button
-          variant="outlined"
-          startIcon={<AddOutlined />}
-          onClick={handleCreateClick}
-        >
+        <Typography variant="h6" sx={{ display: 'none' }}>
+          Users
+        </Typography>
+        <Button variant="outlined" startIcon={<AddOutlined />} onClick={handleCreateClick}>
           Create User
         </Button>
       </Stack>
@@ -163,11 +165,7 @@ export function AdminUsersPage() {
                 <TableCell>{new Date(u.created_at).toLocaleString()}</TableCell>
                 <TableCell align="right">
                   <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => handleEditClick(u)}
-                    >
+                    <IconButton size="small" color="primary" onClick={() => handleEditClick(u)}>
                       <EditOutlined fontSize="small" />
                     </IconButton>
                     <IconButton
@@ -200,10 +198,7 @@ export function AdminUsersPage() {
         user={editingUser}
       />
 
-      <Dialog
-        open={deleteConfirmOpen}
-        onClose={() => setDeleteConfirmOpen(false)}
-      >
+      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -226,7 +221,11 @@ export function AdminUsersPage() {
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert severity={snackbar.severity} onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))} sx={{ width: '100%' }}>
+        <Alert
+          severity={snackbar.severity}
+          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+          sx={{ width: '100%' }}
+        >
           {snackbar.message}
         </Alert>
       </Snackbar>

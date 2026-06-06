@@ -1,16 +1,23 @@
 import { DownloadOutlined, Favorite, FavoriteBorder } from '@mui/icons-material'
 import { Box, IconButton, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { LazyImage } from './lazy-image.tsx'
-import type { GalleryItem, LayoutMode } from '../types.ts'
 
 import { ratingLabel, ratingTone } from '../lib/constants.ts'
+import type { GalleryItem, LayoutMode } from '../types.ts'
+import { LazyImage } from './lazy-image.tsx'
 
 export interface GalleryCardProps {
   item: GalleryItem
   layoutMode: LayoutMode
   showMobileDetails: boolean
-  hoverInfo: { name: boolean; resolution: boolean; tags: boolean; favorite: boolean; rating: boolean; download: boolean }
+  hoverInfo: {
+    name: boolean
+    resolution: boolean
+    tags: boolean
+    favorite: boolean
+    rating: boolean
+    download: boolean
+  }
   isFavorite: boolean
   onToggleFavorite: () => void
   onClick: () => void
@@ -85,7 +92,16 @@ export function GalleryCard({
               justifyContent: 'center',
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <polyline points="20 6 9 17 4 12" />
             </svg>
           </Box>
@@ -93,9 +109,11 @@ export function GalleryCard({
       )}
       <LazyImage
         src={
-          imageQuality === 'original' && item.originalSrc ? item.originalSrc :
-          (imageQuality === 'original' || imageQuality === 'sample') && item.sampleSrc ? item.sampleSrc :
-          item.thumbnailSrc
+          imageQuality === 'original' && item.originalSrc
+            ? item.originalSrc
+            : (imageQuality === 'original' || imageQuality === 'sample') && item.sampleSrc
+              ? item.sampleSrc
+              : item.thumbnailSrc
         }
         alt={item.filename}
         aspectRatio={isGrid ? '1' : `${item.width} / ${item.height}`}
@@ -167,29 +185,31 @@ export function GalleryCard({
           <Stack spacing={0.25} sx={{ minWidth: 0 }}>
             {hoverInfo.name && (
               <Typography
- variant="body2"
- sx={{
- fontWeight: 700,
- textShadow: '0 1px 6px rgba(0,0,0,0.45)',
- }}
- noWrap
->
+                variant="body2"
+                sx={{
+                  fontWeight: 700,
+                  textShadow: '0 1px 6px rgba(0,0,0,0.45)',
+                }}
+                noWrap
+              >
                 {item.filename}
               </Typography>
             )}
             {(hoverInfo.resolution || hoverInfo.tags) && (
               <Typography
- variant="caption"
- sx={{
- color: 'rgba(255,255,255,0.74)',
- textShadow: '0 1px 4px rgba(0,0,0,0.3)',
- }}
- noWrap
->
+                variant="caption"
+                sx={{
+                  color: 'rgba(255,255,255,0.74)',
+                  textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                }}
+                noWrap
+              >
                 {[
                   hoverInfo.resolution ? `${item.width} × ${item.height}` : null,
                   hoverInfo.tags ? item.tags.slice(0, 2).join(' ') : null,
-                ].filter(Boolean).join(' · ')}
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </Typography>
             )}
           </Stack>
@@ -199,9 +219,12 @@ export function GalleryCard({
                 size="small"
                 component="a"
                 href={
-                  hoverDownloadQuality === 'original' && item.originalSrc ? item.originalSrc :
-                  (hoverDownloadQuality === 'original' || hoverDownloadQuality === 'sample') && item.sampleSrc ? item.sampleSrc :
-                  item.thumbnailSrc
+                  hoverDownloadQuality === 'original' && item.originalSrc
+                    ? item.originalSrc
+                    : (hoverDownloadQuality === 'original' || hoverDownloadQuality === 'sample') &&
+                        item.sampleSrc
+                      ? item.sampleSrc
+                      : item.thumbnailSrc
                 }
                 download={item.filename}
                 onClick={(e) => {

@@ -1,12 +1,26 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useState, useRef, useEffect } from 'react'
-import type { ReactNode } from 'react'
-import { Box, Tooltip, IconButton, Autocomplete, TextField, Chip, Drawer, useTheme, useMediaQuery, Stack, Popper, Grow } from '@mui/material'
+import { ArrowBack, Search } from '@mui/icons-material'
 import type { PopperProps } from '@mui/material'
-import { Search, ArrowBack } from '@mui/icons-material'
+import {
+  Autocomplete,
+  Box,
+  Chip,
+  Drawer,
+  Grow,
+  IconButton,
+  Popper,
+  Stack,
+  TextField,
+  Tooltip,
+  useMediaQuery,
+  useTheme,
+} from '@mui/material'
 import { alpha } from '@mui/material/styles'
-import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
+import type { ReactNode } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
+
+import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { suggestTags } from '../lib/api.ts'
 import { getTagColor } from '../lib/tags.ts'
 
@@ -23,14 +37,11 @@ const CustomPopper = function (props: PopperProps) {
 }
 
 export function SearchBar() {
-  const {
-    searchTags,
-    setSearchTags,
-  } = useGallerySessionStore(
+  const { searchTags, setSearchTags } = useGallerySessionStore(
     useShallow((state) => ({
       searchTags: state.searchTags,
       setSearchTags: state.setSearchTags,
-    }))
+    })),
   )
 
   const theme = useTheme()
@@ -135,7 +146,9 @@ export function SearchBar() {
               color: 'text.primary',
               '&:before': { borderBottomColor: isMobileView ? 'transparent' : 'divider' },
               '&:after': { borderBottomWidth: isMobileView ? '0' : '2px' },
-              '&:hover:not(.Mui-disabled, .Mui-error):before': { borderBottomColor: isMobileView ? 'transparent' : 'text.secondary' },
+              '&:hover:not(.Mui-disabled, .Mui-error):before': {
+                borderBottomColor: isMobileView ? 'transparent' : 'text.secondary',
+              },
               pt: 0,
               pb: isMobileView ? 0 : 0.5,
               flexWrap: 'nowrap',
@@ -222,9 +235,7 @@ export function SearchBar() {
             >
               <ArrowBack fontSize="small" />
             </IconButton>
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              {renderAutocomplete(true)}
-            </Box>
+            <Box sx={{ flex: 1, minWidth: 0 }}>{renderAutocomplete(true)}</Box>
           </Stack>
         </Drawer>
       )}

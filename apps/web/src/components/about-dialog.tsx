@@ -1,16 +1,17 @@
+import { GitHub } from '@mui/icons-material'
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  Typography,
-  Stack,
-  Link,
   Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Link,
+  Stack,
+  Typography,
   useTheme,
 } from '@mui/material'
-import { GitHub } from '@mui/icons-material'
+
 import pkg from '../../package.json'
 
 export interface AboutDialogProps {
@@ -71,21 +72,19 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>
-        About
-      </DialogTitle>
+      <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>About</DialogTitle>
       <DialogContent>
         <Stack spacing={3} sx={{ pt: 1, pb: 1, alignItems: 'center' }}>
           <Stack spacing={1} sx={{ alignItems: 'center' }}>
             <Typography
- variant="h4"
- sx={{
- fontFamily: '"Google Sans Code", monospace',
- fontStyle: 'italic',
- fontWeight: 700,
- color: 'primary.main',
- }}
->
+              variant="h4"
+              sx={{
+                fontFamily: '"Google Sans Code", monospace',
+                fontStyle: 'italic',
+                fontWeight: 700,
+                color: 'primary.main',
+              }}
+            >
               Tabella
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
@@ -94,7 +93,16 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
           </Stack>
 
           <Box sx={{ width: '100%', textAlign: 'center', mt: 1 }}>
-            <Typography variant="overline" sx={{ color: 'text.disabled', display: 'block', mb: 1.5, letterSpacing: 1.5, lineHeight: 1 }}>
+            <Typography
+              variant="overline"
+              sx={{
+                color: 'text.disabled',
+                display: 'block',
+                mb: 1.5,
+                letterSpacing: 1.5,
+                lineHeight: 1,
+              }}
+            >
               TECH STACK
             </Typography>
             <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
@@ -111,15 +119,15 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
             <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
               Version: {pkg.version}
             </Typography>
-            <Link 
-              href="https://github.com/Shizuku-in/Tabella" 
-              target="_blank" 
-              rel="noopener" 
-              sx={{ 
+            <Link
+              href="https://github.com/Shizuku-in/Tabella"
+              target="_blank"
+              rel="noopener"
+              sx={{
                 fontSize: '0.875rem',
                 display: 'flex',
                 alignItems: 'center',
-                gap: 0.5
+                gap: 0.5,
               }}
             >
               <GitHub fontSize="small" />
@@ -129,7 +137,9 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
         </Stack>
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
-        <Button onClick={onClose} variant="outlined">Close</Button>
+        <Button onClick={onClose} variant="outlined">
+          Close
+        </Button>
       </DialogActions>
     </Dialog>
   )

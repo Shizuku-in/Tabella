@@ -1,5 +1,4 @@
 import type { AuthUserResponse, GallerySort, Rating } from '../types.ts'
-
 import { API_ERROR_CODES } from './api-error-codes.ts'
 
 export type ApiErrorParams = Record<string, unknown> | null
@@ -10,7 +9,12 @@ export class ApiError extends Error {
   readonly params: ApiErrorParams
   readonly fallbackMessage: string
 
-  constructor(status: number, fallbackMessage: string, code?: string, params: ApiErrorParams = null) {
+  constructor(
+    status: number,
+    fallbackMessage: string,
+    code?: string,
+    params: ApiErrorParams = null,
+  ) {
     super(fallbackMessage)
     this.name = 'ApiError'
     this.status = status
@@ -30,7 +34,8 @@ const ERROR_MESSAGE_MAP: Record<string, ErrorMessageFormatter> = {
   [API_ERROR_CODES.INVALID_CREDENTIALS]: 'Invalid username or password.',
   [API_ERROR_CODES.INVALID_USERNAME]: 'Username cannot be empty.',
   [API_ERROR_CODES.DUPLICATE_USERNAME]: 'Username is already taken.',
-  [API_ERROR_CODES.MISSING_NEW_PASSWORD]: 'New password is required when current password is provided.',
+  [API_ERROR_CODES.MISSING_NEW_PASSWORD]:
+    'New password is required when current password is provided.',
   [API_ERROR_CODES.MISSING_CURRENT_PASSWORD]: 'Current password is required to set a new password.',
   [API_ERROR_CODES.INVALID_PASSWORD]: 'Current password is incorrect.',
   [API_ERROR_CODES.NO_FILE_UPLOADED]: 'No file was provided.',
@@ -42,7 +47,8 @@ const ERROR_MESSAGE_MAP: Record<string, ErrorMessageFormatter> = {
   [API_ERROR_CODES.USER_NOT_FOUND]: 'User not found.',
   [API_ERROR_CODES.IMAGE_NOT_FOUND]: 'Image not found.',
   [API_ERROR_CODES.IMPORT_JOB_NOT_FOUND]: 'Import job not found.',
-  [API_ERROR_CODES.NO_IMPORTABLE_FILES]: 'No supported image files were found in the import source.',
+  [API_ERROR_CODES.NO_IMPORTABLE_FILES]:
+    'No supported image files were found in the import source.',
   [API_ERROR_CODES.NO_FILES_UPLOADED]: 'No files uploaded.',
   [API_ERROR_CODES.INVALID_UPLOAD_PATH]: 'Upload path is invalid.',
   [API_ERROR_CODES.INVALID_CURSOR]: 'Invalid image pagination cursor.',
@@ -61,7 +67,8 @@ const ERROR_MESSAGE_MAP: Record<string, ErrorMessageFormatter> = {
   [API_ERROR_CODES.ARCHIVE_GENERATION_FAILED]: 'Download job failed.',
   [API_ERROR_CODES.IMPORT_PROCESSING_FAILED]: 'Import job failed.',
   [API_ERROR_CODES.WEAK_PASSWORD_TOO_SHORT]: 'Password must be at least 8 characters long.',
-  [API_ERROR_CODES.WEAK_PASSWORD_MISSING_LOWERCASE]: 'Password must contain at least one lowercase letter.',
+  [API_ERROR_CODES.WEAK_PASSWORD_MISSING_LOWERCASE]:
+    'Password must contain at least one lowercase letter.',
   [API_ERROR_CODES.WEAK_PASSWORD_MISSING_NUMBER]: 'Password must contain at least one number.',
   [API_ERROR_CODES.INTERNAL_ERROR]: 'Internal server error.',
   [API_ERROR_CODES.NETWORK_ERROR]: 'Network error during upload.',
@@ -70,7 +77,7 @@ const ERROR_MESSAGE_MAP: Record<string, ErrorMessageFormatter> = {
 
 function readNumericParam(
   params: Record<string, unknown> | undefined,
-  key: string
+  key: string,
 ): string | number | null {
   const value = params?.[key]
   return typeof value === 'number' || typeof value === 'string' ? value : null
@@ -86,7 +93,7 @@ function normalizeErrorParams(value: unknown): ApiErrorParams {
 export function formatApiErrorMessage(
   code?: string,
   params?: ApiErrorParams,
-  fallbackMessage = 'Request failed.'
+  fallbackMessage = 'Request failed.',
 ): string {
   if (!code) return fallbackMessage
   const formatter = ERROR_MESSAGE_MAP[code]
@@ -97,10 +104,7 @@ export function formatApiErrorMessage(
   return formatter
 }
 
-export function getApiErrorMessage(
-  error: unknown,
-  fallbackMessage = 'Request failed.'
-): string {
+export function getApiErrorMessage(error: unknown, fallbackMessage = 'Request failed.'): string {
   if (error instanceof ApiError) {
     return formatApiErrorMessage(error.code, error.params, error.fallbackMessage || fallbackMessage)
   }
@@ -113,7 +117,7 @@ export function getApiErrorMessage(
 export async function request<T>(input: string, init?: RequestInit): Promise<T> {
   const isFormData = init?.body instanceof FormData
   const headers = new Headers(init?.headers)
-  
+
   if (!isFormData && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
@@ -136,7 +140,7 @@ export async function request<T>(input: string, init?: RequestInit): Promise<T> 
       response.status,
       body?.message ?? 'Request failed.',
       body?.error,
-      normalizeErrorParams(body?.params)
+      normalizeErrorParams(body?.params),
     )
   }
 
@@ -168,11 +172,11 @@ export async function login(credentials: {
 export async function uploadWithProgress<T>(
   url: string,
   formData: FormData,
-  onProgress: (percent: number) => void
+  onProgress: (percent: number) => void,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
-    
+
     xhr.upload.addEventListener('progress', (event) => {
       if (event.lengthComputable) {
         const percent = Math.round((event.loaded / event.total) * 100)
@@ -207,7 +211,7 @@ export async function uploadWithProgress<T>(
     xhr.addEventListener('error', () => {
       reject(new ApiError(0, 'Network error during upload', API_ERROR_CODES.NETWORK_ERROR))
     })
-    
+
     xhr.addEventListener('abort', () => {
       reject(new ApiError(0, 'Upload aborted', API_ERROR_CODES.UPLOAD_ABORTED))
     })
@@ -327,10 +331,13 @@ export async function toggleFavorite(imageId: number, isFavorite: boolean): Prom
 }
 
 // Update image rating and tags
-export async function updateImage(imageId: number, data: {
-  rating?: Rating
-  tags?: string[]
-}): Promise<void> {
+export async function updateImage(
+  imageId: number,
+  data: {
+    rating?: Rating
+    tags?: string[]
+  },
+): Promise<void> {
   await request<void>(`/api/images/${imageId}`, {
     method: 'PATCH',
     body: JSON.stringify(data),

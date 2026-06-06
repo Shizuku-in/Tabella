@@ -1,5 +1,4 @@
-
-import React, { useRef, useState, useEffect } from 'react'
+import { Edit, Save } from '@mui/icons-material'
 import {
   Alert,
   Avatar,
@@ -12,8 +11,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { Edit, Save } from '@mui/icons-material'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import React, { useEffect, useRef, useState } from 'react'
+
 import { useAuth } from '../auth/auth-provider.tsx'
 import { ApiError, getApiErrorMessage, request, uploadWithProgress } from '../lib/api.ts'
 import { API_ERROR_CODES } from '../lib/api-error-codes.ts'
@@ -36,18 +36,22 @@ export function ProfilePage() {
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const [errors, setErrors] = useState<ProfileFieldErrors>({})
-  
-  const [snackbar, setSnackbar] = useState<{ open: boolean, message: string, severity: 'success' | 'error' }>({ 
-    open: false, 
-    message: '', 
-    severity: 'success' 
+
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean
+    message: string
+    severity: 'success' | 'error'
+  }>({
+    open: false,
+    message: '',
+    severity: 'success',
   })
 
   const showSnackbar = (message: string, severity: 'success' | 'error' = 'success') => {
     setSnackbar({ open: true, message, severity })
   }
 
-  const handleCloseSnackbar = () => setSnackbar(prev => ({ ...prev, open: false }))
+  const handleCloseSnackbar = () => setSnackbar((prev) => ({ ...prev, open: false }))
 
   useEffect(() => {
     if (user) {
@@ -69,7 +73,7 @@ export function ProfilePage() {
       const formData = new FormData()
       formData.append('file', file)
       return uploadWithProgress<{ avatar_url: string }>('/api/profile/avatar', formData, () => {})
-    }
+    },
   })
 
   const profileMutation = useMutation({
@@ -81,9 +85,9 @@ export function ProfilePage() {
           username,
           current_password: currentPassword ? currentPassword : undefined,
           new_password: newPassword ? newPassword : undefined,
-        })
+        }),
       })
-    }
+    },
   })
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,7 +128,7 @@ export function ProfilePage() {
       setNewPassword('')
       setAvatarFile(null)
       setAvatarPreview(null)
-      
+
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       queryClient.setQueryData(['auth', 'me'], (old: any) => {
         if (!old || !old.user) return old
@@ -133,19 +137,31 @@ export function ProfilePage() {
           user: {
             ...old.user,
             ...updatedProfile,
-            avatar_url: finalAvatarUrl
-          }
+            avatar_url: finalAvatarUrl,
+          },
         }
       })
     } catch (error) {
       if (error instanceof ApiError) {
         const code = error.code
-        if (code === API_ERROR_CODES.INVALID_USERNAME || code === API_ERROR_CODES.DUPLICATE_USERNAME) {
-          setErrors(prev => ({ ...prev, username: getApiErrorMessage(error, 'Invalid username') }))
+        if (
+          code === API_ERROR_CODES.INVALID_USERNAME ||
+          code === API_ERROR_CODES.DUPLICATE_USERNAME
+        ) {
+          setErrors((prev) => ({
+            ...prev,
+            username: getApiErrorMessage(error, 'Invalid username'),
+          }))
           return
         }
-        if (code === API_ERROR_CODES.INVALID_PASSWORD || code === API_ERROR_CODES.MISSING_CURRENT_PASSWORD) {
-          setErrors(prev => ({ ...prev, currentPassword: getApiErrorMessage(error, 'Invalid current password') }))
+        if (
+          code === API_ERROR_CODES.INVALID_PASSWORD ||
+          code === API_ERROR_CODES.MISSING_CURRENT_PASSWORD
+        ) {
+          setErrors((prev) => ({
+            ...prev,
+            currentPassword: getApiErrorMessage(error, 'Invalid current password'),
+          }))
           return
         }
         if (
@@ -154,20 +170,30 @@ export function ProfilePage() {
           code === API_ERROR_CODES.WEAK_PASSWORD_MISSING_NUMBER ||
           code === API_ERROR_CODES.MISSING_NEW_PASSWORD
         ) {
-          setErrors(prev => ({ ...prev, newPassword: getApiErrorMessage(error, 'Invalid new password') }))
+          setErrors((prev) => ({
+            ...prev,
+            newPassword: getApiErrorMessage(error, 'Invalid new password'),
+          }))
           return
         }
       }
-      showSnackbar(`Failed to update profile: ${getApiErrorMessage(error, 'Request failed.')}`, 'error')
+      showSnackbar(
+        `Failed to update profile: ${getApiErrorMessage(error, 'Request failed.')}`,
+        'error',
+      )
     }
   }
 
-  const hasChanges = username !== user?.username || Boolean(currentPassword) || Boolean(newPassword) || Boolean(avatarFile)
+  const hasChanges =
+    username !== user?.username ||
+    Boolean(currentPassword) ||
+    Boolean(newPassword) ||
+    Boolean(avatarFile)
 
   return (
     <Stack spacing={4} sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
       <Typography variant="h5">Profile Settings</Typography>
-      
+
       <Paper sx={{ p: 4 }}>
         <Stack spacing={4}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -179,15 +205,16 @@ export function ProfilePage() {
               }}
               sx={{
                 position: 'relative',
-                cursor: (avatarMutation.isPending || profileMutation.isPending) ? 'default' : 'pointer',
+                cursor:
+                  avatarMutation.isPending || profileMutation.isPending ? 'default' : 'pointer',
                 borderRadius: '50%',
                 overflow: 'hidden',
                 width: 100,
                 height: 100,
                 flexShrink: 0,
                 '&:hover .avatar-overlay': {
-                  opacity: (avatarMutation.isPending || profileMutation.isPending) ? 0 : 1,
-                }
+                  opacity: avatarMutation.isPending || profileMutation.isPending ? 0 : 1,
+                },
               }}
             >
               <Avatar
@@ -195,13 +222,13 @@ export function ProfilePage() {
                 sx={{
                   width: '100%',
                   height: '100%',
-                  bgcolor: (avatarPreview || user?.avatar_url) ? 'transparent' : 'primary.main',
-                  fontSize: '2.5rem'
+                  bgcolor: avatarPreview || user?.avatar_url ? 'transparent' : 'primary.main',
+                  fontSize: '2.5rem',
                 }}
               >
                 {!(avatarPreview || user?.avatar_url) && user?.username?.charAt(0).toUpperCase()}
               </Avatar>
-              
+
               <Box
                 className="avatar-overlay"
                 sx={{
@@ -223,16 +250,18 @@ export function ProfilePage() {
               </Box>
 
               {(avatarMutation.isPending || profileMutation.isPending) && (
-                <CircularProgress
-                  size={100}
-                  sx={{ position: 'absolute', top: 0, left: 0 }}
-                />
+                <CircularProgress size={100} sx={{ position: 'absolute', top: 0, left: 0 }} />
               )}
             </Box>
-            
+
             <Stack spacing={0.5} sx={{ justifyContent: 'center' }}>
-              <Typography variant="h6" sx={{ lineHeight: 1.2 }}>{user?.username}</Typography>
-              <Typography variant="body2" sx={{ color: 'text.secondary', textTransform: 'capitalize' }}>
+              <Typography variant="h6" sx={{ lineHeight: 1.2 }}>
+                {user?.username}
+              </Typography>
+              <Typography
+                variant="body2"
+                sx={{ color: 'text.secondary', textTransform: 'capitalize' }}
+              >
                 Role: {user?.role}
               </Typography>
               <input
@@ -250,7 +279,7 @@ export function ProfilePage() {
               <Typography variant="h6" sx={{ fontSize: '1.1rem' }}>
                 Account Details
               </Typography>
-              
+
               <TextField
                 label="Username"
                 required
@@ -323,9 +352,9 @@ export function ProfilePage() {
         </Stack>
       </Paper>
 
-      <Snackbar 
-        open={snackbar.open} 
-        autoHideDuration={4000} 
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

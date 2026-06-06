@@ -1,5 +1,3 @@
-import { useMemo, useState } from 'react'
-import type { FormEvent } from 'react'
 import { LockOutlined } from '@mui/icons-material'
 import {
   Alert,
@@ -12,7 +10,10 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import type { FormEvent } from 'react'
+import { useMemo, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router-dom'
+
 import { useAuth } from '../auth/auth-provider.tsx'
 import { FullscreenState } from '../components/fullscreen-state.tsx'
 import { getApiErrorMessage } from '../lib/api.ts'
@@ -29,10 +30,7 @@ export function LoginPage() {
 
   if (status === 'loading') {
     return (
-      <FullscreenState
-        title="Checking session"
-        description="Restoring the current login state."
-      />
+      <FullscreenState title="Checking session" description="Restoring the current login state." />
     )
   }
 

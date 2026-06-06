@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
+
 import type { LayoutMode } from '../types.ts'
 
 export interface TopBarConfig {
@@ -54,40 +55,56 @@ export const useGalleryPreferencesStore = create<GalleryPreferencesState>()(
     (set) => ({
       layoutMode: 'masonry',
       setLayoutMode: (value) => set({ layoutMode: value }),
-      
+
       masonryColumns: { xs: 2, sm: 3, lg: 4, xl: 5 },
       setMasonryColumns: (value) => set({ masonryColumns: value }),
-      
+
       gridColumns: { xs: 2, sm: 3, lg: 4, xl: 5 },
       setGridColumns: (value) => set({ gridColumns: value }),
-      
+
       showMobileDetails: true,
       setShowMobileDetails: (value) => set({ showMobileDetails: value }),
-      
-      hoverInfo: { name: false, resolution: true, tags: false, favorite: true, rating: true, download: true },
+
+      hoverInfo: {
+        name: false,
+        resolution: true,
+        tags: false,
+        favorite: true,
+        rating: true,
+        download: true,
+      },
       setHoverInfo: (value) => set({ hoverInfo: value }),
-      
+
       showResultsCount: false,
       setShowResultsCount: (value) => set({ showResultsCount: value }),
-      
+
       galleryImageQuality: 'thumbnail',
       setGalleryImageQuality: (value) => set({ galleryImageQuality: value }),
-      
+
       lightboxImageQuality: 'sample',
       setLightboxImageQuality: (value) => set({ lightboxImageQuality: value }),
-      
+
       showLightboxTags: false,
       setShowLightboxTags: (value) => set({ showLightboxTags: value }),
-      
+
       hoverDownloadQuality: 'original',
       setHoverDownloadQuality: (value) => set({ hoverDownloadQuality: value }),
-      
-      topBarConfig: { sort: true, layout: true, rating: false, favorites: false, selectMultiple: true, search: true, advancedSearch: false, themeToggle: true },
+
+      topBarConfig: {
+        sort: true,
+        layout: true,
+        rating: false,
+        favorites: false,
+        selectMultiple: true,
+        search: true,
+        advancedSearch: false,
+        themeToggle: true,
+      },
       setTopBarConfig: (value) => set({ topBarConfig: value }),
     }),
     {
       name: 'tabella.gallery.preferences',
       version: 1,
-    }
-  )
+    },
+  ),
 )

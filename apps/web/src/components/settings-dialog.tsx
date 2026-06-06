@@ -1,26 +1,27 @@
+import { ExpandMore } from '@mui/icons-material'
 import {
   Accordion,
-  AccordionSummary,
   AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   Checkbox,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   FormControlLabel,
   FormGroup,
   Radio,
   RadioGroup,
   Slider,
-  Switch,
   Stack,
+  Switch,
   Typography,
 } from '@mui/material'
-import { ExpandMore } from '@mui/icons-material'
-import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 import { useShallow } from 'zustand/react/shallow'
+
+import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 
 export interface SettingsDialogProps {
   open: boolean
@@ -71,7 +72,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       setHoverDownloadQuality: state.setHoverDownloadQuality,
       topBarConfig: state.topBarConfig,
       setTopBarConfig: state.setTopBarConfig,
-    }))
+    })),
   )
 
   return (
@@ -84,7 +85,18 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0, pb: 2 }}>
             <FormGroup row sx={{ px: 1 }}>
-              {(['sort', 'layout', 'rating', 'favorites', 'selectMultiple', 'search', 'advancedSearch', 'themeToggle'] as const).map((key) => {
+              {(
+                [
+                  'sort',
+                  'layout',
+                  'rating',
+                  'favorites',
+                  'selectMultiple',
+                  'search',
+                  'advancedSearch',
+                  'themeToggle',
+                ] as const
+              ).map((key) => {
                 const labelMap: Record<typeof key, string> = {
                   sort: 'Sort',
                   layout: 'Layout',
@@ -101,7 +113,9 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                     control={
                       <Checkbox
                         checked={topBarConfig[key]}
-                        onChange={(e) => setTopBarConfig({ ...topBarConfig, [key]: e.target.checked })}
+                        onChange={(e) =>
+                          setTopBarConfig({ ...topBarConfig, [key]: e.target.checked })
+                        }
                         size="small"
                       />
                     }
@@ -114,7 +128,12 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           </AccordionDetails>
         </Accordion>
 
-        <Accordion square disableGutters elevation={0} sx={{ borderTop: 1, borderColor: 'divider', '&:before': { display: 'none' } }}>
+        <Accordion
+          square
+          disableGutters
+          elevation={0}
+          sx={{ borderTop: 1, borderColor: 'divider', '&:before': { display: 'none' } }}
+        >
           <AccordionSummary expandIcon={<ExpandMore />}>
             <Typography variant="subtitle2">Masonry Columns</Typography>
           </AccordionSummary>
@@ -175,117 +194,141 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
         <Box sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
           <Stack spacing={3}>
             <Box>
-            <Typography variant="subtitle2" gutterBottom>
-              Display
-            </Typography>
-            <FormGroup>
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={showResultsCount}
-                    onChange={(e) => setShowResultsCount(e.target.checked)}
-                  />
-                }
-                label={
-                  <Typography variant="body2">
-                    Show results count and sort
-                  </Typography>
-                }
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={showMobileDetails}
-                    onChange={(e) => setShowMobileDetails(e.target.checked)}
-                  />
-                }
-                label={
-                  <Typography variant="body2">
-                    Show image details on mobile
-                  </Typography>
-                }
-              />
-              <FormControlLabel
-                control={
-                  <Switch
-                    checked={showLightboxTags}
-                    onChange={(e) => setShowLightboxTags(e.target.checked)}
-                  />
-                }
-                label={
-                  <Typography variant="body2">
-                    Show tags in lightbox by default
-                  </Typography>
-                }
-              />
-            </FormGroup>
-          </Box>
-
-          <Box>
-            <Typography variant="subtitle2" gutterBottom>
-              Hover Info
-            </Typography>
-            <FormGroup row>
-              {(['name', 'resolution', 'tags', 'favorite', 'rating', 'download'] as const).map((key) => (
+              <Typography variant="subtitle2" gutterBottom>
+                Display
+              </Typography>
+              <FormGroup>
                 <FormControlLabel
-                  key={key}
                   control={
-                    <Checkbox
-                      checked={hoverInfo[key]}
-                      onChange={(e) => setHoverInfo({ ...hoverInfo, [key]: e.target.checked })}
-                      size="small"
+                    <Switch
+                      checked={showResultsCount}
+                      onChange={(e) => setShowResultsCount(e.target.checked)}
                     />
                   }
-                  label={<Typography variant="body2" sx={{ textTransform: 'capitalize' }}>{key}</Typography>}
+                  label={<Typography variant="body2">Show results count and sort</Typography>}
                 />
-              ))}
-            </FormGroup>
-          </Box>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={showMobileDetails}
+                      onChange={(e) => setShowMobileDetails(e.target.checked)}
+                    />
+                  }
+                  label={<Typography variant="body2">Show image details on mobile</Typography>}
+                />
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={showLightboxTags}
+                      onChange={(e) => setShowLightboxTags(e.target.checked)}
+                    />
+                  }
+                  label={<Typography variant="body2">Show tags in lightbox by default</Typography>}
+                />
+              </FormGroup>
+            </Box>
 
-          <Box>
-            <Typography variant="subtitle2" gutterBottom>
-              Image Quality (Gallery)
-            </Typography>
-            <RadioGroup
-              row
-              value={galleryImageQuality}
-              onChange={(e) => setGalleryImageQuality(e.target.value as 'thumbnail' | 'sample' | 'original')}
-            >
-              <FormControlLabel value="thumbnail" control={<Radio size="small" />} label="Thumbnail" />
-              <FormControlLabel value="sample" control={<Radio size="small" />} label="Sample" />
-              <FormControlLabel value="original" control={<Radio size="small" />} label="Original" />
-            </RadioGroup>
-          </Box>
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Hover Info
+              </Typography>
+              <FormGroup row>
+                {(['name', 'resolution', 'tags', 'favorite', 'rating', 'download'] as const).map(
+                  (key) => (
+                    <FormControlLabel
+                      key={key}
+                      control={
+                        <Checkbox
+                          checked={hoverInfo[key]}
+                          onChange={(e) => setHoverInfo({ ...hoverInfo, [key]: e.target.checked })}
+                          size="small"
+                        />
+                      }
+                      label={
+                        <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                          {key}
+                        </Typography>
+                      }
+                    />
+                  ),
+                )}
+              </FormGroup>
+            </Box>
 
-          <Box>
-            <Typography variant="subtitle2" gutterBottom>
-              Image Quality (Lightbox)
-            </Typography>
-            <RadioGroup
-              row
-              value={lightboxImageQuality}
-              onChange={(e) => setLightboxImageQuality(e.target.value as 'thumbnail' | 'sample' | 'original')}
-            >
-              <FormControlLabel value="thumbnail" control={<Radio size="small" />} label="Thumbnail" />
-              <FormControlLabel value="sample" control={<Radio size="small" />} label="Sample" />
-              <FormControlLabel value="original" control={<Radio size="small" />} label="Original" />
-            </RadioGroup>
-          </Box>
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Image Quality (Gallery)
+              </Typography>
+              <RadioGroup
+                row
+                value={galleryImageQuality}
+                onChange={(e) =>
+                  setGalleryImageQuality(e.target.value as 'thumbnail' | 'sample' | 'original')
+                }
+              >
+                <FormControlLabel
+                  value="thumbnail"
+                  control={<Radio size="small" />}
+                  label="Thumbnail"
+                />
+                <FormControlLabel value="sample" control={<Radio size="small" />} label="Sample" />
+                <FormControlLabel
+                  value="original"
+                  control={<Radio size="small" />}
+                  label="Original"
+                />
+              </RadioGroup>
+            </Box>
 
-          <Box>
-            <Typography variant="subtitle2" gutterBottom>
-              Download Quality (Bulk & Batch)
-            </Typography>
-            <RadioGroup
-              row
-              value={hoverDownloadQuality}
-              onChange={(e) => setHoverDownloadQuality(e.target.value as 'thumbnail' | 'sample' | 'original')}
-            >
-              <FormControlLabel value="thumbnail" control={<Radio size="small" />} label="Thumbnail" />
-              <FormControlLabel value="sample" control={<Radio size="small" />} label="Sample" />
-              <FormControlLabel value="original" control={<Radio size="small" />} label="Original" />
-            </RadioGroup>
-          </Box>
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Image Quality (Lightbox)
+              </Typography>
+              <RadioGroup
+                row
+                value={lightboxImageQuality}
+                onChange={(e) =>
+                  setLightboxImageQuality(e.target.value as 'thumbnail' | 'sample' | 'original')
+                }
+              >
+                <FormControlLabel
+                  value="thumbnail"
+                  control={<Radio size="small" />}
+                  label="Thumbnail"
+                />
+                <FormControlLabel value="sample" control={<Radio size="small" />} label="Sample" />
+                <FormControlLabel
+                  value="original"
+                  control={<Radio size="small" />}
+                  label="Original"
+                />
+              </RadioGroup>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                Download Quality (Bulk & Batch)
+              </Typography>
+              <RadioGroup
+                row
+                value={hoverDownloadQuality}
+                onChange={(e) =>
+                  setHoverDownloadQuality(e.target.value as 'thumbnail' | 'sample' | 'original')
+                }
+              >
+                <FormControlLabel
+                  value="thumbnail"
+                  control={<Radio size="small" />}
+                  label="Thumbnail"
+                />
+                <FormControlLabel value="sample" control={<Radio size="small" />} label="Sample" />
+                <FormControlLabel
+                  value="original"
+                  control={<Radio size="small" />}
+                  label="Original"
+                />
+              </RadioGroup>
+            </Box>
           </Stack>
         </Box>
       </DialogContent>

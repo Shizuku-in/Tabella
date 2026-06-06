@@ -1,5 +1,5 @@
-import { Box, Button, Stack, Typography } from '@mui/material'
 import { ErrorOutlined, HomeOutlined } from '@mui/icons-material'
+import { Box, Button, Stack, Typography } from '@mui/material'
 import { Link as RouterLink } from 'react-router-dom'
 
 export function NotFoundPage() {
@@ -24,7 +24,7 @@ export function NotFoundPage() {
         }}
       >
         <ErrorOutlined sx={{ fontSize: 96, color: 'text.secondary', opacity: 0.8 }} />
-        
+
         <Stack spacing={1}>
           <Typography variant="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>
             404
@@ -33,7 +33,8 @@ export function NotFoundPage() {
             Page Not Found
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            The page you are looking for does not exist, has been removed, or is temporarily unavailable.
+            The page you are looking for does not exist, has been removed, or is temporarily
+            unavailable.
           </Typography>
         </Stack>
 

@@ -1,25 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/set-state-in-effect */
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Autocomplete,
+  Box,
   Button,
+  Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Stack,
   TextField,
-  Autocomplete,
-  Chip,
   Typography,
-  Box,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import dayjs, { Dayjs } from 'dayjs'
 import { useEffect, useState } from 'react'
-import { suggestTags } from '../lib/api.ts'
-import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { useShallow } from 'zustand/react/shallow'
+
+import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
+import { suggestTags } from '../lib/api.ts'
 import { getTagColor } from '../lib/tags.ts'
 
 export interface AdvancedSearchDialogProps {
@@ -40,13 +41,12 @@ const hideSpinButton = {
   '& input[type=number]': {
     MozAppearance: 'textfield',
   },
-  '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
-    WebkitAppearance: 'none',
-    margin: 0,
-  },
+  '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button':
+    {
+      WebkitAppearance: 'none',
+      margin: 0,
+    },
 }
-
-
 
 export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProps) {
   const {
@@ -88,7 +88,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
       setAspectRatioMin: state.setAspectRatioMin,
       aspectRatioMax: state.aspectRatioMax,
       setAspectRatioMax: state.setAspectRatioMax,
-    }))
+    })),
   )
 
   // Local state for the dialog form
@@ -278,7 +278,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  placeholder={localIncludeTags.length === 0 ? "e.g. namespace:name" : ""}
+                  placeholder={localIncludeTags.length === 0 ? 'e.g. namespace:name' : ''}
                   size="small"
                   fullWidth
                 />
@@ -322,7 +322,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  placeholder={localExcludeTags.length === 0 ? "e.g. namespace:name" : ""}
+                  placeholder={localExcludeTags.length === 0 ? 'e.g. namespace:name' : ''}
                   size="small"
                   fullWidth
                 />
@@ -386,7 +386,9 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
                 fullWidth
                 size="small"
                 value={localMinWidth}
-                onChange={(e) => handleNumericFieldChange('minWidth', setLocalMinWidth, e.target.value, 'integer')}
+                onChange={(e) =>
+                  handleNumericFieldChange('minWidth', setLocalMinWidth, e.target.value, 'integer')
+                }
                 error={Boolean(errors.minWidth)}
                 helperText={errors.minWidth}
                 slotProps={{ htmlInput: { inputMode: 'numeric', pattern: '\\d*' } }}
@@ -403,7 +405,14 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
                 fullWidth
                 size="small"
                 value={localMinHeight}
-                onChange={(e) => handleNumericFieldChange('minHeight', setLocalMinHeight, e.target.value, 'integer')}
+                onChange={(e) =>
+                  handleNumericFieldChange(
+                    'minHeight',
+                    setLocalMinHeight,
+                    e.target.value,
+                    'integer',
+                  )
+                }
                 error={Boolean(errors.minHeight)}
                 helperText={errors.minHeight}
                 slotProps={{ htmlInput: { inputMode: 'numeric', pattern: '\\d*' } }}
@@ -423,7 +432,14 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
                 fullWidth
                 size="small"
                 value={localArMin}
-                onChange={(e) => handleNumericFieldChange('aspectRatioMin', setLocalArMin, e.target.value, 'decimal')}
+                onChange={(e) =>
+                  handleNumericFieldChange(
+                    'aspectRatioMin',
+                    setLocalArMin,
+                    e.target.value,
+                    'decimal',
+                  )
+                }
                 error={Boolean(errors.aspectRatioMin)}
                 helperText={errors.aspectRatioMin}
                 slotProps={{ htmlInput: { inputMode: 'decimal', pattern: '\\d*\\.?\\d*' } }}
@@ -440,7 +456,14 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
                 fullWidth
                 size="small"
                 value={localArMax}
-                onChange={(e) => handleNumericFieldChange('aspectRatioMax', setLocalArMax, e.target.value, 'decimal')}
+                onChange={(e) =>
+                  handleNumericFieldChange(
+                    'aspectRatioMax',
+                    setLocalArMax,
+                    e.target.value,
+                    'decimal',
+                  )
+                }
                 error={Boolean(errors.aspectRatioMax)}
                 helperText={errors.aspectRatioMax}
                 slotProps={{ htmlInput: { inputMode: 'decimal', pattern: '\\d*\\.?\\d*' } }}

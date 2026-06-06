@@ -1,5 +1,4 @@
 /* eslint-disable react-hooks/set-state-in-effect */
-import { useEffect, useState } from 'react'
 import {
   Button,
   Dialog,
@@ -10,9 +9,11 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  TextField,
   Stack,
+  TextField,
 } from '@mui/material'
+import { useEffect, useState } from 'react'
+
 import type { CreateUserDto, UpdateUserDto, UserRole, UserRow } from '../types.ts'
 
 interface UserDialogProps {
@@ -104,7 +105,7 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
               fullWidth
             />
             <TextField
-              label={isEdit ? "New Password" : "Password"}
+              label={isEdit ? 'New Password' : 'Password'}
               type="password"
               required={!isEdit}
               value={password}
@@ -115,7 +116,10 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
                 }
               }}
               error={Boolean(errors.password)}
-              helperText={errors.password ?? (isEdit ? 'Leave blank to keep the current password.' : undefined)}
+              helperText={
+                errors.password ??
+                (isEdit ? 'Leave blank to keep the current password.' : undefined)
+              }
               fullWidth
             />
             <FormControl fullWidth>
@@ -162,7 +166,8 @@ function validateFields({
     errors.password = 'Password is required.'
   } else if (password) {
     if (password.length < 8 || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
-      errors.password = 'Password must be at least 8 characters, and include a lowercase letter and a number.'
+      errors.password =
+        'Password must be at least 8 characters, and include a lowercase letter and a number.'
     }
   }
 

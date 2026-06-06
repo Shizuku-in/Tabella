@@ -1,6 +1,24 @@
 /* eslint-disable react-hooks/set-state-in-effect, @typescript-eslint/no-explicit-any */
 import {
+  BrokenImage,
+  ChevronLeft,
+  ChevronRight,
+  Close,
+  DeleteOutlined,
+  Download,
+  FavoriteBorderOutlined,
+  FavoriteOutlined,
+  InfoOutlined,
+  LocalOfferOutlined,
+  Tag,
+} from '@mui/icons-material'
+import {
+  alpha,
   Box,
+  Button,
+  Chip,
+  CircularProgress,
+  Collapse,
   Dialog,
   Fade,
   IconButton,
@@ -8,38 +26,21 @@ import {
   MenuItem,
   Slide,
   Stack,
-  Chip,
-  alpha,
-  CircularProgress,
   Tooltip,
   Typography,
-  Button,
-  Collapse,
   useMediaQuery,
   useTheme,
 } from '@mui/material'
-import {
-  ChevronLeft,
-  ChevronRight,
-  Close,
-  Download,
-  Tag,
-  BrokenImage,
-  InfoOutlined,
-  DeleteOutlined,
-  LocalOfferOutlined,
-  FavoriteBorderOutlined,
-  FavoriteOutlined,
-} from '@mui/icons-material'
-import { forwardRef, useEffect, useState, useMemo } from 'react'
-import type { ReactElement, Ref } from 'react'
 import type { TransitionProps } from '@mui/material/transitions'
-import type { GalleryItem, Rating } from '../types'
-import { getTagColor } from '../lib/tags'
+import type { ReactElement, Ref } from 'react'
+import { forwardRef, useEffect, useMemo, useState } from 'react'
+import { useShallow } from 'zustand/react/shallow'
+
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
-import { useShallow } from 'zustand/react/shallow'
-import { updateImage, deleteImage, suggestTags } from '../lib/api'
+import { deleteImage, suggestTags, updateImage } from '../lib/api'
+import { getTagColor } from '../lib/tags'
+import type { GalleryItem, Rating } from '../types'
 import { LightboxViewerInfo } from './lightbox-viewer-info'
 
 const Transition = forwardRef(function Transition(
@@ -50,7 +51,6 @@ const Transition = forwardRef(function Transition(
 ) {
   return <Fade ref={ref} {...props} />
 })
-
 
 interface LightboxViewerProps {
   open: boolean
@@ -64,12 +64,22 @@ interface LightboxViewerProps {
   onToggleFavorite?: (imageId: number) => void
 }
 
-export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChange, onDelete, onUpdate, favoriteOverrides, onToggleFavorite }: LightboxViewerProps) {
+export function LightboxViewer({
+  open,
+  onClose,
+  items,
+  initialIndex,
+  onIndexChange,
+  onDelete,
+  onUpdate,
+  favoriteOverrides,
+  onToggleFavorite,
+}: LightboxViewerProps) {
   const { lightboxImageQuality, showLightboxTags } = useGalleryPreferencesStore(
     useShallow((state) => ({
       lightboxImageQuality: state.lightboxImageQuality,
       showLightboxTags: state.showLightboxTags,
-    }))
+    })),
   )
   const setSearchTags = useGallerySessionStore((state) => state.setSearchTags)
   const theme = useTheme()
@@ -120,7 +130,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
     const timer = setTimeout(async () => {
       try {
         const suggestions = await suggestTags(tagInput.trim(), 20)
-        setTagSuggestions(suggestions.filter(s => !editTags.includes(s)))
+        setTagSuggestions(suggestions.filter((s) => !editTags.includes(s)))
       } catch {
         setTagSuggestions([])
       }
@@ -138,26 +148,34 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
   useEffect(() => {
     if (!item) return
     setFileSizes({ thumb: 0, sample: 0, original: item.fileSize || 0 })
-    
+
     if (item.thumbnailSrc) {
-      fetch(item.thumbnailSrc, { method: 'HEAD' }).then(res => {
-        const size = Number(res.headers.get('content-length'))
-        if (!isNaN(size)) setFileSizes(s => ({ ...s, thumb: size }))
-      }).catch(() => {})
+      fetch(item.thumbnailSrc, { method: 'HEAD' })
+        .then((res) => {
+          const size = Number(res.headers.get('content-length'))
+          if (!isNaN(size)) setFileSizes((s) => ({ ...s, thumb: size }))
+        })
+        .catch(() => {})
     }
-    
+
     if (item.sampleSrc) {
-      fetch(item.sampleSrc, { method: 'HEAD' }).then(res => {
-        const size = Number(res.headers.get('content-length'))
-        if (!isNaN(size)) setFileSizes(s => ({ ...s, sample: size }))
-      }).catch(() => {})
+      fetch(item.sampleSrc, { method: 'HEAD' })
+        .then((res) => {
+          const size = Number(res.headers.get('content-length'))
+          if (!isNaN(size)) setFileSizes((s) => ({ ...s, sample: size }))
+        })
+        .catch(() => {})
     }
   }, [item])
 
   const imgSrc = useMemo(() => {
     if (!item) return ''
     if (lightboxImageQuality === 'original' && item.originalSrc) return item.originalSrc
-    if ((lightboxImageQuality === 'original' || lightboxImageQuality === 'sample') && item.sampleSrc) return item.sampleSrc
+    if (
+      (lightboxImageQuality === 'original' || lightboxImageQuality === 'sample') &&
+      item.sampleSrc
+    )
+      return item.sampleSrc
     return item.thumbnailSrc
   }, [item, lightboxImageQuality])
 
@@ -193,8 +211,8 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
       const target = e.target as HTMLElement
       // Ignore if user is interacting with an input, chip, or dropdown menu
       if (
-        target.tagName === 'INPUT' || 
-        target.tagName === 'TEXTAREA' || 
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
         target.isContentEditable ||
         target.closest('.MuiAutocomplete-root') ||
         target.closest('.MuiInputBase-root') ||
@@ -274,14 +292,14 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
     try {
       await deleteImage(item.id)
       setShowDeleteDialog(false)
-      
+
       // Navigate: try next, then previous, then close
       if (currentIndex < items.length - 1) {
         // Next item exists, stay at same index (items will shift)
         onDelete?.(item.id)
       } else if (currentIndex > 0) {
         // Go to previous
-        setCurrentIndex(prev => prev - 1)
+        setCurrentIndex((prev) => prev - 1)
         onDelete?.(item.id)
       } else {
         // No more items
@@ -294,8 +312,6 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
       setIsDeleting(false)
     }
   }
-
-
 
   const handleRatingChange = (newRating: Rating) => {
     setEditRating(newRating)
@@ -403,7 +419,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
             </IconButton>
           </Tooltip>
 
-          <Tooltip title={isFavorite ? "Remove Favorite" : "Favorite"} placement="bottom">
+          <Tooltip title={isFavorite ? 'Remove Favorite' : 'Favorite'} placement="bottom">
             <IconButton
               sx={{
                 color: isFavorite ? 'primary.main' : 'action.active',
@@ -430,7 +446,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
               }}
               onClick={(e) => {
                 e.stopPropagation()
-                setShowInfoPanel(prev => !prev)
+                setShowInfoPanel((prev) => !prev)
               }}
             >
               <InfoOutlined />
@@ -452,7 +468,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
               <DeleteOutlined />
             </IconButton>
           </Tooltip>
-          
+
           <Tooltip title="Exit" placement="bottom">
             <IconButton
               sx={{
@@ -475,35 +491,54 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
         onClose={() => handleDownloadClose()}
         onClick={(e) => e.stopPropagation()}
       >
-        <MenuItem onClick={() => {
-          const baseName = item.filename.includes('.') ? item.filename.substring(0, item.filename.lastIndexOf('.')) : item.filename;
-          triggerDownload(item.thumbnailSrc, `${baseName}_thumb.webp`)
-        }}>
+        <MenuItem
+          onClick={() => {
+            const baseName = item.filename.includes('.')
+              ? item.filename.substring(0, item.filename.lastIndexOf('.'))
+              : item.filename
+            triggerDownload(item.thumbnailSrc, `${baseName}_thumb.webp`)
+          }}
+        >
           <Stack>
-            <Typography variant="body1" sx={{ fontWeight: 600 }}>Thumbnail</Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              Thumbnail
+            </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {thumbWidth}×{thumbHeight} [{formatSizeStr(fileSizes.thumb)}] WEBP
             </Typography>
           </Stack>
         </MenuItem>
-        
-        <MenuItem onClick={() => {
-          const baseName = item.filename.includes('.') ? item.filename.substring(0, item.filename.lastIndexOf('.')) : item.filename;
-          triggerDownload(item.sampleSrc || item.thumbnailSrc, `${baseName}_sample.webp`)
-        }}>
+
+        <MenuItem
+          onClick={() => {
+            const baseName = item.filename.includes('.')
+              ? item.filename.substring(0, item.filename.lastIndexOf('.'))
+              : item.filename
+            triggerDownload(item.sampleSrc || item.thumbnailSrc, `${baseName}_sample.webp`)
+          }}
+        >
           <Stack>
-            <Typography variant="body1" sx={{ fontWeight: 600 }}>Sample</Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              Sample
+            </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {item.width}×{item.height} [{formatSizeStr(fileSizes.sample)}] WEBP
             </Typography>
           </Stack>
         </MenuItem>
-        
-        <MenuItem onClick={() => triggerDownload(item.originalSrc || item.sampleSrc || item.thumbnailSrc, item.filename)}>
+
+        <MenuItem
+          onClick={() =>
+            triggerDownload(item.originalSrc || item.sampleSrc || item.thumbnailSrc, item.filename)
+          }
+        >
           <Stack>
-            <Typography variant="body1" sx={{ fontWeight: 600 }}>Original</Typography>
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              Original
+            </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              {item.width}×{item.height} [{formatSizeStr(fileSizes.original)}] {getExt(item.filename)}
+              {item.width}×{item.height} [{formatSizeStr(fileSizes.original)}]{' '}
+              {getExt(item.filename)}
             </Typography>
           </Stack>
         </MenuItem>
@@ -536,7 +571,9 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
         onClick={(e) => e.stopPropagation()}
       >
         <Box sx={{ p: 3 }}>
-          <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Delete Image</Typography>
+          <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+            Delete Image
+          </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
             This action cannot be undone.
             <br />
@@ -583,8 +620,12 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
             position: 'absolute',
             right: !isMobile && showInfoPanel ? 376 : 16,
             transition: theme.transitions.create('right', {
-              easing: showInfoPanel ? theme.transitions.easing.easeOut : theme.transitions.easing.sharp,
-              duration: showInfoPanel ? theme.transitions.duration.enteringScreen : theme.transitions.duration.leavingScreen,
+              easing: showInfoPanel
+                ? theme.transitions.easing.easeOut
+                : theme.transitions.easing.sharp,
+              duration: showInfoPanel
+                ? theme.transitions.duration.enteringScreen
+                : theme.transitions.duration.leavingScreen,
             }),
             ...(isMobile && showInfoPanel ? { display: 'none' } : {}),
             top: '50%',
@@ -655,29 +696,29 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
                   '&::-webkit-scrollbar': { display: 'none' },
                 }}
               >
-              {item.tags.map((tag) => (
-                <Chip
-                  key={tag}
-                  label={tag}
-                  size="small"
-                  icon={<Tag fontSize="small" />}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setSearchTags([tag])
-                    onClose()
-                  }}
-                  sx={{
-                    bgcolor: alpha(getTagColor(tag, theme), 0.2),
-                    color: getTagColor(tag, theme),
-                    backdropFilter: 'blur(10px)',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      bgcolor: getTagColor(tag, theme),
-                      color: theme.palette.getContrastText(getTagColor(tag, theme)),
-                    }
-                  }}
-                />
-              ))}
+                {item.tags.map((tag) => (
+                  <Chip
+                    key={tag}
+                    label={tag}
+                    size="small"
+                    icon={<Tag fontSize="small" />}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setSearchTags([tag])
+                      onClose()
+                    }}
+                    sx={{
+                      bgcolor: alpha(getTagColor(tag, theme), 0.2),
+                      color: getTagColor(tag, theme),
+                      backdropFilter: 'blur(10px)',
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        bgcolor: getTagColor(tag, theme),
+                        color: theme.palette.getContrastText(getTagColor(tag, theme)),
+                      },
+                    }}
+                  />
+                ))}
               </Box>
             </Collapse>
           </Box>
