@@ -7,7 +7,6 @@ use axum::{
 use axum_extra::extract::CookieJar;
 use serde_json::json;
 
-
 use crate::{
     AppState,
     api::error::ApiError,

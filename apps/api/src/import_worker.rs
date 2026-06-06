@@ -134,40 +134,41 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
         data: serde_json::json!({ "id": job.id }),
     });
 
-    // 4. Cleanup temporary extraction directory
-    let temp_extract_dir = state
-        .config
-        .temp_root
-        .join("temp_extract")
-        .join(job.id.to_string());
-    if temp_extract_dir.exists() {
-        if let Err(e) = std::fs::remove_dir_all(&temp_extract_dir) {
-            tracing::error!(
-                "Failed to clean up temp_extract directory for job {}: {:?}",
-                job.id,
-                e
-            );
-        } else {
-            tracing::info!("Cleaned up temp_extract directory for job {}", job.id);
-        }
-    }
-
-    // 5. Cleanup source upload directory if it is under temp_root/uploads
-    let uploads_path = std::path::Path::new(&job.source_archive_path);
-    // Safety check to ensure it's actually within temp_root/uploads to prevent arbitrary deletion
-    if uploads_path.starts_with(state.config.temp_root.join("uploads")) && uploads_path.exists() {
-        if let Err(e) = std::fs::remove_dir_all(uploads_path) {
-            tracing::error!(
-                "Failed to clean up uploads directory for job {}: {:?}",
-                job.id,
-                e
-            );
-        } else {
-            tracing::info!("Cleaned up uploads directory for job {}", job.id);
-        }
-    }
+    cleanup_job_temp_dir(
+        &temp_extract_job_dir(&state.config.temp_root, job.id),
+        "temp_extract",
+        job.id,
+    );
+    cleanup_temporary_upload_source(&state.config.temp_root, &job.source_archive_path, job.id);
 
     Ok(true)
+}
+
+fn temp_extract_job_dir(temp_root: &Path, job_id: Uuid) -> PathBuf {
+    temp_root.join("temp_extract").join(job_id.to_string())
+}
+
+fn temp_uploads_root(temp_root: &Path) -> PathBuf {
+    temp_root.join("uploads")
+}
+
+fn cleanup_temporary_upload_source(temp_root: &Path, source_archive_path: &str, job_id: Uuid) {
+    let uploads_path = Path::new(source_archive_path);
+    if uploads_path.starts_with(temp_uploads_root(temp_root)) {
+        cleanup_job_temp_dir(uploads_path, "uploads", job_id);
+    }
+}
+
+fn cleanup_job_temp_dir(path: &Path, label: &str, job_id: Uuid) {
+    if !path.exists() {
+        return;
+    }
+
+    if let Err(e) = std::fs::remove_dir_all(path) {
+        tracing::error!(%job_id, %label, ?path, ?e, "Failed to clean up job temp directory");
+    } else {
+        tracing::info!(%job_id, %label, ?path, "Cleaned up job temp directory");
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
