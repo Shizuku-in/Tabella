@@ -220,7 +220,7 @@ pub(crate) fn routes(state: AppState) -> axum::Router {
         .with_state(state)
 }
 
-fn validate_password(password: &str) -> Result<(), ApiError> {
+pub(crate) fn validate_password(password: &str) -> Result<(), ApiError> {
     if password.chars().count() < 8 {
         return Err(ApiError::bad_request(
             crate::api::error_codes::WEAK_PASSWORD_TOO_SHORT,

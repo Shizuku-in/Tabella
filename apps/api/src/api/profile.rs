@@ -126,6 +126,8 @@ async fn update_profile(
             ));
         }
 
+        crate::api::users::validate_password(&new_password)?;
+
         let new_hash = hash_password(&new_password).map_err(ApiError::internal)?;
 
         query_builder.push(", password_hash = ");

@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/set-state-in-effect */
+
 import React, { useRef, useState, useEffect } from 'react'
 import {
   Alert,
@@ -15,7 +15,8 @@ import {
 import { Edit, Save } from '@mui/icons-material'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '../auth/auth-provider.tsx'
-import { getApiErrorMessage, request, uploadWithProgress } from '../lib/api.ts'
+import { ApiError, getApiErrorMessage, request, uploadWithProgress } from '../lib/api.ts'
+import { API_ERROR_CODES } from '../lib/api-error-codes.ts'
 import type { SessionUser } from '../types.ts'
 
 interface ProfileFieldErrors {
@@ -137,6 +138,26 @@ export function ProfilePage() {
         }
       })
     } catch (error) {
+      if (error instanceof ApiError) {
+        const code = error.code
+        if (code === API_ERROR_CODES.INVALID_USERNAME || code === API_ERROR_CODES.DUPLICATE_USERNAME) {
+          setErrors(prev => ({ ...prev, username: getApiErrorMessage(error, 'Invalid username') }))
+          return
+        }
+        if (code === API_ERROR_CODES.INVALID_PASSWORD || code === API_ERROR_CODES.MISSING_CURRENT_PASSWORD) {
+          setErrors(prev => ({ ...prev, currentPassword: getApiErrorMessage(error, 'Invalid current password') }))
+          return
+        }
+        if (
+          code === API_ERROR_CODES.WEAK_PASSWORD_TOO_SHORT ||
+          code === API_ERROR_CODES.WEAK_PASSWORD_MISSING_LOWERCASE ||
+          code === API_ERROR_CODES.WEAK_PASSWORD_MISSING_NUMBER ||
+          code === API_ERROR_CODES.MISSING_NEW_PASSWORD
+        ) {
+          setErrors(prev => ({ ...prev, newPassword: getApiErrorMessage(error, 'Invalid new password') }))
+          return
+        }
+      }
       showSnackbar(`Failed to update profile: ${getApiErrorMessage(error, 'Request failed.')}`, 'error')
     }
   }
