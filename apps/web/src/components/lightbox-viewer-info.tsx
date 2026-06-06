@@ -252,7 +252,7 @@ export function LightboxViewerInfo({
         {/* Save button */}
         <Box sx={{ p: 2, borderTop: `1px solid ${theme.palette.divider}` }}>
           <Button 
-            variant="contained" 
+            variant="outlined" 
             fullWidth 
             disabled={!hasChanges || isSaving} 
             onClick={handleSave}
