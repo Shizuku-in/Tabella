@@ -11,6 +11,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { GitHub } from '@mui/icons-material'
+import pkg from '../../package.json'
 
 export interface AboutDialogProps {
   open: boolean
@@ -110,7 +111,7 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
 
           <Stack spacing={1} alignItems="center" sx={{ mt: 2 }}>
             <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
-              Version: 0.1.0
+              Version: {pkg.version}
             </Typography>
             <Link 
               href="https://github.com/Shizuku-in/Tabella" 
