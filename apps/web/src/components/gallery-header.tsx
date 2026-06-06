@@ -51,10 +51,10 @@ export function GalleryHeader({ itemCount, isInitialLoading, isFetchingNextPage 
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}
-      alignItems={{ xs: 'flex-start', sm: 'center' }}
-      justifyContent="space-between"
       spacing={0.5}
       sx={{
+        alignItems: { xs: 'flex-start', sm: 'center' },
+        justifyContent: 'space-between',
         px: { xs: 0.25, md: 0.5 },
         minHeight: 24,
       }}

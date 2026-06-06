@@ -36,8 +36,7 @@ export function SelectionActionBar({
         <Stack
           direction="row"
           spacing={1}
-          alignItems="center"
-          sx={{ px: 2, py: 1.5, minWidth: 280 }}
+          sx={{ px: 2, py: 1.5, minWidth: 280, alignItems: 'center' }}
         >
           <IconButton size="small" onClick={onClose} edge="start">
             <Close />

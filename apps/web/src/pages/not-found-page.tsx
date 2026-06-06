@@ -1,5 +1,5 @@
 import { Box, Button, Stack, Typography } from '@mui/material'
-import { ErrorOutline, HomeOutlined } from '@mui/icons-material'
+import { ErrorOutlined, HomeOutlined } from '@mui/icons-material'
 import { Link as RouterLink } from 'react-router-dom'
 
 export function NotFoundPage() {
@@ -16,14 +16,14 @@ export function NotFoundPage() {
     >
       <Stack
         spacing={3}
-        alignItems="center"
-        textAlign="center"
         sx={{
+          alignItems: 'center',
+          textAlign: 'center',
           maxWidth: 400,
           p: 5,
         }}
       >
-        <ErrorOutline sx={{ fontSize: 96, color: 'text.secondary', opacity: 0.8 }} />
+        <ErrorOutlined sx={{ fontSize: 96, color: 'text.secondary', opacity: 0.8 }} />
         
         <Stack spacing={1}>
           <Typography variant="h1" sx={{ fontWeight: 700, color: 'text.primary' }}>

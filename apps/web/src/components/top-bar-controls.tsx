@@ -7,9 +7,9 @@ import {
   StarOutlined,
   FavoriteBorderOutlined,
   FavoriteOutlined,
-  CheckCircleOutline,
+  CheckCircleOutlined,
   CheckCircle,
-  PersonOutline,
+  PersonOutlined,
   GroupOutlined,
   PlaylistAdd,
   AdminPanelSettingsOutlined,
@@ -199,7 +199,7 @@ export function SelectMultipleControl() {
         onClick={() => setSelectionMode(!selectionMode)}
         sx={{ p: 0.75, borderRadius: '50%' }}
       >
-        {selectionMode ? <CheckCircle fontSize="small" /> : <CheckCircleOutline fontSize="small" />}
+        {selectionMode ? <CheckCircle fontSize="small" /> : <CheckCircleOutlined fontSize="small" />}
       </IconButton>
     </Tooltip>
   )
@@ -268,7 +268,7 @@ export function UserControl() {
           selected={location.pathname === '/profile'}
           onClick={() => setAnchorEl(null)}
         >
-          <PersonOutline fontSize="small" sx={{ mr: 1 }} />
+          <PersonOutlined fontSize="small" sx={{ mr: 1 }} />
           Profile
         </MenuItem>
 

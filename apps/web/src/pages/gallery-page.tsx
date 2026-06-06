@@ -146,7 +146,7 @@ export function GalleryPage() {
   if (galleryQuery.status === 'error') {
     return (
       <Box sx={{ minHeight: 320, display: 'grid', placeItems: 'center', color: 'text.secondary' }}>
-        <Stack spacing={0.75} alignItems="center" textAlign="center">
+        <Stack spacing={0.75} sx={{ alignItems: 'center', textAlign: 'center' }}>
           <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
             Unable to load gallery
           </Typography>
@@ -179,7 +179,7 @@ export function GalleryPage() {
         </Box>
       ) : isEmpty ? (
         <Box sx={{ minHeight: 320, display: 'grid', placeItems: 'center', color: 'text.secondary' }}>
-          <Stack spacing={0.75} alignItems="center" textAlign="center">
+          <Stack spacing={0.75} sx={{ alignItems: 'center', textAlign: 'center' }}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
               No matching images
             </Typography>

@@ -172,13 +172,13 @@ export function ProfilePage() {
         <Stack spacing={4}>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
             <Box
-              position="relative"
               onClick={() => {
                 if (!avatarMutation.isPending && !profileMutation.isPending) {
                   fileInputRef.current?.click()
                 }
               }}
               sx={{
+                position: 'relative',
                 cursor: (avatarMutation.isPending || profileMutation.isPending) ? 'default' : 'pointer',
                 borderRadius: '50%',
                 overflow: 'hidden',
@@ -230,7 +230,7 @@ export function ProfilePage() {
               )}
             </Box>
             
-            <Stack spacing={0.5} justifyContent="center">
+            <Stack spacing={0.5} sx={{ justifyContent: 'center' }}>
               <Typography variant="h6" sx={{ lineHeight: 1.2 }}>{user?.username}</Typography>
               <Typography variant="body2" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
                 Role: {user?.role}

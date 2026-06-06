@@ -26,7 +26,7 @@ import {
   Tag,
   BrokenImage,
   InfoOutlined,
-  DeleteOutline,
+  DeleteOutlined,
   LocalOfferOutlined,
   FavoriteBorderOutlined,
   FavoriteOutlined,
@@ -313,13 +313,15 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
       fullScreen
       open={open}
       onClose={onClose}
-      TransitionComponent={Transition}
-      PaperProps={{
-        sx: {
-          bgcolor: alpha(theme.palette.background.default, 0.9),
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
-          overflow: 'hidden',
+      slots={{ transition: Transition }}
+      slotProps={{
+        paper: {
+          sx: {
+            bgcolor: alpha(theme.palette.background.default, 0.9),
+            backdropFilter: 'blur(10px)',
+            WebkitBackdropFilter: 'blur(10px)',
+            overflow: 'hidden',
+          },
         },
       }}
     >
@@ -447,7 +449,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
                 setShowDeleteDialog(true)
               }}
             >
-              <DeleteOutline />
+              <DeleteOutlined />
             </IconButton>
           </Tooltip>
           
@@ -540,7 +542,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
             <br />
             The image and all associated data will be permanently deleted.
           </Typography>
-          <Stack direction="row" spacing={1} justifyContent="flex-end">
+          <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
             <Button onClick={() => setShowDeleteDialog(false)} sx={{ color: 'text.primary' }}>
               Cancel
             </Button>

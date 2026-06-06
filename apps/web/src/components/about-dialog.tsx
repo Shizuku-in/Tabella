@@ -77,8 +77,8 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
         About
       </DialogTitle>
       <DialogContent>
-        <Stack spacing={3} alignItems="center" sx={{ pt: 1, pb: 1 }}>
-          <Stack spacing={1} alignItems="center">
+        <Stack spacing={3} sx={{ pt: 1, pb: 1, alignItems: 'center' }}>
+          <Stack spacing={1} sx={{ alignItems: 'center' }}>
             <Typography
               variant="h4"
               sx={{
@@ -90,7 +90,7 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
             >
               Tabella
             </Typography>
-            <Typography variant="body2" color="text.secondary" textAlign="center">
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
               A high-performance, self-hosted gallery.
             </Typography>
           </Stack>
@@ -99,17 +99,17 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
             <Typography variant="overline" color="text.disabled" sx={{ display: 'block', mb: 1.5, letterSpacing: 1.5, lineHeight: 1 }}>
               TECH STACK
             </Typography>
-            <Stack spacing={1.5} alignItems="center">
-              <Stack direction="row" justifyContent="center" gap={3}>
+            <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
+              <Stack direction="row" sx={{ gap: 3, justifyContent: 'center' }}>
                 {BACKEND_STACK.map(renderTechItem)}
               </Stack>
-              <Stack direction="row" justifyContent="center" gap={2.5}>
+              <Stack direction="row" sx={{ gap: 2.5, justifyContent: 'center' }}>
                 {FRONTEND_STACK.map(renderTechItem)}
               </Stack>
             </Stack>
           </Box>
 
-          <Stack spacing={1} alignItems="center" sx={{ mt: 2 }}>
+          <Stack spacing={1} sx={{ mt: 2, alignItems: 'center' }}>
             <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
               Version: {pkg.version}
             </Typography>
