@@ -13,6 +13,7 @@ async fn healthz(State(state): State<AppState>) -> Json<HealthResponse> {
     Json(HealthResponse {
         status: "ok",
         service: "tabella-api",
+        version: env!("CARGO_PKG_VERSION"),
         max_download_images: settings.max_download_images,
         download_retention_hours: settings.download_retention_hours,
     })
