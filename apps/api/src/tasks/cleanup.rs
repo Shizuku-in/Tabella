@@ -50,5 +50,26 @@ pub(crate) async fn run_cleanup_worker(pool: PgPool, media_root: PathBuf) {
                 error!(%e, "Failed to fetch expired download jobs");
             }
         }
+
+        // Cleanup orphaned temp_extract directories older than 24 hours
+        let temp_extract_dir = media_root.join("temp_extract");
+        if temp_extract_dir.exists()
+            && let Ok(mut entries) = tokio::fs::read_dir(&temp_extract_dir).await
+        {
+            while let Ok(Some(entry)) = entries.next_entry().await {
+                if let Ok(metadata) = entry.metadata().await
+                    && let Ok(modified) = metadata.modified()
+                    && let Ok(elapsed) = modified.elapsed()
+                    && elapsed > std::time::Duration::from_secs(24 * 3600)
+                {
+                    let path = entry.path();
+                    if let Err(e) = tokio::fs::remove_dir_all(&path).await {
+                        error!(?path, %e, "Failed to delete orphaned temp_extract directory");
+                    } else {
+                        info!(?path, "Deleted orphaned temp_extract directory");
+                    }
+                }
+            }
+        }
     }
 }

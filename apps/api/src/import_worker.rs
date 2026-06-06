@@ -134,6 +134,16 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
         data: serde_json::json!({ "id": job.id }),
     });
 
+    // 4. Cleanup temporary extraction directory
+    let temp_extract_dir = state.config.media_root.join("temp_extract").join(job.id.to_string());
+    if temp_extract_dir.exists() {
+        if let Err(e) = std::fs::remove_dir_all(&temp_extract_dir) {
+            tracing::error!("Failed to clean up temp_extract directory for job {}: {:?}", job.id, e);
+        } else {
+            tracing::info!("Cleaned up temp_extract directory for job {}", job.id);
+        }
+    }
+
     Ok(true)
 }
 
