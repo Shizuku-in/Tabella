@@ -6,7 +6,7 @@ use axum::{
 };
 use axum_extra::extract::CookieJar;
 use serde_json::json;
-use tokio::io::AsyncWriteExt;
+
 
 use crate::{
     AppState,
@@ -197,30 +197,29 @@ async fn upload_avatar(
         .map_err(api_error_from_multipart)?
     {
         if field.name() == Some("file") {
-            let content_type = field.content_type().unwrap_or("image/jpeg").to_string();
-            let ext = if content_type.contains("png") {
-                "png"
-            } else if content_type.contains("gif") {
-                "gif"
-            } else {
-                "jpg"
+            let mut bytes = Vec::new();
+            while let Some(chunk) = field.chunk().await.map_err(api_error_from_multipart)? {
+                bytes.extend_from_slice(&chunk);
+            }
+
+            let format = image::guess_format(&bytes).map_err(|_| {
+                ApiError::bad_request(
+                    crate::api::error_codes::INVALID_MULTIPART,
+                    "Uploaded file is not a valid image",
+                )
+            })?;
+
+            let ext = match format {
+                image::ImageFormat::Png => "png",
+                image::ImageFormat::Gif => "gif",
+                image::ImageFormat::WebP => "webp",
+                _ => "jpg",
             };
 
             let file_name = format!("{}.{}", user.id, ext);
             let file_path = avatars_dir.join(&file_name);
 
-            let mut output = tokio::fs::File::create(&file_path)
-                .await
-                .map_err(|e| ApiError::internal(e.into()))?;
-
-            while let Some(chunk) = field.chunk().await.map_err(api_error_from_multipart)? {
-                output
-                    .write_all(&chunk)
-                    .await
-                    .map_err(|e| ApiError::internal(e.into()))?;
-            }
-            output
-                .flush()
+            tokio::fs::write(&file_path, bytes)
                 .await
                 .map_err(|e| ApiError::internal(e.into()))?;
 
