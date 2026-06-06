@@ -37,7 +37,7 @@ async fn login(
     Json(request): Json<LoginRequest>,
 ) -> Result<(CookieJar, Json<AuthUserResponse>), ApiError> {
     let username = request.username.trim();
-    let password = request.password.trim();
+    let password = &request.password;
 
     if username.is_empty() || password.is_empty() {
         return Err(ApiError::bad_request(

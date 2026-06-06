@@ -71,11 +71,11 @@ async fn update_profile(
     let current_password = payload
         .current_password
         .clone()
-        .filter(|value| !value.trim().is_empty());
+        .filter(|value| !value.is_empty());
     let new_password = payload
         .new_password
         .clone()
-        .filter(|value| !value.trim().is_empty());
+        .filter(|value| !value.is_empty());
 
     if current_password.is_some() && new_password.is_none() {
         return Err(ApiError::bad_request(
