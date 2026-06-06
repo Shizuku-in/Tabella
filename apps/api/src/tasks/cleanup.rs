@@ -71,5 +71,26 @@ pub(crate) async fn run_cleanup_worker(pool: PgPool, temp_root: PathBuf) {
                 }
             }
         }
+
+        // Cleanup orphaned uploads directories older than 24 hours
+        let uploads_dir = temp_root.join("uploads");
+        if uploads_dir.exists()
+            && let Ok(mut entries) = tokio::fs::read_dir(&uploads_dir).await
+        {
+            while let Ok(Some(entry)) = entries.next_entry().await {
+                if let Ok(metadata) = entry.metadata().await
+                    && let Ok(modified) = metadata.modified()
+                    && let Ok(elapsed) = modified.elapsed()
+                    && elapsed > std::time::Duration::from_secs(24 * 3600)
+                {
+                    let path = entry.path();
+                    if let Err(e) = tokio::fs::remove_dir_all(&path).await {
+                        error!(?path, %e, "Failed to delete orphaned uploads directory");
+                    } else {
+                        info!(?path, "Deleted orphaned uploads directory");
+                    }
+                }
+            }
+        }
     }
 }

@@ -152,6 +152,21 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
         }
     }
 
+    // 5. Cleanup source upload directory if it is under temp_root/uploads
+    let uploads_path = std::path::Path::new(&job.source_archive_path);
+    // Safety check to ensure it's actually within temp_root/uploads to prevent arbitrary deletion
+    if uploads_path.starts_with(state.config.temp_root.join("uploads")) && uploads_path.exists() {
+        if let Err(e) = std::fs::remove_dir_all(uploads_path) {
+            tracing::error!(
+                "Failed to clean up uploads directory for job {}: {:?}",
+                job.id,
+                e
+            );
+        } else {
+            tracing::info!("Cleaned up uploads directory for job {}", job.id);
+        }
+    }
+
     Ok(true)
 }
 
