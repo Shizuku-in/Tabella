@@ -14,6 +14,7 @@ import {
   PlaylistAdd,
   AdminPanelSettingsOutlined,
   LogoutOutlined,
+  InfoOutlined,
 } from '@mui/icons-material'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
@@ -21,6 +22,7 @@ import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { useShallow } from 'zustand/react/shallow'
 import { useAuth } from '../auth/auth-provider.tsx'
 import type { GallerySort, LayoutMode, RatingFilter } from '../types.ts'
+import { AboutDialog } from './about-dialog.tsx'
 
 const sortOptions: Array<{ value: GallerySort; label: string }> = [
   { value: 'newest', label: 'Newest' },
@@ -205,6 +207,7 @@ export function SelectMultipleControl() {
 
 export function UserControl() {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
+  const [aboutOpen, setAboutOpen] = useState(false)
   const { user, logout } = useAuth()
   const location = useLocation()
 
@@ -305,11 +308,18 @@ export function UserControl() {
           </MenuItem>
         )}
 
+        <MenuItem onClick={() => { setAnchorEl(null); setAboutOpen(true); }}>
+          <InfoOutlined fontSize="small" sx={{ mr: 1 }} />
+          About
+        </MenuItem>
+
         <MenuItem onClick={handleLogout}>
           <LogoutOutlined fontSize="small" sx={{ mr: 1 }} />
           Sign out
         </MenuItem>
       </Menu>
+
+      <AboutDialog open={aboutOpen} onClose={() => setAboutOpen(false)} />
     </>
   )
 }
