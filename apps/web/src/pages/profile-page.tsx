@@ -232,7 +232,7 @@ export function ProfilePage() {
             
             <Stack spacing={0.5} sx={{ justifyContent: 'center' }}>
               <Typography variant="h6" sx={{ lineHeight: 1.2 }}>{user?.username}</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ textTransform: 'capitalize' }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', textTransform: 'capitalize' }}>
                 Role: {user?.role}
               </Typography>
               <input

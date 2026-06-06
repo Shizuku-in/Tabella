@@ -59,21 +59,21 @@ export function GalleryHeader({ itemCount, isInitialLoading, isFetchingNextPage 
         minHeight: 24,
       }}
     >
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" sx={{ color: 'text.secondary' }}>
         {isInitialLoading ? 'Loading gallery...' : `${itemCount} results`}
         {isFetchingNextPage ? ' · Loading more' : ''}
       </Typography>
       <Typography
-        variant="caption"
-        color="text.secondary"
-        sx={{
-          display: 'block',
-          maxWidth: '100%',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        }}
-      >
+ variant="caption"
+ 
+ sx={{ color: 'text.secondary', 
+ display: 'block',
+ maxWidth: '100%',
+ whiteSpace: 'nowrap',
+ overflow: 'hidden',
+ textOverflow: 'ellipsis',
+ }}
+>
         {activeFilterLabels.join(' · ')}
       </Typography>
     </Stack>

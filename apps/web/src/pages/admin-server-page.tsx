@@ -293,7 +293,7 @@ export function AdminServerPage() {
                   label={
                     <Stack>
                       <Typography>Secure Cookies</Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                         Only send cookies over HTTPS. Recommended for production.
                       </Typography>
                     </Stack>

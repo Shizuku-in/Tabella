@@ -37,15 +37,15 @@ const CustomPopper = function (props: PopperProps) {
 function MetaRow({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary">{label}</Typography>
+      <Typography variant="caption" sx={{ color: 'text.secondary' }}>{label}</Typography>
       <Typography
-        variant="body2"
-        sx={{
-          color: 'text.primary',
-          wordBreak: 'break-all',
-          ...(mono ? { fontFamily: 'monospace', fontSize: '0.7rem' } : {}),
-        }}
-      >
+ variant="body2"
+ sx={{
+ color: 'text.primary',
+ wordBreak: 'break-all',
+ ...(mono ? { fontFamily: 'monospace', fontSize: '0.7rem' } : {}),
+ }}
+>
         {value}
       </Typography>
     </Box>
@@ -130,7 +130,7 @@ export function LightboxViewerInfo({
             {item.sourceUrl && <MetaRow label="Source" value={item.sourceUrl} />}
             {item.uploader && (
               <Box sx={{ mt: 1 }}>
-                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}>
                   Uploader
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -152,7 +152,7 @@ export function LightboxViewerInfo({
           <Divider sx={{ borderColor: 'divider', mb: 2 }} />
 
           {/* Rating */}
-          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+          <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1 }}>
             Rating
           </Typography>
           <FormControl fullWidth size="small" sx={{ mb: 3 }}>
@@ -187,7 +187,7 @@ export function LightboxViewerInfo({
           <Divider sx={{ borderColor: 'divider', mb: 2 }} />
 
           {/* Tags */}
-          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+          <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1 }}>
             Tags
           </Typography>
 

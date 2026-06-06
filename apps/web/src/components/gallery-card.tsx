@@ -167,25 +167,25 @@ export function GalleryCard({
           <Stack spacing={0.25} sx={{ minWidth: 0 }}>
             {hoverInfo.name && (
               <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: 700,
-                  textShadow: '0 1px 6px rgba(0,0,0,0.45)',
-                }}
-                noWrap
-              >
+ variant="body2"
+ sx={{
+ fontWeight: 700,
+ textShadow: '0 1px 6px rgba(0,0,0,0.45)',
+ }}
+ noWrap
+>
                 {item.filename}
               </Typography>
             )}
             {(hoverInfo.resolution || hoverInfo.tags) && (
               <Typography
-                variant="caption"
-                sx={{
-                  color: 'rgba(255,255,255,0.74)',
-                  textShadow: '0 1px 4px rgba(0,0,0,0.3)',
-                }}
-                noWrap
-              >
+ variant="caption"
+ sx={{
+ color: 'rgba(255,255,255,0.74)',
+ textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+ }}
+ noWrap
+>
                 {[
                   hoverInfo.resolution ? `${item.width} × ${item.height}` : null,
                   hoverInfo.tags ? item.tags.slice(0, 2).join(' ') : null,

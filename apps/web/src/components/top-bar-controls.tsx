@@ -256,7 +256,7 @@ export function UserControl() {
             <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
               {user?.username ?? 'Guest'}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {userRoleDisplay}
             </Typography>
           </Stack>

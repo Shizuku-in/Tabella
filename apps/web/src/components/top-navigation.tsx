@@ -121,84 +121,84 @@ export function TopNavigation({
           sx={{ minWidth: 0, flex: 1, overflow: 'hidden', alignItems: 'center' }}
         >
           <Typography
-            component={RouterLink}
-            to="/"
-            variant="h5"
-            sx={{
-              flexShrink: 0,
-              color: 'text.primary',
-              fontFamily: '"Google Sans Code", monospace',
-              fontStyle: 'italic',
-              fontWeight: 700,
-              textDecoration: 'none',
-              mr: 0.75,
-              fontSize: { xs: '1.08rem', md: '1.18rem' },
-              lineHeight: 1,
-            }}
-          >
+ component={RouterLink}
+ to="/"
+ variant="h5"
+ sx={{
+ flexShrink: 0,
+ color: 'text.primary',
+ fontFamily: '"Google Sans Code", monospace',
+ fontStyle: 'italic',
+ fontWeight: 700,
+ textDecoration: 'none',
+ mr: 0.75,
+ fontSize: { xs: '1.08rem', md: '1.18rem' },
+ lineHeight: 1,
+ }}
+>
             Tabella
           </Typography>
 
           {isAdminImportsRoute && (
             <Typography
-              sx={{
-                color: 'text.secondary',
-                fontFamily: '"Google Sans Code", monospace',
-                fontWeight: 500,
-                fontSize: '0.95rem',
-                ml: 0.5,
-                mr: 1,
-                fontStyle: 'italic',
-              }}
-            >
+ sx={{
+ color: 'text.secondary',
+ fontFamily: '"Google Sans Code", monospace',
+ fontWeight: 500,
+ fontSize: '0.95rem',
+ ml: 0.5,
+ mr: 1,
+ fontStyle: 'italic',
+ }}
+>
               /Imports
             </Typography>
           )}
 
           {isAdminUsersRoute && (
             <Typography
-              sx={{
-                color: 'text.secondary',
-                fontFamily: '"Google Sans Code", monospace',
-                fontWeight: 500,
-                fontSize: '0.95rem',
-                ml: 0.5,
-                mr: 1,
-                fontStyle: 'italic',
-              }}
-            >
+ sx={{
+ color: 'text.secondary',
+ fontFamily: '"Google Sans Code", monospace',
+ fontWeight: 500,
+ fontSize: '0.95rem',
+ ml: 0.5,
+ mr: 1,
+ fontStyle: 'italic',
+ }}
+>
               /Users
             </Typography>
           )}
 
           {isAdminServerRoute && (
             <Typography
-              sx={{
-                color: 'text.secondary',
-                fontFamily: '"Google Sans Code", monospace',
-                fontWeight: 500,
-                fontSize: '0.95rem',
-                ml: 0.5,
-                mr: 1,
-                fontStyle: 'italic',
-              }}
-            >
+ sx={{
+ color: 'text.secondary',
+ fontFamily: '"Google Sans Code", monospace',
+ fontWeight: 500,
+ fontSize: '0.95rem',
+ ml: 0.5,
+ mr: 1,
+ fontStyle: 'italic',
+ }}
+>
               /Server
             </Typography>
           )}
 
           {isProfileRoute && (
             <Typography
-              sx={{
-                color: 'text.secondary',
-                fontFamily: '"Google Sans Code", monospace',
-                fontWeight: 500,
-                fontSize: '0.95rem',
-                ml: 0.5,
-                mr: 1,
-                fontStyle: 'italic',
-              }}
-            >
+ sx={{
+ color: 'text.secondary',
+ fontFamily: '"Google Sans Code", monospace',
+ fontWeight: 500,
+ fontSize: '0.95rem',
+ ml: 0.5,
+ mr: 1,
+ fontStyle: 'italic',
+ }}
+>
               /Profile
             </Typography>
           )}

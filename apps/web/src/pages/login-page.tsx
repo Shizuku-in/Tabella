@@ -95,10 +95,10 @@ export function LoginPage() {
               <Typography variant="h5" sx={{ fontWeight: 700 }}>
                 Sign in
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                 Private access for your Tabella gallery.
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 After login you will return to {targetLabel}.
               </Typography>
             </Stack>

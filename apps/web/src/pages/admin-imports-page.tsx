@@ -236,7 +236,7 @@ export function AdminImportsPage() {
                         <Typography variant="body2" sx={{ color: 'info.main', fontWeight: 500 }}>
                           Uploading ({job.progress}%)
                         </Typography>
-                        <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                        <Typography variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}>
                           {job.sourceType === 'package' ? 'Archive file' : `${job.totalItems} files`}
                         </Typography>
                       </Stack>
@@ -300,7 +300,7 @@ export function AdminImportsPage() {
                             {label}
                           </Typography>
                           {!hasStructuredError && job.totalItems > 0 && (
-                            <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                            <Typography variant="caption" sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}>
                               {job.status === 'extracting' && job.sourceType === 'package' ? (
                                 `Extracted ${job.processedItems} / ${job.totalItems}`
                               ) : (
@@ -336,7 +336,7 @@ export function AdminImportsPage() {
       <Dialog open={serverDialogOpen} onClose={() => setServerDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Server Import</DialogTitle>
         <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
             Scan a directory directly on the server's filesystem.
           </Typography>
           <TextField 

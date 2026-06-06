@@ -16,7 +16,7 @@ export function FullscreenState({ title, description }: FullscreenStateProps) {
         {title}
       </Typography>
       {description ? (
-        <Typography color="text.secondary">{description}</Typography>
+        <Typography sx={{ color: 'text.secondary' }}>{description}</Typography>
       ) : null}
     </Stack>
   )

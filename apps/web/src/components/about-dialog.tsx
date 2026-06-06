@@ -41,17 +41,15 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
   const isDark = theme.palette.mode === 'dark'
 
   const renderTechItem = (tech: TechItem) => (
-    <Link
+    <Box
       key={tech.name}
-      href={tech.url}
-      target="_blank"
-      rel="noopener"
-      underline="none"
+      onClick={() => window.open(tech.url, '_blank', 'noopener')}
       sx={{
         display: 'flex',
         alignItems: 'center',
         gap: 0.75,
         opacity: 0.85,
+        cursor: 'pointer',
         transition: 'opacity 0.2s',
         '&:hover': { opacity: 1 },
       }}
@@ -65,10 +63,10 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
           filter: tech.name === 'Rust' && isDark ? 'invert(1)' : 'none',
         }}
       />
-      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
+      <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
         {tech.name}
       </Typography>
-    </Link>
+    </Box>
   )
 
   return (
@@ -80,23 +78,23 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
         <Stack spacing={3} sx={{ pt: 1, pb: 1, alignItems: 'center' }}>
           <Stack spacing={1} sx={{ alignItems: 'center' }}>
             <Typography
-              variant="h4"
-              sx={{
-                fontFamily: '"Google Sans Code", monospace',
-                fontStyle: 'italic',
-                fontWeight: 700,
-                color: 'primary.main',
-              }}
-            >
+ variant="h4"
+ sx={{
+ fontFamily: '"Google Sans Code", monospace',
+ fontStyle: 'italic',
+ fontWeight: 700,
+ color: 'primary.main',
+ }}
+>
               Tabella
             </Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
               A high-performance, self-hosted gallery.
             </Typography>
           </Stack>
 
           <Box sx={{ width: '100%', textAlign: 'center', mt: 1 }}>
-            <Typography variant="overline" color="text.disabled" sx={{ display: 'block', mb: 1.5, letterSpacing: 1.5, lineHeight: 1 }}>
+            <Typography variant="overline" sx={{ color: 'text.disabled', display: 'block', mb: 1.5, letterSpacing: 1.5, lineHeight: 1 }}>
               TECH STACK
             </Typography>
             <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
@@ -110,7 +108,7 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
           </Box>
 
           <Stack spacing={1} sx={{ mt: 2, alignItems: 'center' }}>
-            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
               Version: {pkg.version}
             </Typography>
             <Link 

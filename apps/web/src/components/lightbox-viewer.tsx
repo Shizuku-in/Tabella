@@ -481,7 +481,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
         }}>
           <Stack>
             <Typography variant="body1" sx={{ fontWeight: 600 }}>Thumbnail</Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {thumbWidth}×{thumbHeight} [{formatSizeStr(fileSizes.thumb)}] WEBP
             </Typography>
           </Stack>
@@ -493,7 +493,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
         }}>
           <Stack>
             <Typography variant="body1" sx={{ fontWeight: 600 }}>Sample</Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {item.width}×{item.height} [{formatSizeStr(fileSizes.sample)}] WEBP
             </Typography>
           </Stack>
@@ -502,7 +502,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
         <MenuItem onClick={() => triggerDownload(item.originalSrc || item.sampleSrc || item.thumbnailSrc, item.filename)}>
           <Stack>
             <Typography variant="body1" sx={{ fontWeight: 600 }}>Original</Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {item.width}×{item.height} [{formatSizeStr(fileSizes.original)}] {getExt(item.filename)}
             </Typography>
           </Stack>
@@ -537,7 +537,7 @@ export function LightboxViewer({ open, onClose, items, initialIndex, onIndexChan
       >
         <Box sx={{ p: 3 }}>
           <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>Delete Image</Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
             This action cannot be undone.
             <br />
             The image and all associated data will be permanently deleted.
