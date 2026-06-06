@@ -15,38 +15,50 @@ export function ReloadPrompt() {
     },
   })
 
-  const close = () => {
-    setOfflineReady(false)
-    setNeedRefresh(false)
-  }
-
   return (
-    <Snackbar
-      open={offlineReady || needRefresh}
-      anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-      sx={{ mb: 2, ml: 2 }}
-    >
-      <Alert
-        severity="info"
-        sx={{ width: '100%' }}
-        action={
-          <>
-            {needRefresh && (
+    <>
+      <Snackbar
+        open={offlineReady}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        sx={{ mb: 2, ml: 2 }}
+      >
+        <Alert
+          severity="info"
+          sx={{ width: '100%' }}
+          action={
+            <Button color="inherit" size="small" onClick={() => setOfflineReady(false)}>
+              Close
+            </Button>
+          }
+        >
+          <AlertTitle>Ready for offline</AlertTitle>
+          App is ready to work offline.
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={needRefresh}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+        sx={{ mb: 2, ml: 2 }}
+      >
+        <Alert
+          severity="info"
+          sx={{ width: '100%' }}
+          action={
+            <>
               <Button color="inherit" size="small" onClick={() => updateServiceWorker(true)}>
                 Reload
               </Button>
-            )}
-            <Button color="inherit" size="small" onClick={() => close()}>
-              Close
-            </Button>
-          </>
-        }
-      >
-        <AlertTitle>{offlineReady ? 'Ready for offline' : 'Update available'}</AlertTitle>
-        {offlineReady
-          ? 'App is ready to work offline.'
-          : 'New content is available, click on reload button to update.'}
-      </Alert>
-    </Snackbar>
+              <Button color="inherit" size="small" onClick={() => setNeedRefresh(false)}>
+                Close
+              </Button>
+            </>
+          }
+        >
+          <AlertTitle>Update available</AlertTitle>
+          New content is available, click on reload button to update.
+        </Alert>
+      </Snackbar>
+    </>
   )
 }
