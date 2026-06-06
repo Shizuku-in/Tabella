@@ -258,9 +258,9 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
                 const uniqueTags = Array.from(new Set(newValue as string[]))
                 setLocalIncludeTags(uniqueTags)
               }}
-              renderTags={(value, getTagProps) =>
+              renderValue={(value, getItemProps) =>
                 value.map((option, index) => {
-                  const { key, ...chipProps } = getTagProps({ index })
+                  const { key, ...chipProps } = getItemProps({ index })
                   return (
                     <Chip
                       {...chipProps}
@@ -302,9 +302,9 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
                 const uniqueTags = Array.from(new Set(newValue as string[]))
                 setLocalExcludeTags(uniqueTags)
               }}
-              renderTags={(value, getTagProps) =>
+              renderValue={(value, getItemProps) =>
                 value.map((option, index) => {
-                  const { key, ...chipProps } = getTagProps({ index })
+                  const { key, ...chipProps } = getItemProps({ index })
                   return (
                     <Chip
                       {...chipProps}
@@ -331,7 +331,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
           </Box>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <Box flex={1} minWidth={0}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Uploaded After
               </Typography>
@@ -352,7 +352,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
                 }}
               />
             </Box>
-            <Box flex={1} minWidth={0}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Uploaded Before
               </Typography>
@@ -376,7 +376,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
           </Stack>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <Box flex={1} minWidth={0}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Min Width (px)
               </Typography>
@@ -389,11 +389,11 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
                 onChange={(e) => handleNumericFieldChange('minWidth', setLocalMinWidth, e.target.value, 'integer')}
                 error={Boolean(errors.minWidth)}
                 helperText={errors.minWidth}
-                inputProps={{ inputMode: 'numeric', pattern: '\\d*' }}
+                slotProps={{ htmlInput: { inputMode: 'numeric', pattern: '\\d*' } }}
                 sx={hideSpinButton}
               />
             </Box>
-            <Box flex={1} minWidth={0}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Min Height (px)
               </Typography>
@@ -406,14 +406,14 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
                 onChange={(e) => handleNumericFieldChange('minHeight', setLocalMinHeight, e.target.value, 'integer')}
                 error={Boolean(errors.minHeight)}
                 helperText={errors.minHeight}
-                inputProps={{ inputMode: 'numeric', pattern: '\\d*' }}
+                slotProps={{ htmlInput: { inputMode: 'numeric', pattern: '\\d*' } }}
                 sx={hideSpinButton}
               />
             </Box>
           </Stack>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <Box flex={1} minWidth={0}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Min Aspect Ratio (W/H)
               </Typography>
@@ -426,11 +426,11 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
                 onChange={(e) => handleNumericFieldChange('aspectRatioMin', setLocalArMin, e.target.value, 'decimal')}
                 error={Boolean(errors.aspectRatioMin)}
                 helperText={errors.aspectRatioMin}
-                inputProps={{ inputMode: 'decimal', pattern: '\\d*\\.?\\d*' }}
+                slotProps={{ htmlInput: { inputMode: 'decimal', pattern: '\\d*\\.?\\d*' } }}
                 sx={hideSpinButton}
               />
             </Box>
-            <Box flex={1} minWidth={0}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Max Aspect Ratio (W/H)
               </Typography>
@@ -443,7 +443,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
                 onChange={(e) => handleNumericFieldChange('aspectRatioMax', setLocalArMax, e.target.value, 'decimal')}
                 error={Boolean(errors.aspectRatioMax)}
                 helperText={errors.aspectRatioMax}
-                inputProps={{ inputMode: 'decimal', pattern: '\\d*\\.?\\d*' }}
+                slotProps={{ htmlInput: { inputMode: 'decimal', pattern: '\\d*\\.?\\d*' } }}
                 sx={hideSpinButton}
               />
             </Box>

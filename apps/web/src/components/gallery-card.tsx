@@ -104,9 +104,9 @@ export function GalleryCard({
       {hoverInfo.rating && (
         <Stack
           direction="row"
-          alignItems="flex-start"
-          justifyContent="space-between"
           sx={{
+            alignItems: 'flex-start',
+            justifyContent: 'space-between',
             position: 'absolute',
             insetInline: 0,
             top: 0,
@@ -193,7 +193,7 @@ export function GalleryCard({
               </Typography>
             )}
           </Stack>
-          <Stack direction="row" spacing={0.5} alignItems="center">
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
             {hoverInfo.download && (
               <IconButton
                 size="small"

@@ -143,7 +143,7 @@ export function AdminServerPage() {
     <Fragment>
       <form onSubmit={handleSave} noValidate>
         <Stack spacing={3} sx={{ p: { xs: 2, sm: 4 }, maxWidth: 800, mx: 'auto' }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography variant="h5" sx={{ fontWeight: 600 }}>
               Server Settings
             </Typography>

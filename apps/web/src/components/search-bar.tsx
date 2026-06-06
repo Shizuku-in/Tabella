@@ -85,7 +85,7 @@ export function SearchBar() {
       multiple
       freeSolo
       disableClearable
-      PopperComponent={CustomPopper}
+      slots={{ popper: CustomPopper }}
       options={tagSuggestions}
       filterOptions={(x) => x}
       value={searchTags}
@@ -97,9 +97,9 @@ export function SearchBar() {
       }}
       onBlur={isMobileView ? undefined : handleSearchBlur}
       size="small"
-      renderTags={(value, getTagProps) =>
+      renderValue={(value, getItemProps) =>
         value.map((option, index) => {
-          const { key, ...chipProps } = getTagProps({ index })
+          const { key, ...chipProps } = getItemProps({ index })
           return (
             <Chip
               {...chipProps}
@@ -197,20 +197,22 @@ export function SearchBar() {
           open={searchVisible}
           onClose={() => setSearchVisible(false)}
           sx={{ zIndex: (theme) => theme.zIndex.appBar + 100 }}
-          PaperProps={{
-            sx: {
-              bgcolor: 'background.paper',
-              backgroundImage: 'none',
-              px: 1,
-              py: 0,
-              height: 50,
-              borderBottom: '1px solid',
-              borderColor: 'divider',
-              justifyContent: 'center',
+          slotProps={{
+            paper: {
+              sx: {
+                bgcolor: 'background.paper',
+                backgroundImage: 'none',
+                px: 1,
+                py: 0,
+                height: 50,
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                justifyContent: 'center',
+              },
             },
           }}
         >
-          <Stack direction="row" alignItems="center" spacing={0.5} sx={{ height: '100%' }}>
+          <Stack direction="row" spacing={0.5} sx={{ height: '100%', alignItems: 'center' }}>
             <IconButton
               edge="start"
               color="default"

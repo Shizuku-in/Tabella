@@ -130,7 +130,7 @@ export function LightboxViewerInfo({
             {item.sourceUrl && <MetaRow label="Source" value={item.sourceUrl} />}
             {item.uploader && (
               <Box sx={{ mt: 1 }}>
-                <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 0.5 }}>
+                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
                   Uploader
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -141,7 +141,7 @@ export function LightboxViewerInfo({
                   >
                     {item.uploader.username.charAt(0).toUpperCase()}
                   </Avatar>
-                  <Typography variant="body2" color="text.primary" fontWeight={500}>
+                  <Typography variant="body2" color="text.primary" sx={{ fontWeight: 500 }}>
                     {item.uploader.username}
                   </Typography>
                 </Box>
@@ -167,11 +167,13 @@ export function LightboxViewerInfo({
                 '& .MuiSvgIcon-root': { color: 'text.primary' },
               }}
               MenuProps={{
-                PaperProps: {
-                  sx: {
-                    bgcolor: alpha(theme.palette.background.paper, 0.95),
-                    backdropFilter: 'blur(10px)',
-                    color: 'text.primary',
+                slotProps: {
+                  paper: {
+                    sx: {
+                      bgcolor: alpha(theme.palette.background.paper, 0.95),
+                      backdropFilter: 'blur(10px)',
+                      color: 'text.primary',
+                    },
                   },
                 },
               }}
@@ -192,7 +194,7 @@ export function LightboxViewerInfo({
           <Autocomplete
             multiple
             freeSolo
-            PopperComponent={CustomPopper}
+            slots={{ popper: CustomPopper }}
             options={tagSuggestions}
             filterOptions={(x) => x}
             value={editTags}
@@ -203,9 +205,9 @@ export function LightboxViewerInfo({
               setEditTags(uniqueTags)
               setHasChanges(true)
             }}
-            renderTags={(value, getTagProps) =>
+            renderValue={(value, getItemProps) =>
               value.map((option, index) => {
-                const { key, ...chipProps } = getTagProps({ index })
+                const { key, ...chipProps } = getItemProps({ index })
                 return (
                   <Chip
                     {...chipProps}

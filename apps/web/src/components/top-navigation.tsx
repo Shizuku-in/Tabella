@@ -118,8 +118,7 @@ export function TopNavigation({
         <Stack
           direction="row"
           spacing={0.25}
-          alignItems="center"
-          sx={{ minWidth: 0, flex: 1, overflow: 'hidden' }}
+          sx={{ minWidth: 0, flex: 1, overflow: 'hidden', alignItems: 'center' }}
         >
           <Typography
             component={RouterLink}
@@ -229,7 +228,7 @@ export function TopNavigation({
           ) : null}
         </Stack>
 
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ flexShrink: 0 }}>
+        <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0, alignItems: 'center' }}>
           {isDownloading && (
             <Tooltip title="Downloading archive...">
               <IconButton color="primary" sx={{ p: 0.75, borderRadius: '50%' }}>

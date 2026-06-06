@@ -18,7 +18,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material'
-import { AddOutlined, DeleteOutline, EditOutlined } from '@mui/icons-material'
+import { AddOutlined, DeleteOutlined, EditOutlined } from '@mui/icons-material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getApiErrorMessage, request } from '../lib/api.ts'
 import type { CreateUserDto, UpdateUserDto, UserRow } from '../types.ts'
@@ -132,7 +132,7 @@ export function AdminUsersPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
+      <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" sx={{ display: 'none' }}>Users</Typography>
         <Button
           variant="outlined"
@@ -162,7 +162,7 @@ export function AdminUsersPage() {
                 <TableCell sx={{ textTransform: 'capitalize' }}>{u.role}</TableCell>
                 <TableCell>{new Date(u.created_at).toLocaleString()}</TableCell>
                 <TableCell align="right">
-                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
                     <IconButton
                       size="small"
                       color="primary"
@@ -176,7 +176,7 @@ export function AdminUsersPage() {
                       onClick={() => handleDeleteClick(u)}
                       disabled={u.id === currentUser?.id}
                     >
-                      <DeleteOutline fontSize="small" />
+                      <DeleteOutlined fontSize="small" />
                     </IconButton>
                   </Stack>
                 </TableCell>

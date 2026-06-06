@@ -121,7 +121,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           <AccordionDetails sx={{ pt: 0, pb: 2 }}>
             <Stack spacing={2} sx={{ px: 1 }}>
               {(['xs', 'sm', 'lg', 'xl'] as const).map((breakpoint) => (
-                <Stack key={breakpoint} direction="row" spacing={2} alignItems="center">
+                <Stack key={breakpoint} direction="row" spacing={2} sx={{ alignItems: 'center' }}>
                   <Typography variant="body2" sx={{ width: 24, fontWeight: 700 }}>
                     {breakpoint.toUpperCase()}
                   </Typography>
@@ -150,7 +150,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           <AccordionDetails sx={{ pt: 0, pb: 2 }}>
             <Stack spacing={2} sx={{ px: 1 }}>
               {(['xs', 'sm', 'lg', 'xl'] as const).map((breakpoint) => (
-                <Stack key={breakpoint} direction="row" spacing={2} alignItems="center">
+                <Stack key={breakpoint} direction="row" spacing={2} sx={{ alignItems: 'center' }}>
                   <Typography variant="body2" sx={{ width: 24, fontWeight: 700 }}>
                     {breakpoint.toUpperCase()}
                   </Typography>

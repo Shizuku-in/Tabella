@@ -168,7 +168,7 @@ export function AdminImportsPage() {
       <Stack
         direction={{ xs: 'column', md: 'row' }}
         spacing={2}
-        justifyContent="flex-start"
+        sx={{ justifyContent: 'flex-start' }}
       >
         <Stack direction="row" spacing={1}>
           <input 
@@ -229,10 +229,10 @@ export function AdminImportsPage() {
                 <TableCell>Uploading...</TableCell>
                 <TableCell>{new Date(job.createdAt).toLocaleString()}</TableCell>
                 <TableCell>
-                  <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%', maxWidth: 500 }}>
+                  <Stack direction="row" spacing={2} sx={{ width: '100%', maxWidth: 500, alignItems: 'center' }}>
                     <CircularProgress variant="determinate" value={job.progress} size={24} color="info" />
                     <Stack sx={{ flex: 1 }}>
-                      <Stack direction="row" justifyContent="space-between" flexWrap="wrap" columnGap={1} sx={{ mb: 0.5 }}>
+                      <Stack direction="row" sx={{ mb: 0.5, columnGap: 1, justifyContent: 'space-between', flexWrap: 'wrap' }}>
                         <Typography variant="body2" sx={{ color: 'info.main', fontWeight: 500 }}>
                           Uploading ({job.progress}%)
                         </Typography>
@@ -292,10 +292,10 @@ export function AdminImportsPage() {
                   <TableCell>{job.id.substring(0, 8)}</TableCell>
                   <TableCell>{new Date(job.createdAt).toLocaleString()}</TableCell>
                   <TableCell>
-                    <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%', maxWidth: 500 }}>
+                    <Stack direction="row" spacing={2} sx={{ width: '100%', maxWidth: 500, alignItems: 'center' }}>
                       {icon}
                       <Stack sx={{ flex: 1 }}>
-                        <Stack direction="row" justifyContent="space-between" flexWrap="wrap" columnGap={1} sx={{ mb: 0.5 }}>
+                        <Stack direction="row" sx={{ mb: 0.5, columnGap: 1, justifyContent: 'space-between', flexWrap: 'wrap' }}>
                           <Typography variant="body2" sx={{ color, textTransform: 'capitalize', fontWeight: 500 }}>
                             {label}
                           </Typography>
