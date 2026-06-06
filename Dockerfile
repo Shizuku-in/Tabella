@@ -1,5 +1,5 @@
 # Stage 1: Build the React frontend
-FROM node:20-slim AS frontend-builder
+FROM node:24.15.0-slim AS frontend-builder
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
@@ -13,7 +13,7 @@ RUN pnpm install --frozen-lockfile
 RUN pnpm --filter @tabella/web build
 
 # Stage 2: Build the Rust backend
-FROM rust:1.88-slim AS backend-builder
+FROM rust:1.96-slim AS backend-builder
 WORKDIR /app
 # Install system dependencies required for compilation
 RUN apt-get update && apt-get install -y pkg-config libssl-dev && rm -rf /var/lib/apt/lists/*
