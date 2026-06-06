@@ -10,7 +10,7 @@ use zip::write::{FileOptions, ZipWriter};
 pub(crate) struct ArchiveTask {
     pub job_id: Uuid,
     pub image_paths: Vec<(String, String)>, // (absolute_path, original_filename)
-    pub media_root: PathBuf,
+    pub download_root: PathBuf,
 }
 
 pub(crate) async fn process_archive_job(state: AppState, task: ArchiveTask) {
@@ -64,7 +64,7 @@ pub(crate) async fn process_archive_job(state: AppState, task: ArchiveTask) {
 
 async fn spawn_blocking_zip(task: ArchiveTask) -> Result<String> {
     tokio::task::spawn_blocking(move || {
-        let downloads_dir = task.media_root.join("downloads");
+        let downloads_dir = task.download_root.join("downloads");
         std::fs::create_dir_all(&downloads_dir).context("failed to create downloads directory")?;
 
         let zip_filename = format!("{}.zip", task.job_id);

@@ -1,4 +1,9 @@
 use anyhow::Context;
+use axum::{
+    extract::{Request, State},
+    middleware::Next,
+    response::Response,
+};
 use axum_extra::extract::CookieJar;
 
 use crate::{
@@ -54,4 +59,25 @@ pub(crate) async fn require_editor(
     }
 
     Ok(user)
+}
+
+pub(crate) async fn require_media_session(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    request: Request,
+    next: Next,
+) -> Result<Response, ApiError> {
+    let has_session = auth::check_session_from_jar(&state, &jar)
+        .await
+        .context("failed to check media session")
+        .map_err(ApiError::internal)?;
+
+    if !has_session {
+        return Err(ApiError::unauthorized(
+            crate::api::error_codes::AUTHENTICATION_REQUIRED,
+            "Authentication required.",
+        ));
+    }
+
+    Ok(next.run(request).await)
 }

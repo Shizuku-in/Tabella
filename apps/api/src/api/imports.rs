@@ -191,8 +191,8 @@ async fn upload_import_files(
     let batch_id = uuid::Uuid::new_v4();
     let temp_dir = state
         .config
-        .media_root
-        .join("temp")
+        .temp_root
+        .join("uploads")
         .join(batch_id.to_string());
     tokio::fs::create_dir_all(&temp_dir)
         .await

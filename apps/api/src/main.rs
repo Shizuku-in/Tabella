@@ -9,9 +9,10 @@ mod tags;
 mod tasks;
 
 use anyhow::Context;
-use axum::Router;
+use axum::{Router, http::StatusCode, middleware, routing::any};
 use config::Config;
 use sqlx::postgres::PgPoolOptions;
+use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
@@ -63,27 +64,48 @@ async fn main() -> anyhow::Result<()> {
     tokio::spawn(import_worker::start_worker(app_state.clone()));
     tokio::spawn(tasks::cleanup::run_cleanup_worker(
         pool.clone(),
-        config.media_root.clone(),
+        config.temp_root.clone(),
     ));
 
     let frontend_dir = std::env::var("TABELLA_FRONTEND_DIR").unwrap_or_else(|_| "dist".to_string());
     let frontend_path = std::path::Path::new(&frontend_dir);
 
+    let media_root = config.media_root.clone();
+    let media_router = Router::new()
+        .nest_service(
+            "/media/originals",
+            ServeDir::new(media_root.join("originals")),
+        )
+        .nest_service("/media/samples", ServeDir::new(media_root.join("samples")))
+        .nest_service(
+            "/media/thumbnails",
+            ServeDir::new(media_root.join("thumbnails")),
+        )
+        .nest_service("/media/avatars", ServeDir::new(media_root.join("avatars")))
+        .route_layer(middleware::from_fn_with_state(
+            app_state.clone(),
+            api::require_media_session,
+        ));
+
+    let private_static_blocklist = Router::new()
+        .route("/tmp", any(not_found))
+        .route("/tmp/{*path}", any(not_found))
+        .route("/media/temp", any(not_found))
+        .route("/media/temp/{*path}", any(not_found))
+        .route("/media/temp_extract", any(not_found))
+        .route("/media/temp_extract/{*path}", any(not_found))
+        .route("/media/downloads", any(not_found))
+        .route("/media/downloads/{*path}", any(not_found));
+
     let mut app = Router::new()
-        .nest_service(
-            "/media",
-            tower_http::services::ServeDir::new(&config.media_root),
-        )
-        .nest_service(
-            "/tmp",
-            tower_http::services::ServeDir::new(&config.temp_root),
-        )
+        .merge(media_router)
+        .merge(private_static_blocklist)
         .merge(api::router(app_state));
 
     if frontend_path.exists() {
         tracing::info!("serving frontend from {:?}", frontend_path);
         let index_path = frontend_path.join("index.html");
-        let serve_dir = tower_http::services::ServeDir::new(frontend_path)
+        let serve_dir = ServeDir::new(frontend_path)
             .not_found_service(tower_http::services::ServeFile::new(index_path));
         app = app.fallback_service(serve_dir);
     } else {
@@ -123,4 +145,8 @@ fn init_tracing() {
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
+}
+
+async fn not_found() -> StatusCode {
+    StatusCode::NOT_FOUND
 }

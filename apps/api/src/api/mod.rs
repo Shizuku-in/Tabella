@@ -15,6 +15,8 @@ use axum::Router;
 
 use crate::AppState;
 
+pub(crate) use guards::require_media_session;
+
 pub(crate) fn router(state: AppState) -> Router {
     Router::new()
         .merge(health::routes(state.clone()))

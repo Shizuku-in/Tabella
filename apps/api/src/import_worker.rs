@@ -135,10 +135,18 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
     });
 
     // 4. Cleanup temporary extraction directory
-    let temp_extract_dir = state.config.media_root.join("temp_extract").join(job.id.to_string());
+    let temp_extract_dir = state
+        .config
+        .temp_root
+        .join("temp_extract")
+        .join(job.id.to_string());
     if temp_extract_dir.exists() {
         if let Err(e) = std::fs::remove_dir_all(&temp_extract_dir) {
-            tracing::error!("Failed to clean up temp_extract directory for job {}: {:?}", job.id, e);
+            tracing::error!(
+                "Failed to clean up temp_extract directory for job {}: {:?}",
+                job.id,
+                e
+            );
         } else {
             tracing::info!("Cleaned up temp_extract directory for job {}", job.id);
         }
@@ -246,9 +254,9 @@ async fn run_import_job(
                 data: serde_json::json!({ "id": job_id }),
             });
 
-            // Create a temporary extraction directory inside media root
+            // Keep raw extracted files outside the authenticated media tree.
             let temp_extract_dir = config
-                .media_root
+                .temp_root
                 .join("temp_extract")
                 .join(job_id.to_string());
             std::fs::create_dir_all(&temp_extract_dir)?;
@@ -312,7 +320,7 @@ async fn run_import_job(
             });
 
             let temp_extract_dir = config
-                .media_root
+                .temp_root
                 .join("temp_extract")
                 .join(job_id.to_string());
             std::fs::create_dir_all(&temp_extract_dir)?;

@@ -154,6 +154,27 @@ pub(crate) async fn current_user_from_jar(
     }))
 }
 
+pub(crate) async fn check_session_from_jar(state: &AppState, jar: &CookieJar) -> Result<bool> {
+    let Some(session_id) = session_id_from_jar(jar, &state.config.session_cookie_name) else {
+        return Ok(false);
+    };
+
+    sqlx::query_scalar(
+        r#"
+        select exists (
+            select 1
+            from sessions
+            where id = $1
+              and expires_at > now()
+        )
+        "#,
+    )
+    .bind(session_id)
+    .fetch_one(&state.pool)
+    .await
+    .context("failed to check current session")
+}
+
 pub(crate) async fn destroy_session(pool: &PgPool, session_id: Uuid) -> Result<()> {
     sqlx::query("delete from sessions where id = $1")
         .bind(session_id)

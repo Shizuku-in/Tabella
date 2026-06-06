@@ -145,7 +145,7 @@ async fn create_download_job(
     let task = ArchiveTask {
         job_id,
         image_paths,
-        media_root: state.config.media_root.clone(),
+        download_root: state.config.temp_root.clone(),
     };
     tokio::spawn(process_archive_job(state.clone(), task));
 
@@ -200,43 +200,6 @@ fn derived_archive_filename(original_filename: &str, suffix: &str, stored_path: 
         .unwrap_or("bin");
 
     format!("{stem}{suffix}.{extension}")
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{DownloadImageRow, archive_filename, derived_archive_filename};
-    use crate::dto::DownloadQuality;
-
-    #[test]
-    fn derived_archive_filename_uses_original_stem_and_stored_extension() {
-        assert_eq!(
-            derived_archive_filename("cover.jpg", "_sample", "samples/hash.webp"),
-            "cover_sample.webp"
-        );
-    }
-
-    #[test]
-    fn archive_filename_keeps_original_name_for_original_quality() {
-        let row = DownloadImageRow {
-            original_path: String::from("originals/cover.jpg"),
-            preview_path: String::from("samples/hash.webp"),
-            thumbnail_path: String::from("thumbnails/hash.webp"),
-            original_filename: String::from("cover.jpg"),
-        };
-
-        assert_eq!(
-            archive_filename(&row, &DownloadQuality::Original),
-            "cover.jpg"
-        );
-        assert_eq!(
-            archive_filename(&row, &DownloadQuality::Sample),
-            "cover_sample.webp"
-        );
-        assert_eq!(
-            archive_filename(&row, &DownloadQuality::Thumbnail),
-            "cover_thumb.webp"
-        );
-    }
 }
 
 async fn get_download_job(
@@ -331,7 +294,7 @@ async fn download_job_file(
     let file_path: Option<String> = sqlx::Row::try_get(&record, "file_path").unwrap();
     let file_path =
         file_path.ok_or_else(|| ApiError::internal(anyhow::anyhow!("File path is missing")))?;
-    let abs_path = state.config.media_root.join(&file_path);
+    let abs_path = state.config.temp_root.join(&file_path);
 
     let file = tokio::fs::File::open(&abs_path).await.map_err(|e| {
         error!(%e, "Failed to open download zip file");
@@ -358,4 +321,41 @@ async fn download_job_file(
     );
 
     Ok(response)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{DownloadImageRow, archive_filename, derived_archive_filename};
+    use crate::dto::DownloadQuality;
+
+    #[test]
+    fn derived_archive_filename_uses_original_stem_and_stored_extension() {
+        assert_eq!(
+            derived_archive_filename("cover.jpg", "_sample", "samples/hash.webp"),
+            "cover_sample.webp"
+        );
+    }
+
+    #[test]
+    fn archive_filename_keeps_original_name_for_original_quality() {
+        let row = DownloadImageRow {
+            original_path: String::from("originals/cover.jpg"),
+            preview_path: String::from("samples/hash.webp"),
+            thumbnail_path: String::from("thumbnails/hash.webp"),
+            original_filename: String::from("cover.jpg"),
+        };
+
+        assert_eq!(
+            archive_filename(&row, &DownloadQuality::Original),
+            "cover.jpg"
+        );
+        assert_eq!(
+            archive_filename(&row, &DownloadQuality::Sample),
+            "cover_sample.webp"
+        );
+        assert_eq!(
+            archive_filename(&row, &DownloadQuality::Thumbnail),
+            "cover_thumb.webp"
+        );
+    }
 }
