@@ -7,7 +7,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon/favicon.ico', 'favicon/apple-touch-icon.png'],
+      includeAssets: ['favicon/*', 'icons/*'],
+      workbox: {
+        navigateFallbackDenylist: [/^\/api\//, /^\/media\//],
+      },
       manifest: {
         name: 'Tabella',
         short_name: 'Tabella',
