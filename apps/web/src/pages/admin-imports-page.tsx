@@ -46,9 +46,20 @@ interface LocalUploadJob {
   status: string
   sourceType: string
   progress: number
+  loadedBytes: number
+  totalBytes: number
   totalItems: number
   processedItems: number
   createdAt: string
+}
+
+function formatBytes(bytes: number, decimals = 2) {
+  if (!+bytes) return '0 Bytes'
+  const k = 1024
+  const dm = decimals < 0 ? 0 : decimals
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
 export function AdminImportsPage() {
@@ -133,6 +144,8 @@ export function AdminImportsPage() {
           status: 'uploading',
           sourceType,
           progress: 0,
+          loadedBytes: 0,
+          totalBytes: 0,
           totalItems: files.length,
           processedItems: 0,
           createdAt: new Date().toISOString(),
@@ -143,10 +156,15 @@ export function AdminImportsPage() {
         const result = await uploadWithProgress<{ id: string; status: string }>(
           `/api/admin/imports/upload?type=${sourceType}`,
           formData,
-          (percent: number) => {
+          (percent: number, loaded: number, total: number) => {
             setActiveUploads((prev) => ({
               ...prev,
-              [tempId]: { ...prev[tempId], progress: percent },
+              [tempId]: {
+                ...prev[tempId],
+                progress: percent,
+                loadedBytes: loaded,
+                totalBytes: total,
+              },
             }))
           },
         )
@@ -291,7 +309,7 @@ export function AdminImportsPage() {
                             sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}
                           >
                             {job.sourceType === 'package'
-                              ? t('admin.imports.archiveFile')
+                              ? `${job.totalBytes > 0 ? `${formatBytes(job.loadedBytes)} / ${formatBytes(job.totalBytes)}` : t('admin.imports.archiveFile')}`
                               : t('admin.imports.filesCount', { count: job.totalItems })}
                           </Typography>
                         </Stack>

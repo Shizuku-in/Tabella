@@ -171,7 +171,7 @@ export async function login(credentials: {
 export async function uploadWithProgress<T>(
   url: string,
   formData: FormData,
-  onProgress: (percent: number) => void,
+  onProgress: (percent: number, loaded: number, total: number) => void,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
@@ -179,7 +179,7 @@ export async function uploadWithProgress<T>(
     xhr.upload.addEventListener('progress', (event) => {
       if (event.lengthComputable) {
         const percent = Math.round((event.loaded / event.total) * 100)
-        onProgress(percent)
+        onProgress(percent, event.loaded, event.total)
       }
     })
 
