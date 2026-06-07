@@ -387,8 +387,17 @@ function validateProfileFields(
     errors.username = t('auth.profile.errors.usernameRequired')
   }
 
-  if (trimmedNewPassword && !trimmedCurrentPassword) {
-    errors.currentPassword = t('auth.profile.errors.currentRequired')
+  if (trimmedNewPassword) {
+    if (!trimmedCurrentPassword) {
+      errors.currentPassword = t('auth.profile.errors.currentRequired')
+    }
+    if (
+      trimmedNewPassword.length < 8 ||
+      !/[a-z]/.test(trimmedNewPassword) ||
+      !/[0-9]/.test(trimmedNewPassword)
+    ) {
+      errors.newPassword = t('auth.profile.errors.passwordWeak')
+    }
   }
 
   if (trimmedCurrentPassword && !trimmedNewPassword) {

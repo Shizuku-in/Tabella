@@ -221,13 +221,14 @@
       "success": "Profile updated successfully!",
       "fail": "Failed to update profile: {{message}}",
       "errors": {
+        "invalidUsername": "Invalid username.",
+        "invalidCurrent": "Current password is incorrect.",
+        "invalidNew": "Invalid new password.",
         "usernameRequired": "Username is required.",
-        "invalidUsername": "Invalid username",
         "currentRequired": "Current password is required to set a new password.",
-        "invalidCurrent": "Invalid current password",
-        "newRequired": "New password is required when current password is provided.",
-        "invalidNew": "Invalid new password",
-        "requestFailed": "Request failed."
+        "newRequired": "New password is required when providing a current password.",
+        "passwordWeak": "Password must be at least 8 characters and contain lowercase letters and numbers.",
+        "requestFailed": "Failed to update profile: {{message}}"
       }
     }
   },

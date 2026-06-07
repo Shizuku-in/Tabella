@@ -221,13 +221,14 @@
       "success": "个人资料已更新！",
       "fail": "更新失败: {{message}}",
       "errors": {
-        "usernameRequired": "用户名不能为空。",
         "invalidUsername": "无效的用户名",
-        "currentRequired": "设置新密码需要提供当前密码。",
-        "invalidCurrent": "当前密码错误",
-        "newRequired": "提供了当前密码时，必须填写新密码。",
+        "invalidCurrent": "当前密码不正确",
         "invalidNew": "无效的新密码",
-        "requestFailed": "请求失败。"
+        "usernameRequired": "用户名不能为空",
+        "currentRequired": "设置新密码需要提供当前密码",
+        "newRequired": "提供当前密码时必须设置新密码",
+        "passwordWeak": "密码必须至少8位，且包含小写字母和数字",
+        "requestFailed": "更新个人资料失败：{{message}}"
       }
     }
   },
