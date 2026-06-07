@@ -1,34 +1,10 @@
-import { Masonry } from '@mui/lab'
-import { Box } from '@mui/material'
+import { Box, useMediaQuery,useTheme } from '@mui/material'
+import { useRef } from 'react'
 
 import type { ColumnConfig } from '../gallery/gallery-preferences-store.ts'
 import type { GalleryItem, LayoutMode } from '../types.ts'
 import { GalleryCard } from './gallery-card.tsx'
-
-const galleryLayoutStyles: Record<LayoutMode, object> = {
-  grid: {
-    display: 'grid',
-    gridTemplateColumns: {
-      xs: 'repeat(2, minmax(0, 1fr))',
-      sm: 'repeat(3, minmax(0, 1fr))',
-      lg: 'repeat(4, minmax(0, 1fr))',
-      xl: 'repeat(5, minmax(0, 1fr))',
-    },
-    gap: 1,
-  },
-  masonry: {},
-  justified: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: 1,
-    alignItems: 'flex-start',
-    '&::after': {
-      content: '""',
-      flexGrow: 99999,
-      minWidth: '220px',
-    },
-  },
-}
+import { useGalleryVirtualizer } from './use-gallery-virtualizer.ts'
 
 export interface GalleryGridLayoutProps {
   items: GalleryItem[]
@@ -66,12 +42,49 @@ export function GalleryGridLayout({
   onImageClick,
   onToggleFavorite,
 }: GalleryGridLayoutProps) {
-  if (layoutMode === 'masonry') {
-    return (
-      <Masonry columns={masonryColumns} spacing={1.25}>
-        {items.map((item, index) => (
+  const theme = useTheme()
+  const isXl = useMediaQuery(theme.breakpoints.up('xl'))
+  const isLg = useMediaQuery(theme.breakpoints.up('lg'))
+  const isMd = useMediaQuery(theme.breakpoints.up('md'))
+  const isSm = useMediaQuery(theme.breakpoints.up('sm'))
+
+  const getColumns = (config: ColumnConfig) => {
+    if (isXl) return config.xl || config.lg || config.md || config.sm || config.xs || 1
+    if (isLg) return config.lg || config.md || config.sm || config.xs || 1
+    if (isMd) return config.md || config.sm || config.xs || 1
+    if (isSm) return config.sm || config.xs || 1
+    return config.xs || 1
+  }
+
+  const columns = layoutMode === 'grid' ? getColumns(gridColumns) : getColumns(masonryColumns)
+
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  const { totalHeight, visiblePositions } = useGalleryVirtualizer({
+    containerRef,
+    items,
+    layoutMode,
+    columns,
+    gap: 8,
+    overscan: 2000,
+  })
+
+  return (
+    <Box ref={containerRef} sx={{ position: 'relative', width: '100%', height: totalHeight }}>
+      {visiblePositions.map(({ x, y, width, height, item, index }) => (
+        <Box
+          key={item.id}
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width,
+            height,
+            transform: `translate3d(${x}px, ${y}px, 0)`,
+            willChange: 'transform',
+          }}
+        >
           <GalleryCard
-            key={item.id}
             item={item}
             layoutMode={layoutMode}
             showMobileDetails={showMobileDetails}
@@ -83,39 +96,7 @@ export function GalleryGridLayout({
             isSelected={selectedIds.has(item.id)}
             hoverDownloadQuality={hoverDownloadQuality}
           />
-        ))}
-      </Masonry>
-    )
-  }
-
-  return (
-    <Box
-      sx={{
-        ...galleryLayoutStyles[layoutMode],
-        ...(layoutMode === 'grid' && {
-          gridTemplateColumns: {
-            xs: `repeat(${gridColumns.xs}, minmax(0, 1fr))`,
-            sm: `repeat(${gridColumns.sm}, minmax(0, 1fr))`,
-            lg: `repeat(${gridColumns.lg}, minmax(0, 1fr))`,
-            xl: `repeat(${gridColumns.xl}, minmax(0, 1fr))`,
-          },
-        }),
-      }}
-    >
-      {items.map((item, index) => (
-        <GalleryCard
-          key={item.id}
-          item={item}
-          layoutMode={layoutMode}
-          showMobileDetails={showMobileDetails}
-          hoverInfo={hoverInfo}
-          isFavorite={favoriteOverrides[item.id] ?? item.favorite}
-          onToggleFavorite={() => onToggleFavorite(item.id)}
-          onClick={() => onImageClick(index)}
-          imageQuality={galleryImageQuality}
-          isSelected={selectedIds.has(item.id)}
-          hoverDownloadQuality={hoverDownloadQuality}
-        />
+        </Box>
       ))}
     </Box>
   )

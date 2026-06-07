@@ -41,7 +41,7 @@ export function GalleryCard({
   isSelected,
 }: GalleryCardProps) {
   const { t } = useTranslation()
-  const isJustified = layoutMode === 'justified'
+
   const isGrid = layoutMode === 'grid'
 
   return (
@@ -57,13 +57,6 @@ export function GalleryCard({
         borderRadius: 0.75,
         breakInside: layoutMode === 'masonry' ? 'avoid' : 'auto',
         bgcolor: 'rgba(17, 20, 29, 0.04)',
-        ...(isJustified
-          ? {
-              flexGrow: item.width / item.height,
-              flexBasis: `${Math.round((item.width / item.height) * 240)}px`,
-              width: 'auto',
-            }
-          : null),
       }}
     >
       {isSelected && (
