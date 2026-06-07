@@ -204,7 +204,7 @@
       "signIn": "登录",
       "signInFailed": "登录失败，请重试。",
       "signingIn": "登录中...",
-      "description": "访问您的专属 Tabella 画廊。",
+      "description": "访问 Tabella 画廊。",
       "returnTo": "登录后将返回 {{target}}。",
       "username": "用户名",
       "password": "密码"
