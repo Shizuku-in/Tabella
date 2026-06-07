@@ -47,7 +47,7 @@
     "topBar": {
       "sort": "排序",
       "layout": "布局切换",
-      "rating": "按评分筛选",
+      "rating": "按年龄评级筛选",
       "favorites": "仅看收藏",
       "selectMultiple": "多选模式",
       "search": "搜索框",
@@ -68,7 +68,7 @@
       "resolution": "分辨率",
       "tags": "标签",
       "favorite": "收藏按钮",
-      "rating": "评分",
+      "rating": "年龄评级",
       "download": "下载按钮"
     },
     "galleryQuality": "画廊图片质量",
@@ -88,7 +88,7 @@
     "loadingMore": " · 加载更多",
     "filters": {
       "search": "搜索: {{tags}}",
-      "rating": "评分: {{rating}}",
+      "rating": "年龄评级: {{rating}}",
       "sort": "排序: {{sort}}"
     },
     "sort": {
@@ -177,7 +177,7 @@
       "loadFailed": "无法加载图库",
       "refresh": "请刷新重试。",
       "noMatching": "没有匹配的图片",
-      "noMatchingDesc": "尝试清除搜索条件或放宽评分筛选。",
+      "noMatchingDesc": "尝试清除或放宽搜索条件和年龄评级筛选。",
       "end": "已加载完全部内容",
       "scrollMore": "滚动加载更多",
       "downloadFail": "启动下载失败：{{message}}",
