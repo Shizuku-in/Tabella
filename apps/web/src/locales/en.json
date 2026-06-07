@@ -192,6 +192,12 @@
     "viewSource": "View Source"
   },
   "auth": {
+    "guards": {
+      "checkingSession": "Checking session",
+      "restoringSession": "Restoring the current login state.",
+      "checkingAccess": "Checking access",
+      "verifyingPermissions": "Verifying account permissions."
+    },
     "login": {
       "checkingSession": "Checking session",
       "restoring": "Restoring the current login state.",
@@ -331,6 +337,53 @@
         "pathLabel": "Server Directory Path",
         "import": "Import"
       }
+    }
+  },
+  "api": {
+    "errors": {
+      "AUTHENTICATION_REQUIRED": "Authentication required.",
+      "ADMIN_REQUIRED": "Admin privileges required.",
+      "EDITOR_REQUIRED": "Editor or admin privileges required.",
+      "MISSING_CREDENTIALS": "Username and password are required.",
+      "INVALID_CREDENTIALS": "Invalid username or password.",
+      "INVALID_USERNAME": "Username cannot be empty.",
+      "DUPLICATE_USERNAME": "Username is already taken.",
+      "MISSING_NEW_PASSWORD": "New password is required when current password is provided.",
+      "MISSING_CURRENT_PASSWORD": "Current password is required to set a new password.",
+      "INVALID_PASSWORD": "Current password is incorrect.",
+      "NO_FILE_UPLOADED": "No file was provided.",
+      "INVALID_MULTIPART": "Uploaded data could not be processed.",
+      "PAYLOAD_TOO_LARGE": "Uploaded payload is too large.",
+      "INVALID_SETTINGS": "Server settings are invalid.",
+      "ROLE_CHANGE_NOT_ALLOWED": "You cannot change your own role.",
+      "SELF_DELETE_NOT_ALLOWED": "You cannot delete your own account.",
+      "USER_NOT_FOUND": "User not found.",
+      "IMAGE_NOT_FOUND": "Image not found.",
+      "IMPORT_JOB_NOT_FOUND": "Import job not found.",
+      "NO_IMPORTABLE_FILES": "No supported image files were found in the import source.",
+      "NO_FILES_UPLOADED": "No files uploaded.",
+      "INVALID_UPLOAD_PATH": "Upload path is invalid.",
+      "INVALID_CURSOR": "Invalid image pagination cursor.",
+      "CURSOR_MISSING_IMPORTED_AT": "Image pagination cursor is missing imported_at.",
+      "CURSOR_MISSING_FILENAME": "Image pagination cursor is missing filename.",
+      "NO_IMAGES_SELECTED": "No images selected.",
+      "SELECTED_IMAGES_NOT_FOUND": "Selected images not found.",
+      "TOO_MANY_IMAGES_REQUESTED": "Cannot download more than {{max_images}} images at once.",
+      "DOWNLOAD_SIZE_LIMIT_EXCEEDED": "Total size exceeds the maximum limit of {{max_total_bytes}} bytes.",
+      "DOWNLOAD_JOB_NOT_FOUND": "Download job not found.",
+      "DOWNLOAD_JOB_ACCESS_DENIED": "You can only access your own download jobs.",
+      "DOWNLOAD_JOB_NOT_COMPLETED": "The download job is not completed yet.",
+      "DOWNLOAD_ARCHIVE_MISSING": "The archive file no longer exists.",
+      "ARCHIVE_GENERATION_FAILED": "Download job failed.",
+      "IMPORT_PROCESSING_FAILED": "Import job failed.",
+      "WEAK_PASSWORD_TOO_SHORT": "Password must be at least 8 characters long.",
+      "WEAK_PASSWORD_MISSING_LOWERCASE": "Password must contain at least one lowercase letter.",
+      "WEAK_PASSWORD_MISSING_NUMBER": "Password must contain at least one number.",
+      "INTERNAL_ERROR": "Internal server error.",
+      "NETWORK_ERROR": "Network error during upload.",
+      "UPLOAD_ABORTED": "Upload aborted.",
+      "fallbackAllowedNumber": "the allowed number of",
+      "DEFAULT_REQUEST_FAILED": "Request failed."
     }
   }
 }

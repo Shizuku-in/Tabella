@@ -192,6 +192,12 @@
     "viewSource": "查看源码"
   },
   "auth": {
+    "guards": {
+      "checkingSession": "检查登录状态",
+      "restoringSession": "正在恢复当前登录状态。",
+      "checkingAccess": "检查访问权限",
+      "verifyingPermissions": "正在验证账户权限。"
+    },
     "login": {
       "checkingSession": "检查登录状态",
       "restoring": "正在恢复登录会话...",
@@ -331,6 +337,53 @@
         "pathLabel": "服务器目录路径",
         "import": "导入"
       }
+    }
+  },
+  "api": {
+    "errors": {
+      "AUTHENTICATION_REQUIRED": "需要身份验证。",
+      "ADMIN_REQUIRED": "需要管理员权限。",
+      "EDITOR_REQUIRED": "需要编辑者或管理员权限。",
+      "MISSING_CREDENTIALS": "必须提供用户名和密码。",
+      "INVALID_CREDENTIALS": "用户名或密码无效。",
+      "INVALID_USERNAME": "用户名不能为空。",
+      "DUPLICATE_USERNAME": "用户名已被占用。",
+      "MISSING_NEW_PASSWORD": "提供当前密码时必须设置新密码。",
+      "MISSING_CURRENT_PASSWORD": "设置新密码时必须提供当前密码。",
+      "INVALID_PASSWORD": "当前密码不正确。",
+      "NO_FILE_UPLOADED": "未提供任何文件。",
+      "INVALID_MULTIPART": "无法处理上传的数据。",
+      "PAYLOAD_TOO_LARGE": "上传的文件体积过大。",
+      "INVALID_SETTINGS": "服务器设置无效。",
+      "ROLE_CHANGE_NOT_ALLOWED": "您不能更改自己的角色。",
+      "SELF_DELETE_NOT_ALLOWED": "您不能删除自己的账户。",
+      "USER_NOT_FOUND": "未找到该用户。",
+      "IMAGE_NOT_FOUND": "未找到该图片。",
+      "IMPORT_JOB_NOT_FOUND": "未找到该导入任务。",
+      "NO_IMPORTABLE_FILES": "导入源中未找到受支持的图片文件。",
+      "NO_FILES_UPLOADED": "没有文件被上传。",
+      "INVALID_UPLOAD_PATH": "上传路径无效。",
+      "INVALID_CURSOR": "无效的图片分页游标。",
+      "CURSOR_MISSING_IMPORTED_AT": "图片分页游标缺少 imported_at 字段。",
+      "CURSOR_MISSING_FILENAME": "图片分页游标缺少 filename 字段。",
+      "NO_IMAGES_SELECTED": "未选择任何图片。",
+      "SELECTED_IMAGES_NOT_FOUND": "未找到选中的图片。",
+      "TOO_MANY_IMAGES_REQUESTED": "一次下载不能超过 {{max_images}} 张图片。",
+      "DOWNLOAD_SIZE_LIMIT_EXCEEDED": "总大小超过了最大限制的 {{max_total_bytes}} 字节。",
+      "DOWNLOAD_JOB_NOT_FOUND": "未找到该下载任务。",
+      "DOWNLOAD_JOB_ACCESS_DENIED": "您只能访问自己的下载任务。",
+      "DOWNLOAD_JOB_NOT_COMPLETED": "该下载任务尚未完成。",
+      "DOWNLOAD_ARCHIVE_MISSING": "打包文件已不存在。",
+      "ARCHIVE_GENERATION_FAILED": "下载任务失败。",
+      "IMPORT_PROCESSING_FAILED": "导入任务失败。",
+      "WEAK_PASSWORD_TOO_SHORT": "密码长度必须至少为 8 个字符。",
+      "WEAK_PASSWORD_MISSING_LOWERCASE": "密码必须至少包含一个小写字母。",
+      "WEAK_PASSWORD_MISSING_NUMBER": "密码必须至少包含一个数字。",
+      "INTERNAL_ERROR": "服务器内部错误。",
+      "NETWORK_ERROR": "上传过程中发生网络错误。",
+      "UPLOAD_ABORTED": "上传被中止。",
+      "fallbackAllowedNumber": "所允许的最大",
+      "DEFAULT_REQUEST_FAILED": "请求失败。"
     }
   }
 }
