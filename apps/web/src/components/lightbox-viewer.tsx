@@ -421,7 +421,10 @@ export function LightboxViewer({
             </IconButton>
           </Tooltip>
 
-          <Tooltip title={isFavorite ? t('gallery.viewer.removeFavorite') : t('gallery.viewer.favorite')} placement="bottom">
+          <Tooltip
+            title={isFavorite ? t('gallery.viewer.removeFavorite') : t('gallery.viewer.favorite')}
+            placement="bottom"
+          >
             <IconButton
               sx={{
                 color: isFavorite ? 'primary.main' : 'action.active',
@@ -576,7 +579,10 @@ export function LightboxViewer({
           <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
             {t('gallery.viewer.deleteTitle')}
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, whiteSpace: 'pre-line' }}>
+          <Typography
+            variant="body2"
+            sx={{ color: 'text.secondary', mb: 3, whiteSpace: 'pre-line' }}
+          >
             {t('gallery.viewer.deleteWarning')}
           </Typography>
           <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
@@ -659,7 +665,10 @@ export function LightboxViewer({
               pointerEvents: 'auto',
             }}
           >
-            <Tooltip title={isTagsExpanded ? t('gallery.viewer.hideTags') : t('gallery.viewer.showTags')} placement="right">
+            <Tooltip
+              title={isTagsExpanded ? t('gallery.viewer.hideTags') : t('gallery.viewer.showTags')}
+              placement="right"
+            >
               <IconButton
                 size="small"
                 onClick={(e) => {

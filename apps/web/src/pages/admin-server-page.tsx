@@ -196,10 +196,7 @@ export function AdminServerPage() {
                   value={settings.max_download_images}
                   onChange={(e) => handleNumberChange('max_download_images', e.target.value)}
                   error={Boolean(errors.max_download_images)}
-                  helperText={
-                    errors.max_download_images ??
-                    t('admin.server.maxDownloadImagesHelp')
-                  }
+                  helperText={errors.max_download_images ?? t('admin.server.maxDownloadImagesHelp')}
                   fullWidth
                 />
                 <TextField
@@ -210,8 +207,7 @@ export function AdminServerPage() {
                   onChange={(e) => handleNumberChange('max_download_total_bytes', e.target.value)}
                   error={Boolean(errors.max_download_total_bytes)}
                   helperText={
-                    errors.max_download_total_bytes ??
-                    t('admin.server.maxDownloadSizeHelp')
+                    errors.max_download_total_bytes ?? t('admin.server.maxDownloadSizeHelp')
                   }
                   fullWidth
                 />
@@ -223,8 +219,7 @@ export function AdminServerPage() {
                   onChange={(e) => handleNumberChange('download_retention_hours', e.target.value)}
                   error={Boolean(errors.download_retention_hours)}
                   helperText={
-                    errors.download_retention_hours ??
-                    t('admin.server.downloadRetentionHelp')
+                    errors.download_retention_hours ?? t('admin.server.downloadRetentionHelp')
                   }
                   fullWidth
                 />
@@ -244,10 +239,7 @@ export function AdminServerPage() {
                   value={settings.import_progress_batch_size}
                   onChange={(e) => handleNumberChange('import_progress_batch_size', e.target.value)}
                   error={Boolean(errors.import_progress_batch_size)}
-                  helperText={
-                    errors.import_progress_batch_size ??
-                    t('admin.server.batchSizeHelp')
-                  }
+                  helperText={errors.import_progress_batch_size ?? t('admin.server.batchSizeHelp')}
                   fullWidth
                 />
               </Stack>
@@ -266,10 +258,7 @@ export function AdminServerPage() {
                   value={settings.thumbnail_size}
                   onChange={(e) => handleNumberChange('thumbnail_size', e.target.value)}
                   error={Boolean(errors.thumbnail_size)}
-                  helperText={
-                    errors.thumbnail_size ??
-                    t('admin.server.thumbSizeHelp')
-                  }
+                  helperText={errors.thumbnail_size ?? t('admin.server.thumbSizeHelp')}
                   fullWidth
                 />
                 <TextField
@@ -279,10 +268,7 @@ export function AdminServerPage() {
                   value={settings.thumbnail_quality}
                   onChange={(e) => handleNumberChange('thumbnail_quality', e.target.value)}
                   error={Boolean(errors.thumbnail_quality)}
-                  helperText={
-                    errors.thumbnail_quality ??
-                    t('admin.server.thumbQualityHelp')
-                  }
+                  helperText={errors.thumbnail_quality ?? t('admin.server.thumbQualityHelp')}
                   fullWidth
                 />
                 <TextField
@@ -292,10 +278,7 @@ export function AdminServerPage() {
                   value={settings.sample_size}
                   onChange={(e) => handleNumberChange('sample_size', e.target.value)}
                   error={Boolean(errors.sample_size)}
-                  helperText={
-                    errors.sample_size ??
-                    t('admin.server.sampleSizeHelp')
-                  }
+                  helperText={errors.sample_size ?? t('admin.server.sampleSizeHelp')}
                   fullWidth
                 />
                 <TextField
@@ -305,10 +288,7 @@ export function AdminServerPage() {
                   value={settings.sample_quality}
                   onChange={(e) => handleNumberChange('sample_quality', e.target.value)}
                   error={Boolean(errors.sample_quality)}
-                  helperText={
-                    errors.sample_quality ??
-                    t('admin.server.sampleQualityHelp')
-                  }
+                  helperText={errors.sample_quality ?? t('admin.server.sampleQualityHelp')}
                   fullWidth
                 />
               </Stack>
@@ -327,10 +307,7 @@ export function AdminServerPage() {
                   value={settings.session_ttl_hours}
                   onChange={(e) => handleNumberChange('session_ttl_hours', e.target.value)}
                   error={Boolean(errors.session_ttl_hours)}
-                  helperText={
-                    errors.session_ttl_hours ??
-                    t('admin.server.sessionTtlHelp')
-                  }
+                  helperText={errors.session_ttl_hours ?? t('admin.server.sessionTtlHelp')}
                   fullWidth
                 />
                 <FormControlLabel
@@ -403,7 +380,10 @@ function parseFormState(settings: ServerSettingsForm): ServerSettings {
   }
 }
 
-function validateServerSettingsFields(settings: ServerSettingsForm, t: any): ServerSettingsFieldErrors {
+function validateServerSettingsFields(
+  settings: ServerSettingsForm,
+  t: import('i18next').TFunction,
+): ServerSettingsFieldErrors {
   const errors: ServerSettingsFieldErrors = {}
 
   const validatePositiveInteger = (value: string, label: string) => {
@@ -451,16 +431,28 @@ function validateServerSettingsFields(settings: ServerSettingsForm, t: any): Ser
     return undefined
   }
 
-  const maxImages = validatePositiveInteger(settings.max_download_images, t('admin.server.maxDownloadImages'))
+  const maxImages = validatePositiveInteger(
+    settings.max_download_images,
+    t('admin.server.maxDownloadImages'),
+  )
   if (maxImages) errors.max_download_images = maxImages
 
-  const maxBytes = validatePositiveInteger(settings.max_download_total_bytes, t('admin.server.maxDownloadSize'))
+  const maxBytes = validatePositiveInteger(
+    settings.max_download_total_bytes,
+    t('admin.server.maxDownloadSize'),
+  )
   if (maxBytes) errors.max_download_total_bytes = maxBytes
 
-  const retention = validatePositiveInteger(settings.download_retention_hours, t('admin.server.downloadRetention'))
+  const retention = validatePositiveInteger(
+    settings.download_retention_hours,
+    t('admin.server.downloadRetention'),
+  )
   if (retention) errors.download_retention_hours = retention
 
-  const sessionTtl = validatePositiveInteger(settings.session_ttl_hours, t('admin.server.sessionTtl'))
+  const sessionTtl = validatePositiveInteger(
+    settings.session_ttl_hours,
+    t('admin.server.sessionTtl'),
+  )
   if (sessionTtl) errors.session_ttl_hours = sessionTtl
 
   const batchSize = validatePositiveInteger(
@@ -469,7 +461,12 @@ function validateServerSettingsFields(settings: ServerSettingsForm, t: any): Ser
   )
   if (batchSize) errors.import_progress_batch_size = batchSize
 
-  const thumbSize = validateIntegerRange(settings.thumbnail_size, t('admin.server.thumbSize'), 100, 4000)
+  const thumbSize = validateIntegerRange(
+    settings.thumbnail_size,
+    t('admin.server.thumbSize'),
+    100,
+    4000,
+  )
   if (thumbSize) errors.thumbnail_size = thumbSize
 
   const thumbQuality = validateFloatRange(
@@ -480,10 +477,21 @@ function validateServerSettingsFields(settings: ServerSettingsForm, t: any): Ser
   )
   if (thumbQuality) errors.thumbnail_quality = thumbQuality
 
-  const sampleSize = validateIntegerRange(settings.sample_size, t('admin.server.sampleSize'), 100, 16000, true)
+  const sampleSize = validateIntegerRange(
+    settings.sample_size,
+    t('admin.server.sampleSize'),
+    100,
+    16000,
+    true,
+  )
   if (sampleSize) errors.sample_size = sampleSize
 
-  const sampleQuality = validateFloatRange(settings.sample_quality, t('admin.server.sampleQuality'), 1.0, 100.0)
+  const sampleQuality = validateFloatRange(
+    settings.sample_quality,
+    t('admin.server.sampleQuality'),
+    1.0,
+    100.0,
+  )
   if (sampleQuality) errors.sample_quality = sampleQuality
 
   return errors

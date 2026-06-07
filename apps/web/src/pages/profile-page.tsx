@@ -103,10 +103,7 @@ export function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const nextErrors = validateProfileFields(
-      { username, currentPassword, newPassword },
-      t
-    )
+    const nextErrors = validateProfileFields({ username, currentPassword, newPassword }, t)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) {
       return
@@ -179,7 +176,9 @@ export function ProfilePage() {
         }
       }
       showSnackbar(
-        t('auth.profile.fail', { message: getApiErrorMessage(error, t('auth.profile.errors.requestFailed')) }),
+        t('auth.profile.fail', {
+          message: getApiErrorMessage(error, t('auth.profile.errors.requestFailed')),
+        }),
         'error',
       )
     }
@@ -367,15 +366,18 @@ export function ProfilePage() {
   )
 }
 
-function validateProfileFields({
-  username,
-  currentPassword,
-  newPassword,
-}: {
-  username: string
-  currentPassword: string
-  newPassword: string
-}, t: any): ProfileFieldErrors {
+function validateProfileFields(
+  {
+    username,
+    currentPassword,
+    newPassword,
+  }: {
+    username: string
+    currentPassword: string
+    newPassword: string
+  },
+  t: import('i18next').TFunction,
+): ProfileFieldErrors {
   const errors: ProfileFieldErrors = {}
   const trimmedUsername = username.trim()
   const trimmedCurrentPassword = currentPassword.trim()

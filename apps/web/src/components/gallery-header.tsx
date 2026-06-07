@@ -70,9 +70,7 @@ export function GalleryHeader({
       }}
     >
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-        {isInitialLoading
-          ? t('gallery.loading')
-          : t('gallery.resultsCount', { count: itemCount })}
+        {isInitialLoading ? t('gallery.loading') : t('gallery.resultsCount', { count: itemCount })}
         {isFetchingNextPage ? t('gallery.loadingMore') : ''}
       </Typography>
       <Typography

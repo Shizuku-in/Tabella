@@ -128,11 +128,17 @@ export function LightboxViewerInfo({
           {/* Metadata */}
           <Stack spacing={1} sx={{ mb: 3 }}>
             <MetaRow label={t('gallery.info.filename')} value={item.filename} />
-            <MetaRow label={t('gallery.info.dimensions')} value={`${item.width} × ${item.height}`} />
+            <MetaRow
+              label={t('gallery.info.dimensions')}
+              value={`${item.width} × ${item.height}`}
+            />
             <MetaRow label={t('gallery.info.fileSize')} value={formatSizeStr(item.fileSize || 0)} />
             {item.sha256 && <MetaRow label={t('gallery.info.sha256')} value={item.sha256} />}
             {item.importedAt && (
-              <MetaRow label={t('gallery.info.imported')} value={new Date(item.importedAt).toLocaleString()} />
+              <MetaRow
+                label={t('gallery.info.imported')}
+                value={new Date(item.importedAt).toLocaleString()}
+              />
             )}
             {item.sourceUrl && <MetaRow label={t('gallery.info.source')} value={item.sourceUrl} />}
             {item.uploader && (

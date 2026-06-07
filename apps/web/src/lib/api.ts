@@ -38,7 +38,7 @@ export function formatApiErrorMessage(
   fallbackMessage = 'Request failed.',
 ): string {
   if (!code) return i18n.t('api.errors.DEFAULT_REQUEST_FAILED', { defaultValue: fallbackMessage })
-  
+
   const translationKey = `api.errors.${code}`
   if (i18n.exists(translationKey)) {
     const interpParams = { ...params }
@@ -48,9 +48,11 @@ export function formatApiErrorMessage(
     if (code === API_ERROR_CODES.DOWNLOAD_SIZE_LIMIT_EXCEEDED && !interpParams.max_total_bytes) {
       interpParams.max_total_bytes = i18n.t('api.errors.fallbackAllowedNumber')
     }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return i18n.t(translationKey as any, interpParams as any)
   }
-  
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return i18n.t('api.errors.DEFAULT_REQUEST_FAILED' as any, { defaultValue: fallbackMessage })
 }
 

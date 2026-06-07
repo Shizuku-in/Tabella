@@ -107,7 +107,12 @@ export function AdminImportsPage() {
       jobsQuery.refetch()
     },
     onError: (err) => {
-      showSnackbar(t('admin.imports.startFail', { message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')) }), 'error')
+      showSnackbar(
+        t('admin.imports.startFail', {
+          message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')),
+        }),
+        'error',
+      )
     },
   })
 
@@ -164,7 +169,12 @@ export function AdminImportsPage() {
       jobsQuery.refetch()
     },
     onError: (err) => {
-      showSnackbar(t('admin.imports.uploadFail', { message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')) }), 'error')
+      showSnackbar(
+        t('admin.imports.uploadFail', {
+          message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')),
+        }),
+        'error',
+      )
     },
   })
 
@@ -367,8 +377,15 @@ export function AdminImportsPage() {
                               sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}
                             >
                               {job.status === 'extracting' && job.sourceType === 'package'
-                                ? t('admin.imports.progressExtracted', { processed: job.processedItems, total: job.totalItems })
-                                : t('admin.imports.progressCount', { processed: job.processedItems, total: job.totalItems, percent: progressPercent })}
+                                ? t('admin.imports.progressExtracted', {
+                                    processed: job.processedItems,
+                                    total: job.totalItems,
+                                  })
+                                : t('admin.imports.progressCount', {
+                                    processed: job.processedItems,
+                                    total: job.totalItems,
+                                    percent: progressPercent,
+                                  })}
                             </Typography>
                           )}
                         </Stack>

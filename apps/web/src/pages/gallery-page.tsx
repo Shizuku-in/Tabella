@@ -194,9 +194,7 @@ export function GalleryPage() {
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
               {t('gallery.errors.noMatching')}
             </Typography>
-            <Typography variant="body2">
-              {t('gallery.errors.noMatchingDesc')}
-            </Typography>
+            <Typography variant="body2">{t('gallery.errors.noMatchingDesc')}</Typography>
           </Stack>
         </Box>
       ) : (

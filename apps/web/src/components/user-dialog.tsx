@@ -87,7 +87,9 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{isEdit ? t('admin.users.dialog.editUser') : t('admin.users.dialog.createUser')}</DialogTitle>
+      <DialogTitle>
+        {isEdit ? t('admin.users.dialog.editUser') : t('admin.users.dialog.createUser')}
+      </DialogTitle>
       <form onSubmit={handleSubmit} noValidate>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
@@ -107,7 +109,9 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
               fullWidth
             />
             <TextField
-              label={isEdit ? t('admin.users.dialog.newPassword') : t('admin.users.dialog.password')}
+              label={
+                isEdit ? t('admin.users.dialog.newPassword') : t('admin.users.dialog.password')
+              }
               type="password"
               required={!isEdit}
               value={password}
@@ -119,8 +123,7 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
               }}
               error={Boolean(errors.password)}
               helperText={
-                errors.password ??
-                (isEdit ? t('admin.users.dialog.passwordHelp') : undefined)
+                errors.password ?? (isEdit ? t('admin.users.dialog.passwordHelp') : undefined)
               }
               fullWidth
             />
@@ -149,15 +152,18 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
   )
 }
 
-function validateFields({
-  username,
-  password,
-  isEdit,
-}: {
-  username: string
-  password: string
-  isEdit: boolean
-}, t: any): FieldErrors {
+function validateFields(
+  {
+    username,
+    password,
+    isEdit,
+  }: {
+    username: string
+    password: string
+    isEdit: boolean
+  },
+  t: import('i18next').TFunction,
+): FieldErrors {
   const errors: FieldErrors = {}
 
   if (!isEdit && !username.trim()) {

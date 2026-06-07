@@ -32,7 +32,10 @@ export function LoginPage() {
 
   if (status === 'loading') {
     return (
-      <FullscreenState title={t('auth.login.checkingSession')} description={t('auth.login.restoring')} />
+      <FullscreenState
+        title={t('auth.login.checkingSession')}
+        description={t('auth.login.restoring')}
+      />
     )
   }
 

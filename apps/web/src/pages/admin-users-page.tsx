@@ -69,7 +69,12 @@ export function AdminUsersPage() {
       showSnackbar(t('admin.users.createSuccess'), 'success')
     },
     onError: (err) => {
-      showSnackbar(t('admin.users.createFail', { message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')) }), 'error')
+      showSnackbar(
+        t('admin.users.createFail', {
+          message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')),
+        }),
+        'error',
+      )
     },
   })
 
@@ -86,7 +91,12 @@ export function AdminUsersPage() {
       showSnackbar(t('admin.users.updateSuccess'), 'success')
     },
     onError: (err) => {
-      showSnackbar(t('admin.users.updateFail', { message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')) }), 'error')
+      showSnackbar(
+        t('admin.users.updateFail', {
+          message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')),
+        }),
+        'error',
+      )
     },
   })
 
@@ -101,7 +111,12 @@ export function AdminUsersPage() {
       showSnackbar(t('admin.users.deleteSuccess'), 'success')
     },
     onError: (err) => {
-      showSnackbar(t('admin.users.deleteFail', { message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')) }), 'error')
+      showSnackbar(
+        t('admin.users.deleteFail', {
+          message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')),
+        }),
+        'error',
+      )
     },
   })
 

@@ -12,10 +12,10 @@ import {
   DialogTitle,
   FormControlLabel,
   FormGroup,
+  MenuItem,
   Radio,
   RadioGroup,
   Select,
-  MenuItem,
   Slider,
   Stack,
   Switch,
@@ -209,7 +209,11 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       onChange={(e) => setShowResultsCount(e.target.checked)}
                     />
                   }
-                  label={<Typography variant="body2">{t('settings.displayOptions.showResultsCount')}</Typography>}
+                  label={
+                    <Typography variant="body2">
+                      {t('settings.displayOptions.showResultsCount')}
+                    </Typography>
+                  }
                 />
                 <FormControlLabel
                   control={
@@ -218,7 +222,11 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       onChange={(e) => setShowMobileDetails(e.target.checked)}
                     />
                   }
-                  label={<Typography variant="body2">{t('settings.displayOptions.showMobileDetails')}</Typography>}
+                  label={
+                    <Typography variant="body2">
+                      {t('settings.displayOptions.showMobileDetails')}
+                    </Typography>
+                  }
                 />
                 <FormControlLabel
                   control={
@@ -227,7 +235,11 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       onChange={(e) => setShowLightboxTags(e.target.checked)}
                     />
                   }
-                  label={<Typography variant="body2">{t('settings.displayOptions.showLightboxTags')}</Typography>}
+                  label={
+                    <Typography variant="body2">
+                      {t('settings.displayOptions.showLightboxTags')}
+                    </Typography>
+                  }
                 />
               </FormGroup>
             </Box>
@@ -250,6 +262,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       }
                       label={
                         <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
+                          {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                           {t(`settings.hoverInfoOptions.${key}` as any)}
                         </Typography>
                       }
@@ -270,9 +283,21 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                   setGalleryImageQuality(e.target.value as 'thumbnail' | 'sample' | 'original')
                 }
               >
-                <FormControlLabel value="thumbnail" control={<Radio size="small" />} label={t('settings.quality.thumbnail')} />
-                <FormControlLabel value="sample" control={<Radio size="small" />} label={t('settings.quality.sample')} />
-                <FormControlLabel value="original" control={<Radio size="small" />} label={t('settings.quality.original')} />
+                <FormControlLabel
+                  value="thumbnail"
+                  control={<Radio size="small" />}
+                  label={t('settings.quality.thumbnail')}
+                />
+                <FormControlLabel
+                  value="sample"
+                  control={<Radio size="small" />}
+                  label={t('settings.quality.sample')}
+                />
+                <FormControlLabel
+                  value="original"
+                  control={<Radio size="small" />}
+                  label={t('settings.quality.original')}
+                />
               </RadioGroup>
             </Box>
 
@@ -287,9 +312,21 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                   setLightboxImageQuality(e.target.value as 'thumbnail' | 'sample' | 'original')
                 }
               >
-                <FormControlLabel value="thumbnail" control={<Radio size="small" />} label={t('settings.quality.thumbnail')} />
-                <FormControlLabel value="sample" control={<Radio size="small" />} label={t('settings.quality.sample')} />
-                <FormControlLabel value="original" control={<Radio size="small" />} label={t('settings.quality.original')} />
+                <FormControlLabel
+                  value="thumbnail"
+                  control={<Radio size="small" />}
+                  label={t('settings.quality.thumbnail')}
+                />
+                <FormControlLabel
+                  value="sample"
+                  control={<Radio size="small" />}
+                  label={t('settings.quality.sample')}
+                />
+                <FormControlLabel
+                  value="original"
+                  control={<Radio size="small" />}
+                  label={t('settings.quality.original')}
+                />
               </RadioGroup>
             </Box>
 
@@ -304,12 +341,24 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                   setHoverDownloadQuality(e.target.value as 'thumbnail' | 'sample' | 'original')
                 }
               >
-                <FormControlLabel value="thumbnail" control={<Radio size="small" />} label={t('settings.quality.thumbnail')} />
-                <FormControlLabel value="sample" control={<Radio size="small" />} label={t('settings.quality.sample')} />
-                <FormControlLabel value="original" control={<Radio size="small" />} label={t('settings.quality.original')} />
+                <FormControlLabel
+                  value="thumbnail"
+                  control={<Radio size="small" />}
+                  label={t('settings.quality.thumbnail')}
+                />
+                <FormControlLabel
+                  value="sample"
+                  control={<Radio size="small" />}
+                  label={t('settings.quality.sample')}
+                />
+                <FormControlLabel
+                  value="original"
+                  control={<Radio size="small" />}
+                  label={t('settings.quality.original')}
+                />
               </RadioGroup>
             </Box>
-            
+
             <Box>
               <Typography variant="subtitle2" gutterBottom>
                 {t('settings.language')}

@@ -258,7 +258,9 @@ export function GalleryCard({
                   e.stopPropagation()
                   onToggleFavorite()
                 }}
-                aria-label={isFavorite ? t('gallery.viewer.removeFavorite') : t('gallery.viewer.favorite')}
+                aria-label={
+                  isFavorite ? t('gallery.viewer.removeFavorite') : t('gallery.viewer.favorite')
+                }
                 sx={{
                   width: 32,
                   height: 32,

@@ -187,12 +187,15 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
   }
 
   const handleApply = () => {
-    const nextErrors = validateAdvancedSearchFields({
-      minWidth: localMinWidth,
-      minHeight: localMinHeight,
-      aspectRatioMin: localArMin,
-      aspectRatioMax: localArMax,
-    }, t)
+    const nextErrors = validateAdvancedSearchFields(
+      {
+        minWidth: localMinWidth,
+        minHeight: localMinHeight,
+        aspectRatioMin: localArMin,
+        aspectRatioMax: localArMax,
+      },
+      t,
+    )
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) {
       return
@@ -280,7 +283,9 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  placeholder={localIncludeTags.length === 0 ? t('gallery.advancedSearch.tagPlaceholder') : ''}
+                  placeholder={
+                    localIncludeTags.length === 0 ? t('gallery.advancedSearch.tagPlaceholder') : ''
+                  }
                   size="small"
                   fullWidth
                 />
@@ -324,7 +329,9 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  placeholder={localExcludeTags.length === 0 ? t('gallery.advancedSearch.tagPlaceholder') : ''}
+                  placeholder={
+                    localExcludeTags.length === 0 ? t('gallery.advancedSearch.tagPlaceholder') : ''
+                  }
                   size="small"
                   fullWidth
                 />
@@ -492,13 +499,16 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
   )
 }
 
-function validateAdvancedSearchFields(values: {
-  minWidth: string
-  minHeight: string
-  aspectRatioMin: string
-  aspectRatioMax: string
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-}, t: any): AdvancedSearchFieldErrors {
+function validateAdvancedSearchFields(
+  values: {
+    minWidth: string
+    minHeight: string
+    aspectRatioMin: string
+    aspectRatioMax: string
+     
+  },
+  t: any,
+): AdvancedSearchFieldErrors {
   const errors: AdvancedSearchFieldErrors = {}
 
   const validatePositiveInteger = (value: string, label: string) => {
