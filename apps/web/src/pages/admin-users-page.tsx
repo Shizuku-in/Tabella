@@ -20,6 +20,7 @@ import {
 } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { useAuth } from '../auth/auth-provider.tsx'
 import { UserDialog } from '../components/user-dialog.tsx'
@@ -27,6 +28,7 @@ import { getApiErrorMessage, request } from '../lib/api.ts'
 import type { CreateUserDto, UpdateUserDto, UserRow } from '../types.ts'
 
 export function AdminUsersPage() {
+  const { t } = useTranslation()
   const { user: currentUser } = useAuth()
   const queryClient = useQueryClient()
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -64,10 +66,10 @@ export function AdminUsersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
-      showSnackbar('User created successfully.', 'success')
+      showSnackbar(t('admin.users.createSuccess'), 'success')
     },
     onError: (err) => {
-      showSnackbar(`Failed to create user: ${getApiErrorMessage(err, 'Request failed.')}`, 'error')
+      showSnackbar(t('admin.users.createFail', { message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')) }), 'error')
     },
   })
 
@@ -81,10 +83,10 @@ export function AdminUsersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
-      showSnackbar('User updated successfully.', 'success')
+      showSnackbar(t('admin.users.updateSuccess'), 'success')
     },
     onError: (err) => {
-      showSnackbar(`Failed to update user: ${getApiErrorMessage(err, 'Request failed.')}`, 'error')
+      showSnackbar(t('admin.users.updateFail', { message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')) }), 'error')
     },
   })
 
@@ -96,10 +98,10 @@ export function AdminUsersPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
-      showSnackbar('User deleted successfully.', 'success')
+      showSnackbar(t('admin.users.deleteSuccess'), 'success')
     },
     onError: (err) => {
-      showSnackbar(`Failed to delete user: ${getApiErrorMessage(err, 'Request failed.')}`, 'error')
+      showSnackbar(t('admin.users.deleteFail', { message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')) }), 'error')
     },
   })
 
@@ -138,10 +140,10 @@ export function AdminUsersPage() {
     <Stack spacing={3}>
       <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" sx={{ display: 'none' }}>
-          Users
+          {t('admin.users.title')}
         </Typography>
         <Button variant="outlined" startIcon={<AddOutlined />} onClick={handleCreateClick}>
-          Create User
+          {t('admin.users.create')}
         </Button>
       </Stack>
 
@@ -149,11 +151,11 @@ export function AdminUsersPage() {
         <Table size="small">
           <TableHead>
             <TableRow>
-              <TableCell sx={{ width: '80px' }}>ID</TableCell>
-              <TableCell>Username</TableCell>
-              <TableCell>Role</TableCell>
-              <TableCell>Created At</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell sx={{ width: '80px' }}>{t('admin.users.id')}</TableCell>
+              <TableCell>{t('admin.users.username')}</TableCell>
+              <TableCell>{t('admin.users.role')}</TableCell>
+              <TableCell>{t('admin.users.createdAt')}</TableCell>
+              <TableCell align="right">{t('admin.users.actions')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -183,7 +185,7 @@ export function AdminUsersPage() {
             {usersQuery.data?.length === 0 && (
               <TableRow>
                 <TableCell colSpan={5} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                  No users found.
+                  {t('admin.users.noUsers')}
                 </TableCell>
               </TableRow>
             )}
@@ -199,18 +201,16 @@ export function AdminUsersPage() {
       />
 
       <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
-        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogTitle>{t('admin.users.confirmDeleteTitle')}</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete user "{userToDelete?.username}"?
-            <br />
-            This action cannot be undone.
+          <DialogContentText sx={{ whiteSpace: 'pre-line' }}>
+            {t('admin.users.confirmDeleteWarning', { username: userToDelete?.username })}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+          <Button onClick={() => setDeleteConfirmOpen(false)}>{t('common.cancel')}</Button>
           <Button color="error" onClick={handleConfirmDelete}>
-            Delete
+            {t('common.delete')}
           </Button>
         </DialogActions>
       </Dialog>

@@ -26,6 +26,8 @@ export interface GalleryCardProps {
   isSelected?: boolean
 }
 
+import { useTranslation } from 'react-i18next'
+
 export function GalleryCard({
   item,
   layoutMode,
@@ -38,6 +40,7 @@ export function GalleryCard({
   hoverDownloadQuality,
   isSelected,
 }: GalleryCardProps) {
+  const { t } = useTranslation()
   const isJustified = layoutMode === 'justified'
   const isGrid = layoutMode === 'grid'
 
@@ -255,7 +258,7 @@ export function GalleryCard({
                   e.stopPropagation()
                   onToggleFavorite()
                 }}
-                aria-label={isFavorite ? 'remove favorite' : 'add favorite'}
+                aria-label={isFavorite ? t('gallery.viewer.removeFavorite') : t('gallery.viewer.favorite')}
                 sx={{
                   width: 32,
                   height: 32,

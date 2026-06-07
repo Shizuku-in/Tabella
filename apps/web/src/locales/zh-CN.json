@@ -3,11 +3,24 @@
     "loading": "加载中...",
     "error": "错误",
     "save": "保存",
+    "saving": "保存中...",
     "cancel": "取消",
     "close": "关闭",
     "delete": "删除",
     "edit": "编辑",
-    "search": "搜索"
+    "search": "搜索",
+    "notFound": {
+      "title": "页面未找到",
+      "description": "您正在寻找的页面不存在，已被移除，或暂时不可用。",
+      "back": "返回"
+    },
+    "pwa": {
+      "ready": "准备好离线使用",
+      "readyDesc": "应用程序已准备好离线工作。",
+      "update": "有可用更新",
+      "updateDesc": "有新内容可用，请点击重新加载按钮进行更新。",
+      "reload": "重新加载"
+    }
   },
   "nav": {
     "imports": "/导入管理 (Imports)",
@@ -18,7 +31,15 @@
     "downloading": "正在打包下载...",
     "darkMode": "深色模式",
     "lightMode": "浅色模式",
-    "settings": "设置"
+    "settings": "设置",
+    "guest": "访客",
+    "viewer": "观察者",
+    "menuProfile": "个人资料",
+    "menuUsers": "用户管理",
+    "menuImports": "导入任务",
+    "menuServer": "服务器管理",
+    "menuAbout": "关于",
+    "menuSignOut": "退出登录"
   },
   "settings": {
     "title": "画廊设置",
@@ -59,5 +80,257 @@
       "original": "原图"
     },
     "language": "语言 / Language"
+  },
+  "gallery": {
+    "loading": "正在加载画廊...",
+    "resultsCount_one": "{{count}} 个结果",
+    "resultsCount_other": "{{count}} 个结果",
+    "loadingMore": " · 加载更多",
+    "filters": {
+      "search": "搜索: {{tags}}",
+      "rating": "评分: {{rating}}",
+      "sort": "排序: {{sort}}"
+    },
+    "sort": {
+      "oldest": "最早上传",
+      "filenameAsc": "文件名 A-Z",
+      "filenameDesc": "文件名 Z-A",
+      "newest": "最新上传"
+    },
+    "layout": {
+      "grid": "网格视图",
+      "masonry": "瀑布流视图",
+      "justified": "自适应视图"
+    },
+    "ratingFilter": {
+      "all": "全部评级",
+      "safe": "安全 (Safe)",
+      "suggestive": "微量裸露 (Suggestive)",
+      "explicit": "成人 (Explicit)"
+    },
+    "quality": {
+      "thumbnail": "缩略图",
+      "sample": "预览图",
+      "original": "原图"
+    },
+    "info": {
+      "title": "图片详情",
+      "filename": "文件名",
+      "dimensions": "分辨率",
+      "fileSize": "文件大小",
+      "sha256": "SHA256 哈希值",
+      "imported": "导入时间",
+      "source": "来源地址",
+      "uploader": "上传者",
+      "rating": "分级",
+      "tags": "标签",
+      "addTag": "添加标签 (命名空间:标签名)",
+      "saving": "保存中...",
+      "ratings": {
+        "safe": "安全 (Safe)",
+        "suggestive": "微量裸露 (Suggestive)",
+        "explicit": "成人 (Explicit)"
+      }
+    },
+    "viewer": {
+      "download": "下载图片",
+      "removeFavorite": "取消收藏",
+      "favorite": "添加到收藏",
+      "info": "查看信息",
+      "delete": "删除图片",
+      "exit": "退出预览",
+      "hideTags": "隐藏底部标签",
+      "showTags": "显示底部标签",
+      "deleteTitle": "删除图片",
+      "deleteWarning": "此操作无法撤销。\n图片及所有相关数据将被永久删除。",
+      "deleting": "删除中..."
+    },
+    "advancedSearch": {
+      "title": "高级搜索",
+      "includeTags": "包含标签",
+      "excludeTags": "排除标签",
+      "tagPlaceholder": "例如：namespace:name",
+      "uploadedAfter": "上传时间早于",
+      "uploadedBefore": "上传时间晚于",
+      "minWidth": "最小宽度 (px)",
+      "minWidthPlaceholder": "例如：1920",
+      "minHeight": "最小高度 (px)",
+      "minHeightPlaceholder": "例如：1080",
+      "minAspect": "最小宽高比 (W/H)",
+      "minAspectPlaceholder": "例如：16:9输入1.77",
+      "maxAspect": "最大宽高比 (W/H)",
+      "maxAspectPlaceholder": "例如：9:16输入0.56",
+      "clearAll": "清除全部",
+      "apply": "应用筛选",
+      "errors": {
+        "positiveInteger": "{{label}} 必须是正整数。",
+        "greaterThanZero": "{{label}} 必须大于 0。",
+        "validNumber": "{{label}} 必须是有效数字。"
+      }
+    },
+    "selection": {
+      "selected": "已选择 {{count}} 项",
+      "selectAll": "全选当前加载的项",
+      "download": "下载"
+    },
+    "errors": {
+      "loadFailed": "无法加载图库",
+      "refresh": "请刷新重试。",
+      "noMatching": "没有匹配的图片",
+      "noMatchingDesc": "尝试清除搜索条件或放宽评分筛选。",
+      "end": "图库已到底部",
+      "scrollMore": "滚动加载更多",
+      "downloadFail": "启动下载失败：{{message}}",
+      "downloadNetwork": "启动下载时出现网络错误。"
+    }
+  },
+  "about": {
+    "title": "关于",
+    "description": "一个高性能、自托管的画廊。",
+    "techStack": "技术栈",
+    "version": "版本: {{version}}",
+    "viewSource": "查看源码"
+  },
+  "auth": {
+    "login": {
+      "checkingSession": "检查登录状态",
+      "restoring": "正在恢复登录会话...",
+      "signIn": "登录",
+      "signInFailed": "登录失败，请重试。",
+      "signingIn": "登录中...",
+      "description": "访问您的专属 Tabella 画廊。",
+      "returnTo": "登录后将返回 {{target}}。",
+      "username": "用户名",
+      "password": "密码"
+    },
+    "profile": {
+      "title": "个人资料设置",
+      "role": "角色: {{role}}",
+      "accountDetails": "账户信息",
+      "username": "用户名",
+      "changePassword": "修改密码",
+      "currentPassword": "当前密码",
+      "currentPasswordHelp": "如果需要设置新密码则必须填写",
+      "newPassword": "新密码",
+      "success": "个人资料已更新！",
+      "fail": "更新失败: {{message}}",
+      "errors": {
+        "usernameRequired": "用户名不能为空。",
+        "invalidUsername": "无效的用户名",
+        "currentRequired": "设置新密码需要提供当前密码。",
+        "invalidCurrent": "当前密码错误",
+        "newRequired": "提供了当前密码时，必须填写新密码。",
+        "invalidNew": "无效的新密码",
+        "requestFailed": "请求失败。"
+      }
+    }
+  },
+  "admin": {
+    "users": {
+      "title": "用户管理",
+      "create": "创建用户",
+      "id": "ID",
+      "username": "用户名",
+      "role": "角色",
+      "createdAt": "创建时间",
+      "actions": "操作",
+      "noUsers": "未找到用户。",
+      "createSuccess": "用户创建成功。",
+      "createFail": "创建用户失败: {{message}}",
+      "updateSuccess": "用户更新成功。",
+      "updateFail": "更新用户失败: {{message}}",
+      "deleteSuccess": "用户删除成功。",
+      "deleteFail": "删除用户失败: {{message}}",
+      "confirmDeleteTitle": "确认删除",
+      "confirmDeleteWarning": "确定要删除用户 \"{{username}}\" 吗？\n此操作无法撤销。",
+      "dialog": {
+        "createUser": "创建用户",
+        "editUser": "编辑用户",
+        "username": "用户名",
+        "newPassword": "新密码",
+        "password": "密码",
+        "passwordHelp": "留空表示保留当前密码",
+        "role": "角色",
+        "roles": {
+          "admin": "管理员",
+          "editor": "编辑者",
+          "viewer": "观察者"
+        },
+        "errors": {
+          "usernameRequired": "用户名不能为空。",
+          "passwordRequired": "新用户必须设置密码。",
+          "passwordWeak": "密码必须至少8位，且包含小写字母和数字。",
+          "requestFailed": "请求失败。"
+        }
+      }
+    },
+    "server": {
+      "title": "服务器设置",
+      "loading": "正在加载设置...",
+      "loadFail": "加载服务器设置失败。",
+      "updateSuccess": "服务器设置已成功更新！",
+      "updateFail": "更新服务器设置失败。",
+      "validateFail": "验证服务器设置失败。",
+      "downloads": "下载",
+      "maxDownloadImages": "最大下载图片数",
+      "maxDownloadImagesHelp": "单次打包下载允许的最大图片数量。",
+      "maxDownloadSize": "最大下载体积 (字节)",
+      "maxDownloadSizeHelp": "单次打包下载允许的最大文件总大小。",
+      "downloadRetention": "下载保留时间 (小时)",
+      "downloadRetentionHelp": "生成的压缩包在被自动删除前保留多长时间。",
+      "imports": "导入",
+      "batchSize": "导入进度批处理大小",
+      "batchSizeHelp": "更新数据库进度之前要处理的文件数。较低的值提供更频繁的UI更新，但数据库负载更高。",
+      "imageProcessing": "图像处理",
+      "thumbSize": "缩略图最大尺寸 (px)",
+      "thumbSizeHelp": "生成的缩略图的最大尺寸（宽或高）。默认值为 500。",
+      "thumbQuality": "缩略图质量 (WebP)",
+      "thumbQualityHelp": "缩略图的 WebP 压缩质量 (1.0 - 100.0)。默认值为 75。",
+      "sampleSize": "预览图最大尺寸 (px)",
+      "sampleSizeHelp": "预览图像的最大尺寸。设置为 0 以保持原始分辨率。默认值为 0。",
+      "sampleQuality": "预览图质量 (WebP)",
+      "sampleQualityHelp": "预览图的 WebP 压缩质量 (1.0 - 100.0)。默认值为 80。",
+      "security": "安全与会话",
+      "sessionTtl": "会话有效期 (小时)",
+      "sessionTtlHelp": "用户会话在需要重新登录之前保持有效的时间。",
+      "secureCookies": "安全 Cookie",
+      "secureCookiesHelp": "仅通过 HTTPS 发送 Cookie。建议在生产环境中使用。",
+      "errors": {
+        "positiveInteger": "{{label}} 必须为正整数。",
+        "greaterThanZero": "{{label}} 必须大于 0。",
+        "mustBeInteger": "{{label}} 必须为整数。",
+        "betweenMinMax": "{{label}} 必须在 {{min}} 到 {{max}} 之间。",
+        "betweenMinMaxOrZero": "{{label}} 必须在 {{min}} 到 {{max}} 之间 (或0)。",
+        "mustBeNumber": "{{label}} 必须为数字。"
+      }
+    },
+    "imports": {
+      "startSuccess": "任务已启动。任务 ID: {{id}}",
+      "startFail": "启动任务失败: {{message}}",
+      "uploadFail": "上传失败: {{message}}",
+      "buttons": {
+        "package": "压缩包",
+        "folder": "文件夹",
+        "server": "服务器"
+      },
+      "columns": {
+        "jobId": "任务 ID",
+        "date": "日期",
+        "status": "状态"
+      },
+      "uploadingRow": "上传中...",
+      "uploading": "上传中 ({{progress}}%)",
+      "archiveFile": "压缩文件",
+      "filesCount": "{{count}} 个文件",
+      "progressExtracted": "已解压 {{processed}} / {{total}}",
+      "progressCount": "{{processed}} / {{total}} ({{percent}}%)",
+      "noJobs": "未找到导入任务。",
+      "serverDialog": {
+        "title": "服务器导入",
+        "description": "直接扫描服务器文件系统上的目录。",
+        "pathLabel": "服务器目录路径",
+        "import": "导入"
+      }
+    }
   }
 }

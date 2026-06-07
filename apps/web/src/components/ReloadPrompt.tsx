@@ -1,7 +1,9 @@
 import { Alert, AlertTitle, Button, Snackbar } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
 export function ReloadPrompt() {
+  const { t } = useTranslation()
   const {
     offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
@@ -27,12 +29,12 @@ export function ReloadPrompt() {
           sx={{ width: '100%' }}
           action={
             <Button color="inherit" size="small" onClick={() => setOfflineReady(false)}>
-              Close
+              {t('common.close')}
             </Button>
           }
         >
-          <AlertTitle>Ready for offline</AlertTitle>
-          App is ready to work offline.
+          <AlertTitle>{t('common.pwa.ready')}</AlertTitle>
+          {t('common.pwa.readyDesc')}
         </Alert>
       </Snackbar>
 
@@ -47,16 +49,16 @@ export function ReloadPrompt() {
           action={
             <>
               <Button color="inherit" size="small" onClick={() => updateServiceWorker(true)}>
-                Reload
+                {t('common.pwa.reload')}
               </Button>
               <Button color="inherit" size="small" onClick={() => setNeedRefresh(false)}>
-                Close
+                {t('common.close')}
               </Button>
             </>
           }
         >
-          <AlertTitle>Update available</AlertTitle>
-          New content is available, click on reload button to update.
+          <AlertTitle>{t('common.pwa.update')}</AlertTitle>
+          {t('common.pwa.updateDesc')}
         </Alert>
       </Snackbar>
     </>

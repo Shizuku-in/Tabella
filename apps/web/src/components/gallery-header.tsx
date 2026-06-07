@@ -1,23 +1,26 @@
 import { Stack, Typography } from '@mui/material'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { ratingLabel } from '../lib/constants.ts'
 
-function sortLabel(sort: string) {
-  switch (sort) {
-    case 'oldest':
-      return 'Oldest'
-    case 'filename_asc':
-      return 'Filename A-Z'
-    case 'filename_desc':
-      return 'Filename Z-A'
-    default:
-      return 'Newest'
+function useSortLabel() {
+  const { t } = useTranslation()
+  return (sort: string) => {
+    switch (sort) {
+      case 'oldest':
+        return t('gallery.sort.oldest')
+      case 'filename_asc':
+        return t('gallery.sort.filenameAsc')
+      case 'filename_desc':
+        return t('gallery.sort.filenameDesc')
+      default:
+        return t('gallery.sort.newest')
+    }
   }
 }
-
 export interface GalleryHeaderProps {
   itemCount: number
   isInitialLoading: boolean
@@ -29,6 +32,8 @@ export function GalleryHeader({
   isInitialLoading,
   isFetchingNextPage,
 }: GalleryHeaderProps) {
+  const { t } = useTranslation()
+  const sortLabel = useSortLabel()
   const { searchTags, ratingFilter, sort } = useGallerySessionStore(
     useShallow((state) => ({
       searchTags: state.searchTags,
@@ -41,17 +46,17 @@ export function GalleryHeader({
     const labels: string[] = []
 
     if (searchTags.length > 0) {
-      labels.push(`Search: ${searchTags.join(', ')}`)
+      labels.push(t('gallery.filters.search', { tags: searchTags.join(', ') }))
     }
 
     if (ratingFilter !== 'all') {
-      labels.push(`Rating: ${ratingLabel[ratingFilter]}`)
+      labels.push(t('gallery.filters.rating', { rating: ratingLabel[ratingFilter] }))
     }
 
-    labels.push(`Sort: ${sortLabel(sort)}`)
+    labels.push(t('gallery.filters.sort', { sort: sortLabel(sort) }))
 
     return labels
-  }, [ratingFilter, searchTags, sort])
+  }, [ratingFilter, searchTags, sort, t, sortLabel])
 
   return (
     <Stack
@@ -65,8 +70,10 @@ export function GalleryHeader({
       }}
     >
       <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-        {isInitialLoading ? 'Loading gallery...' : `${itemCount} results`}
-        {isFetchingNextPage ? ' · Loading more' : ''}
+        {isInitialLoading
+          ? t('gallery.loading')
+          : t('gallery.resultsCount', { count: itemCount })}
+        {isFetchingNextPage ? t('gallery.loadingMore') : ''}
       </Typography>
       <Typography
         variant="caption"

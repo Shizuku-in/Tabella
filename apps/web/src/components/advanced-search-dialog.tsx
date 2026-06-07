@@ -17,6 +17,7 @@ import { alpha } from '@mui/material/styles'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import dayjs, { Dayjs } from 'dayjs'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
@@ -49,6 +50,7 @@ const hideSpinButton = {
 }
 
 export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProps) {
+  const { t } = useTranslation()
   const {
     searchTags,
     setSearchTags,
@@ -190,7 +192,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
       minHeight: localMinHeight,
       aspectRatioMin: localArMin,
       aspectRatioMax: localArMax,
-    })
+    }, t)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) {
       return
@@ -239,12 +241,12 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Advanced Search</DialogTitle>
+      <DialogTitle>{t('gallery.advancedSearch.title')}</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={3} sx={{ py: 1 }}>
           <Box>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Include Tags
+              {t('gallery.advancedSearch.includeTags')}
             </Typography>
             <Autocomplete
               multiple
@@ -278,7 +280,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  placeholder={localIncludeTags.length === 0 ? 'e.g. namespace:name' : ''}
+                  placeholder={localIncludeTags.length === 0 ? t('gallery.advancedSearch.tagPlaceholder') : ''}
                   size="small"
                   fullWidth
                 />
@@ -288,7 +290,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
 
           <Box>
             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-              Exclude Tags
+              {t('gallery.advancedSearch.excludeTags')}
             </Typography>
             <Autocomplete
               multiple
@@ -322,7 +324,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
               renderInput={(params) => (
                 <TextField
                   {...params}
-                  placeholder={localExcludeTags.length === 0 ? 'e.g. namespace:name' : ''}
+                  placeholder={localExcludeTags.length === 0 ? t('gallery.advancedSearch.tagPlaceholder') : ''}
                   size="small"
                   fullWidth
                 />
@@ -333,7 +335,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Uploaded After
+                {t('gallery.advancedSearch.uploadedAfter')}
               </Typography>
               <DatePicker
                 value={localUploadedAfter}
@@ -354,7 +356,7 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Uploaded Before
+                {t('gallery.advancedSearch.uploadedBefore')}
               </Typography>
               <DatePicker
                 value={localUploadedBefore}
@@ -378,11 +380,11 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Min Width (px)
+                {t('gallery.advancedSearch.minWidth')}
               </Typography>
               <TextField
                 type="text"
-                placeholder="e.g. 1920"
+                placeholder={t('gallery.advancedSearch.minWidthPlaceholder')}
                 fullWidth
                 size="small"
                 value={localMinWidth}
@@ -397,11 +399,11 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Min Height (px)
+                {t('gallery.advancedSearch.minHeight')}
               </Typography>
               <TextField
                 type="text"
-                placeholder="e.g. 1080"
+                placeholder={t('gallery.advancedSearch.minHeightPlaceholder')}
                 fullWidth
                 size="small"
                 value={localMinHeight}
@@ -424,11 +426,11 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Min Aspect Ratio (W/H)
+                {t('gallery.advancedSearch.minAspect')}
               </Typography>
               <TextField
                 type="text"
-                placeholder="e.g. 1.77 for 16:9"
+                placeholder={t('gallery.advancedSearch.minAspectPlaceholder')}
                 fullWidth
                 size="small"
                 value={localArMin}
@@ -448,11 +450,11 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
             </Box>
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Max Aspect Ratio (W/H)
+                {t('gallery.advancedSearch.maxAspect')}
               </Typography>
               <TextField
                 type="text"
-                placeholder="e.g. 0.56 for 9:16"
+                placeholder={t('gallery.advancedSearch.maxAspectPlaceholder')}
                 fullWidth
                 size="small"
                 value={localArMax}
@@ -475,14 +477,14 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
       </DialogContent>
       <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
         <Button onClick={handleClearAll} color="error" variant="text">
-          Clear All
+          {t('gallery.advancedSearch.clearAll')}
         </Button>
         <Stack direction="row" spacing={1}>
           <Button onClick={onClose} color="inherit">
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button onClick={handleApply} variant="contained" color="primary">
-            Apply Filters
+            {t('gallery.advancedSearch.apply')}
           </Button>
         </Stack>
       </DialogActions>
@@ -495,18 +497,19 @@ function validateAdvancedSearchFields(values: {
   minHeight: string
   aspectRatioMin: string
   aspectRatioMax: string
-}): AdvancedSearchFieldErrors {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+}, t: any): AdvancedSearchFieldErrors {
   const errors: AdvancedSearchFieldErrors = {}
 
   const validatePositiveInteger = (value: string, label: string) => {
     const trimmed = value.trim()
     if (!trimmed) return undefined
     if (!/^\d+$/.test(trimmed)) {
-      return `${label} must be a positive integer.`
+      return t('gallery.advancedSearch.errors.positiveInteger', { label })
     }
     const parsed = Number.parseInt(trimmed, 10)
     if (!Number.isSafeInteger(parsed) || parsed <= 0) {
-      return `${label} must be greater than 0.`
+      return t('gallery.advancedSearch.errors.greaterThanZero', { label })
     }
     return undefined
   }
@@ -516,10 +519,10 @@ function validateAdvancedSearchFields(values: {
     if (!trimmed) return undefined
     const parsed = Number(trimmed)
     if (!Number.isFinite(parsed)) {
-      return `${label} must be a valid number.`
+      return t('gallery.advancedSearch.errors.validNumber', { label })
     }
     if (parsed <= 0) {
-      return `${label} must be greater than 0.`
+      return t('gallery.advancedSearch.errors.greaterThanZero', { label })
     }
     return undefined
   }

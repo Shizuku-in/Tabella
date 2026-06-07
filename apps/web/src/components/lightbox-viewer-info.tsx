@@ -19,6 +19,7 @@ import {
 } from '@mui/material'
 import { alpha, useTheme } from '@mui/material/styles'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { getTagColor } from '../lib/tags.ts'
 import type { GalleryItem, Rating } from '../types'
@@ -92,6 +93,7 @@ export function LightboxViewerInfo({
   isSaving,
   handleSave,
 }: LightboxViewerInfoProps) {
+  const { t } = useTranslation()
   const theme = useTheme()
 
   return (
@@ -117,7 +119,7 @@ export function LightboxViewerInfo({
         {/* Header */}
         <Box sx={{ p: 2, pt: 8 }}>
           <Typography variant="h6" color="text.primary" sx={{ fontWeight: 700 }}>
-            Image Info
+            {t('gallery.info.title')}
           </Typography>
         </Box>
 
@@ -125,21 +127,21 @@ export function LightboxViewerInfo({
         <Box sx={{ flex: 1, overflow: 'auto', px: 2, pb: 2 }}>
           {/* Metadata */}
           <Stack spacing={1} sx={{ mb: 3 }}>
-            <MetaRow label="Filename" value={item.filename} />
-            <MetaRow label="Dimensions" value={`${item.width} × ${item.height}`} />
-            <MetaRow label="File size" value={formatSizeStr(item.fileSize || 0)} />
-            {item.sha256 && <MetaRow label="SHA256" value={item.sha256} />}
+            <MetaRow label={t('gallery.info.filename')} value={item.filename} />
+            <MetaRow label={t('gallery.info.dimensions')} value={`${item.width} × ${item.height}`} />
+            <MetaRow label={t('gallery.info.fileSize')} value={formatSizeStr(item.fileSize || 0)} />
+            {item.sha256 && <MetaRow label={t('gallery.info.sha256')} value={item.sha256} />}
             {item.importedAt && (
-              <MetaRow label="Imported" value={new Date(item.importedAt).toLocaleString()} />
+              <MetaRow label={t('gallery.info.imported')} value={new Date(item.importedAt).toLocaleString()} />
             )}
-            {item.sourceUrl && <MetaRow label="Source" value={item.sourceUrl} />}
+            {item.sourceUrl && <MetaRow label={t('gallery.info.source')} value={item.sourceUrl} />}
             {item.uploader && (
               <Box sx={{ mt: 1 }}>
                 <Typography
                   variant="caption"
                   sx={{ color: 'text.secondary', display: 'block', mb: 0.5 }}
                 >
-                  Uploader
+                  {t('gallery.info.uploader')}
                 </Typography>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Avatar
@@ -161,7 +163,7 @@ export function LightboxViewerInfo({
 
           {/* Rating */}
           <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1 }}>
-            Rating
+            {t('gallery.info.rating')}
           </Typography>
           <FormControl fullWidth size="small" sx={{ mb: 3 }}>
             <Select
@@ -190,9 +192,9 @@ export function LightboxViewerInfo({
                 },
               }}
             >
-              <MenuItem value="safe">Safe</MenuItem>
-              <MenuItem value="suggestive">Suggestive</MenuItem>
-              <MenuItem value="explicit">Explicit</MenuItem>
+              <MenuItem value="safe">{t('gallery.info.ratings.safe')}</MenuItem>
+              <MenuItem value="suggestive">{t('gallery.info.ratings.suggestive')}</MenuItem>
+              <MenuItem value="explicit">{t('gallery.info.ratings.explicit')}</MenuItem>
             </Select>
           </FormControl>
 
@@ -200,7 +202,7 @@ export function LightboxViewerInfo({
 
           {/* Tags */}
           <Typography variant="subtitle2" sx={{ color: 'text.secondary', mb: 1 }}>
-            Tags
+            {t('gallery.info.tags')}
           </Typography>
 
           <Autocomplete
@@ -238,7 +240,7 @@ export function LightboxViewerInfo({
             renderInput={(params) => (
               <TextField
                 {...params}
-                placeholder={editTags.length === 0 ? 'Add tag (namespace:name)' : ''}
+                placeholder={editTags.length === 0 ? t('gallery.info.addTag') : ''}
                 size="small"
                 sx={{
                   '& .MuiOutlinedInput-root': {
@@ -274,7 +276,7 @@ export function LightboxViewerInfo({
             onClick={handleSave}
             startIcon={<Save />}
           >
-            {isSaving ? 'Saving...' : 'Save'}
+            {isSaving ? t('gallery.info.saving') : t('common.save')}
           </Button>
         </Box>
       </Box>

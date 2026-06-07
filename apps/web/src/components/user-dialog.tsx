@@ -13,6 +13,7 @@ import {
   TextField,
 } from '@mui/material'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import type { CreateUserDto, UpdateUserDto, UserRole, UserRow } from '../types.ts'
 
@@ -29,6 +30,7 @@ interface FieldErrors {
 }
 
 export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
+  const { t } = useTranslation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState<UserRole>('viewer')
@@ -55,7 +57,7 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const nextErrors = validateFields({ username, password, isEdit })
+    const nextErrors = validateFields({ username, password, isEdit }, t)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) {
       return
@@ -85,12 +87,12 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>{isEdit ? 'Edit User' : 'Create User'}</DialogTitle>
+      <DialogTitle>{isEdit ? t('admin.users.dialog.editUser') : t('admin.users.dialog.createUser')}</DialogTitle>
       <form onSubmit={handleSubmit} noValidate>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
-              label="Username"
+              label={t('admin.users.dialog.username')}
               required={!isEdit}
               value={username}
               onChange={(e) => {
@@ -105,7 +107,7 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
               fullWidth
             />
             <TextField
-              label={isEdit ? 'New Password' : 'Password'}
+              label={isEdit ? t('admin.users.dialog.newPassword') : t('admin.users.dialog.password')}
               type="password"
               required={!isEdit}
               value={password}
@@ -118,28 +120,28 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
               error={Boolean(errors.password)}
               helperText={
                 errors.password ??
-                (isEdit ? 'Leave blank to keep the current password.' : undefined)
+                (isEdit ? t('admin.users.dialog.passwordHelp') : undefined)
               }
               fullWidth
             />
             <FormControl fullWidth>
-              <InputLabel>Role</InputLabel>
+              <InputLabel>{t('admin.users.dialog.role')}</InputLabel>
               <Select
                 value={role}
-                label="Role"
+                label={t('admin.users.dialog.role')}
                 onChange={(e) => setRole(e.target.value as UserRole)}
               >
-                <MenuItem value="viewer">Viewer</MenuItem>
-                <MenuItem value="editor">Editor</MenuItem>
-                <MenuItem value="admin">Admin</MenuItem>
+                <MenuItem value="viewer">{t('admin.users.dialog.roles.viewer')}</MenuItem>
+                <MenuItem value="editor">{t('admin.users.dialog.roles.editor')}</MenuItem>
+                <MenuItem value="admin">{t('admin.users.dialog.roles.admin')}</MenuItem>
               </Select>
             </FormControl>
           </Stack>
         </DialogContent>
         <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button onClick={onClose}>{t('common.cancel')}</Button>
           <Button type="submit" variant="contained" disabled={loading}>
-            Save
+            {t('common.save')}
           </Button>
         </DialogActions>
       </form>
@@ -155,19 +157,18 @@ function validateFields({
   username: string
   password: string
   isEdit: boolean
-}): FieldErrors {
+}, t: any): FieldErrors {
   const errors: FieldErrors = {}
 
   if (!isEdit && !username.trim()) {
-    errors.username = 'Username is required.'
+    errors.username = t('admin.users.dialog.errors.usernameRequired')
   }
 
   if (!isEdit && !password.trim()) {
-    errors.password = 'Password is required.'
+    errors.password = t('admin.users.dialog.errors.passwordRequired')
   } else if (password) {
     if (password.length < 8 || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
-      errors.password =
-        'Password must be at least 8 characters, and include a lowercase letter and a number.'
+      errors.password = t('admin.users.dialog.errors.passwordWeak')
     }
   }
 

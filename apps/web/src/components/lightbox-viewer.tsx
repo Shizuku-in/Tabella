@@ -34,6 +34,7 @@ import {
 import type { TransitionProps } from '@mui/material/transitions'
 import type { ReactElement, Ref } from 'react'
 import { forwardRef, useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
@@ -75,6 +76,7 @@ export function LightboxViewer({
   favoriteOverrides,
   onToggleFavorite,
 }: LightboxViewerProps) {
+  const { t } = useTranslation()
   const { lightboxImageQuality, showLightboxTags } = useGalleryPreferencesStore(
     useShallow((state) => ({
       lightboxImageQuality: state.lightboxImageQuality,
@@ -406,7 +408,7 @@ export function LightboxViewer({
             zIndex: 3,
           }}
         >
-          <Tooltip title="Download" placement="bottom">
+          <Tooltip title={t('gallery.viewer.download')} placement="bottom">
             <IconButton
               sx={{
                 color: 'action.active',
@@ -419,7 +421,7 @@ export function LightboxViewer({
             </IconButton>
           </Tooltip>
 
-          <Tooltip title={isFavorite ? 'Remove Favorite' : 'Favorite'} placement="bottom">
+          <Tooltip title={isFavorite ? t('gallery.viewer.removeFavorite') : t('gallery.viewer.favorite')} placement="bottom">
             <IconButton
               sx={{
                 color: isFavorite ? 'primary.main' : 'action.active',
@@ -437,7 +439,7 @@ export function LightboxViewer({
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Info" placement="bottom">
+          <Tooltip title={t('gallery.viewer.info')} placement="bottom">
             <IconButton
               sx={{
                 color: showInfoPanel ? 'primary.main' : 'action.active',
@@ -453,7 +455,7 @@ export function LightboxViewer({
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Delete" placement="bottom">
+          <Tooltip title={t('gallery.viewer.delete')} placement="bottom">
             <IconButton
               sx={{
                 color: 'action.active',
@@ -469,7 +471,7 @@ export function LightboxViewer({
             </IconButton>
           </Tooltip>
 
-          <Tooltip title="Exit" placement="bottom">
+          <Tooltip title={t('gallery.viewer.exit')} placement="bottom">
             <IconButton
               sx={{
                 ml: 2,
@@ -501,7 +503,7 @@ export function LightboxViewer({
         >
           <Stack>
             <Typography variant="body1" sx={{ fontWeight: 600 }}>
-              Thumbnail
+              {t('gallery.quality.thumbnail')}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {thumbWidth}×{thumbHeight} [{formatSizeStr(fileSizes.thumb)}] WEBP
@@ -519,7 +521,7 @@ export function LightboxViewer({
         >
           <Stack>
             <Typography variant="body1" sx={{ fontWeight: 600 }}>
-              Sample
+              {t('gallery.quality.sample')}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {item.width}×{item.height} [{formatSizeStr(fileSizes.sample)}] WEBP
@@ -534,7 +536,7 @@ export function LightboxViewer({
         >
           <Stack>
             <Typography variant="body1" sx={{ fontWeight: 600 }}>
-              Original
+              {t('gallery.quality.original')}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {item.width}×{item.height} [{formatSizeStr(fileSizes.original)}]{' '}
@@ -572,16 +574,14 @@ export function LightboxViewer({
       >
         <Box sx={{ p: 3 }}>
           <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
-            Delete Image
+            {t('gallery.viewer.deleteTitle')}
           </Typography>
-          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
-            This action cannot be undone.
-            <br />
-            The image and all associated data will be permanently deleted.
+          <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3, whiteSpace: 'pre-line' }}>
+            {t('gallery.viewer.deleteWarning')}
           </Typography>
           <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
             <Button onClick={() => setShowDeleteDialog(false)} sx={{ color: 'text.primary' }}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button
               variant="contained"
@@ -589,7 +589,7 @@ export function LightboxViewer({
               disabled={isDeleting}
               onClick={handleDeleteConfirm}
             >
-              {isDeleting ? 'Deleting...' : 'Delete'}
+              {isDeleting ? t('gallery.viewer.deleting') : t('gallery.viewer.delete')}
             </Button>
           </Stack>
         </Box>
@@ -659,7 +659,7 @@ export function LightboxViewer({
               pointerEvents: 'auto',
             }}
           >
-            <Tooltip title={isTagsExpanded ? 'Hide Tags' : 'Show Tags'} placement="right">
+            <Tooltip title={isTagsExpanded ? t('gallery.viewer.hideTags') : t('gallery.viewer.showTags')} placement="right">
               <IconButton
                 size="small"
                 onClick={(e) => {

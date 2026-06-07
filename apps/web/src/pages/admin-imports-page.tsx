@@ -29,6 +29,7 @@ import {
 } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { useAuth } from '../auth/auth-provider.tsx'
 import { useServerEvents } from '../hooks/use-server-events.ts'
@@ -51,6 +52,7 @@ interface LocalUploadJob {
 }
 
 export function AdminImportsPage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const [serverDialogOpen, setServerDialogOpen] = useState(false)
   const [serverPath, setServerPath] = useState('')
@@ -100,12 +102,12 @@ export function AdminImportsPage() {
       })
     },
     onSuccess: (data) => {
-      showSnackbar('Job started. Job ID: ' + data.id, 'success')
+      showSnackbar(t('admin.imports.startSuccess', { id: data.id }), 'success')
       setServerDialogOpen(false)
       jobsQuery.refetch()
     },
     onError: (err) => {
-      showSnackbar(`Failed to start job: ${getApiErrorMessage(err, 'Request failed.')}`, 'error')
+      showSnackbar(t('admin.imports.startFail', { message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')) }), 'error')
     },
   })
 
@@ -162,7 +164,7 @@ export function AdminImportsPage() {
       jobsQuery.refetch()
     },
     onError: (err) => {
-      showSnackbar(`Failed to upload: ${getApiErrorMessage(err, 'Upload failed.')}`, 'error')
+      showSnackbar(t('admin.imports.uploadFail', { message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')) }), 'error')
     },
   })
 
@@ -212,7 +214,7 @@ export function AdminImportsPage() {
             onClick={() => packageInputRef.current?.click()}
             disabled={uploadMutation.isPending}
           >
-            Package
+            {t('admin.imports.buttons.package')}
           </Button>
           <Button
             variant="outlined"
@@ -220,7 +222,7 @@ export function AdminImportsPage() {
             onClick={() => folderInputRef.current?.click()}
             disabled={uploadMutation.isPending}
           >
-            Folder
+            {t('admin.imports.buttons.folder')}
           </Button>
           <Button
             variant="outlined"
@@ -228,7 +230,7 @@ export function AdminImportsPage() {
             onClick={() => setServerDialogOpen(true)}
             disabled={user?.role !== 'admin'}
           >
-            Server
+            {t('admin.imports.buttons.server')}
           </Button>
         </Stack>
       </Stack>
@@ -237,9 +239,9 @@ export function AdminImportsPage() {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ width: '100px' }}>Job ID</TableCell>
-              <TableCell sx={{ width: '180px' }}>Date</TableCell>
-              <TableCell>Status</TableCell>
+              <TableCell sx={{ width: '100px' }}>{t('admin.imports.columns.jobId')}</TableCell>
+              <TableCell sx={{ width: '180px' }}>{t('admin.imports.columns.date')}</TableCell>
+              <TableCell>{t('admin.imports.columns.status')}</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -272,15 +274,15 @@ export function AdminImportsPage() {
                           }}
                         >
                           <Typography variant="body2" sx={{ color: 'info.main', fontWeight: 500 }}>
-                            Uploading ({job.progress}%)
+                            {t('admin.imports.uploading', { progress: job.progress })}
                           </Typography>
                           <Typography
                             variant="caption"
                             sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}
                           >
                             {job.sourceType === 'package'
-                              ? 'Archive file'
-                              : `${job.totalItems} files`}
+                              ? t('admin.imports.archiveFile')
+                              : t('admin.imports.filesCount', { count: job.totalItems })}
                           </Typography>
                         </Stack>
                         <LinearProgress variant="determinate" value={job.progress} color="info" />
@@ -365,8 +367,8 @@ export function AdminImportsPage() {
                               sx={{ color: 'text.secondary', whiteSpace: 'nowrap' }}
                             >
                               {job.status === 'extracting' && job.sourceType === 'package'
-                                ? `Extracted ${job.processedItems} / ${job.totalItems}`
-                                : `${job.processedItems} / ${job.totalItems} (${progressPercent}%)`}
+                                ? t('admin.imports.progressExtracted', { processed: job.processedItems, total: job.totalItems })
+                                : t('admin.imports.progressCount', { processed: job.processedItems, total: job.totalItems, percent: progressPercent })}
                             </Typography>
                           )}
                         </Stack>
@@ -386,7 +388,7 @@ export function AdminImportsPage() {
             {Object.keys(activeUploads).length === 0 && jobsQuery.data?.items.length === 0 && (
               <TableRow>
                 <TableCell colSpan={3} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                  No import jobs found.
+                  {t('admin.imports.noJobs')}
                 </TableCell>
               </TableRow>
             )}
@@ -400,13 +402,13 @@ export function AdminImportsPage() {
         maxWidth="sm"
         fullWidth
       >
-        <DialogTitle>Server Import</DialogTitle>
+        <DialogTitle>{t('admin.imports.serverDialog.title')}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-            Scan a directory directly on the server's filesystem.
+            {t('admin.imports.serverDialog.description')}
           </Typography>
           <TextField
-            label="Server Directory Path"
+            label={t('admin.imports.serverDialog.pathLabel')}
             variant="outlined"
             size="small"
             fullWidth
@@ -415,7 +417,7 @@ export function AdminImportsPage() {
           />
         </DialogContent>
         <DialogActions sx={{ p: 2, pt: 0 }}>
-          <Button onClick={() => setServerDialogOpen(false)}>Cancel</Button>
+          <Button onClick={() => setServerDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button
             variant="contained"
             color="primary"
@@ -423,7 +425,7 @@ export function AdminImportsPage() {
             onClick={() => startJobMutation.mutate(serverPath)}
             disabled={startJobMutation.isPending}
           >
-            Import
+            {t('admin.imports.serverDialog.import')}
           </Button>
         </DialogActions>
       </Dialog>
