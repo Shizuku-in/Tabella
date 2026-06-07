@@ -8,5 +8,56 @@
     "delete": "Delete",
     "edit": "Edit",
     "search": "Search"
+  },
+  "nav": {
+    "imports": "/Imports",
+    "users": "/Users",
+    "server": "/Server",
+    "profile": "/Profile",
+    "advancedSearch": "Advanced Search",
+    "downloading": "Downloading archive...",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Gallery Settings",
+    "topBarButtons": "TopBar Buttons",
+    "topBar": {
+      "sort": "Sort",
+      "layout": "Layout",
+      "rating": "Rating",
+      "favorites": "Favorites Only",
+      "selectMultiple": "Select Multiple",
+      "search": "Search",
+      "advancedSearch": "Advanced Search",
+      "themeToggle": "Dark/Light Mode"
+    },
+    "masonryColumns": "Masonry Columns",
+    "gridColumns": "Grid Columns",
+    "display": "Display",
+    "displayOptions": {
+      "showResultsCount": "Show results count and sort",
+      "showMobileDetails": "Show image details on mobile",
+      "showLightboxTags": "Show tags in lightbox by default"
+    },
+    "hoverInfo": "Hover Info",
+    "hoverInfoOptions": {
+      "name": "Name",
+      "resolution": "Resolution",
+      "tags": "Tags",
+      "favorite": "Favorite",
+      "rating": "Rating",
+      "download": "Download"
+    },
+    "galleryQuality": "Image Quality (Gallery)",
+    "lightboxQuality": "Image Quality (Lightbox)",
+    "downloadQuality": "Download Quality (Bulk & Batch)",
+    "quality": {
+      "thumbnail": "Thumbnail",
+      "sample": "Sample",
+      "original": "Original"
+    },
+    "language": "Language"
   }
 }

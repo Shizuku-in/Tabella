@@ -14,11 +14,14 @@ import {
   FormGroup,
   Radio,
   RadioGroup,
+  Select,
+  MenuItem,
   Slider,
   Stack,
   Switch,
   Typography,
 } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
@@ -29,6 +32,7 @@ export interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
+  const { t, i18n } = useTranslation()
   const {
     masonryColumns,
     setMasonryColumns,
@@ -77,11 +81,11 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>Gallery Settings</DialogTitle>
+      <DialogTitle>{t('settings.title')}</DialogTitle>
       <DialogContent dividers sx={{ p: 0 }}>
         <Accordion square disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">TopBar Buttons</Typography>
+            <Typography variant="subtitle2">{t('settings.topBarButtons')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0, pb: 2 }}>
             <FormGroup row sx={{ px: 1 }}>
@@ -98,14 +102,14 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 ] as const
               ).map((key) => {
                 const labelMap: Record<typeof key, string> = {
-                  sort: 'Sort',
-                  layout: 'Layout',
-                  rating: 'Rating',
-                  favorites: 'Favorites Only',
-                  selectMultiple: 'Select Multiple',
-                  search: 'Search',
-                  advancedSearch: 'Advanced Search',
-                  themeToggle: 'Dark/Light Mode',
+                  sort: t('settings.topBar.sort'),
+                  layout: t('settings.topBar.layout'),
+                  rating: t('settings.topBar.rating'),
+                  favorites: t('settings.topBar.favorites'),
+                  selectMultiple: t('settings.topBar.selectMultiple'),
+                  search: t('settings.topBar.search'),
+                  advancedSearch: t('settings.topBar.advancedSearch'),
+                  themeToggle: t('settings.topBar.themeToggle'),
                 }
                 return (
                   <FormControlLabel
@@ -135,7 +139,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           sx={{ borderTop: 1, borderColor: 'divider', '&:before': { display: 'none' } }}
         >
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">Masonry Columns</Typography>
+            <Typography variant="subtitle2">{t('settings.masonryColumns')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0, pb: 2 }}>
             <Stack spacing={2} sx={{ px: 1 }}>
@@ -164,7 +168,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
 
         <Accordion square disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
           <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">Grid Columns</Typography>
+            <Typography variant="subtitle2">{t('settings.gridColumns')}</Typography>
           </AccordionSummary>
           <AccordionDetails sx={{ pt: 0, pb: 2 }}>
             <Stack spacing={2} sx={{ px: 1 }}>
@@ -195,7 +199,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           <Stack spacing={3}>
             <Box>
               <Typography variant="subtitle2" gutterBottom>
-                Display
+                {t('settings.display')}
               </Typography>
               <FormGroup>
                 <FormControlLabel
@@ -205,7 +209,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       onChange={(e) => setShowResultsCount(e.target.checked)}
                     />
                   }
-                  label={<Typography variant="body2">Show results count and sort</Typography>}
+                  label={<Typography variant="body2">{t('settings.displayOptions.showResultsCount')}</Typography>}
                 />
                 <FormControlLabel
                   control={
@@ -214,7 +218,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       onChange={(e) => setShowMobileDetails(e.target.checked)}
                     />
                   }
-                  label={<Typography variant="body2">Show image details on mobile</Typography>}
+                  label={<Typography variant="body2">{t('settings.displayOptions.showMobileDetails')}</Typography>}
                 />
                 <FormControlLabel
                   control={
@@ -223,14 +227,14 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       onChange={(e) => setShowLightboxTags(e.target.checked)}
                     />
                   }
-                  label={<Typography variant="body2">Show tags in lightbox by default</Typography>}
+                  label={<Typography variant="body2">{t('settings.displayOptions.showLightboxTags')}</Typography>}
                 />
               </FormGroup>
             </Box>
 
             <Box>
               <Typography variant="subtitle2" gutterBottom>
-                Hover Info
+                {t('settings.hoverInfo')}
               </Typography>
               <FormGroup row>
                 {(['name', 'resolution', 'tags', 'favorite', 'rating', 'download'] as const).map(
@@ -246,7 +250,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       }
                       label={
                         <Typography variant="body2" sx={{ textTransform: 'capitalize' }}>
-                          {key}
+                          {t(`settings.hoverInfoOptions.${key}` as any)}
                         </Typography>
                       }
                     />
@@ -257,7 +261,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
 
             <Box>
               <Typography variant="subtitle2" gutterBottom>
-                Image Quality (Gallery)
+                {t('settings.galleryQuality')}
               </Typography>
               <RadioGroup
                 row
@@ -266,23 +270,15 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                   setGalleryImageQuality(e.target.value as 'thumbnail' | 'sample' | 'original')
                 }
               >
-                <FormControlLabel
-                  value="thumbnail"
-                  control={<Radio size="small" />}
-                  label="Thumbnail"
-                />
-                <FormControlLabel value="sample" control={<Radio size="small" />} label="Sample" />
-                <FormControlLabel
-                  value="original"
-                  control={<Radio size="small" />}
-                  label="Original"
-                />
+                <FormControlLabel value="thumbnail" control={<Radio size="small" />} label={t('settings.quality.thumbnail')} />
+                <FormControlLabel value="sample" control={<Radio size="small" />} label={t('settings.quality.sample')} />
+                <FormControlLabel value="original" control={<Radio size="small" />} label={t('settings.quality.original')} />
               </RadioGroup>
             </Box>
 
             <Box>
               <Typography variant="subtitle2" gutterBottom>
-                Image Quality (Lightbox)
+                {t('settings.lightboxQuality')}
               </Typography>
               <RadioGroup
                 row
@@ -291,23 +287,15 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                   setLightboxImageQuality(e.target.value as 'thumbnail' | 'sample' | 'original')
                 }
               >
-                <FormControlLabel
-                  value="thumbnail"
-                  control={<Radio size="small" />}
-                  label="Thumbnail"
-                />
-                <FormControlLabel value="sample" control={<Radio size="small" />} label="Sample" />
-                <FormControlLabel
-                  value="original"
-                  control={<Radio size="small" />}
-                  label="Original"
-                />
+                <FormControlLabel value="thumbnail" control={<Radio size="small" />} label={t('settings.quality.thumbnail')} />
+                <FormControlLabel value="sample" control={<Radio size="small" />} label={t('settings.quality.sample')} />
+                <FormControlLabel value="original" control={<Radio size="small" />} label={t('settings.quality.original')} />
               </RadioGroup>
             </Box>
 
             <Box>
               <Typography variant="subtitle2" gutterBottom>
-                Download Quality (Bulk & Batch)
+                {t('settings.downloadQuality')}
               </Typography>
               <RadioGroup
                 row
@@ -316,24 +304,31 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                   setHoverDownloadQuality(e.target.value as 'thumbnail' | 'sample' | 'original')
                 }
               >
-                <FormControlLabel
-                  value="thumbnail"
-                  control={<Radio size="small" />}
-                  label="Thumbnail"
-                />
-                <FormControlLabel value="sample" control={<Radio size="small" />} label="Sample" />
-                <FormControlLabel
-                  value="original"
-                  control={<Radio size="small" />}
-                  label="Original"
-                />
+                <FormControlLabel value="thumbnail" control={<Radio size="small" />} label={t('settings.quality.thumbnail')} />
+                <FormControlLabel value="sample" control={<Radio size="small" />} label={t('settings.quality.sample')} />
+                <FormControlLabel value="original" control={<Radio size="small" />} label={t('settings.quality.original')} />
               </RadioGroup>
+            </Box>
+            
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                {t('settings.language')}
+              </Typography>
+              <Select
+                size="small"
+                value={i18n.resolvedLanguage || 'en'}
+                onChange={(e) => i18n.changeLanguage(e.target.value)}
+                sx={{ width: 150 }}
+              >
+                <MenuItem value="en">English</MenuItem>
+                <MenuItem value="zh-CN">简体中文</MenuItem>
+              </Select>
             </Box>
           </Stack>
         </Box>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Close</Button>
+        <Button onClick={onClose}>{t('common.close')}</Button>
       </DialogActions>
     </Dialog>
   )

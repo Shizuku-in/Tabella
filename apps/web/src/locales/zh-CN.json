@@ -8,5 +8,56 @@
     "delete": "删除",
     "edit": "编辑",
     "search": "搜索"
+  },
+  "nav": {
+    "imports": "/导入管理 (Imports)",
+    "users": "/用户管理 (Users)",
+    "server": "/服务器 (Server)",
+    "profile": "/个人中心 (Profile)",
+    "advancedSearch": "高级搜索",
+    "downloading": "正在打包下载...",
+    "darkMode": "深色模式",
+    "lightMode": "浅色模式",
+    "settings": "设置"
+  },
+  "settings": {
+    "title": "画廊设置",
+    "topBarButtons": "顶部按钮配置",
+    "topBar": {
+      "sort": "排序",
+      "layout": "布局切换",
+      "rating": "按评分筛选",
+      "favorites": "仅看收藏",
+      "selectMultiple": "多选模式",
+      "search": "搜索框",
+      "advancedSearch": "高级搜索",
+      "themeToggle": "深色/浅色模式"
+    },
+    "masonryColumns": "瀑布流列数",
+    "gridColumns": "网格列数",
+    "display": "显示设置",
+    "displayOptions": {
+      "showResultsCount": "显示搜索结果数量",
+      "showMobileDetails": "在手机端显示图片详细信息",
+      "showLightboxTags": "大图预览时默认显示标签"
+    },
+    "hoverInfo": "鼠标悬停信息",
+    "hoverInfoOptions": {
+      "name": "名称",
+      "resolution": "分辨率",
+      "tags": "标签",
+      "favorite": "收藏按钮",
+      "rating": "评分",
+      "download": "下载按钮"
+    },
+    "galleryQuality": "画廊图片质量",
+    "lightboxQuality": "大图预览质量",
+    "downloadQuality": "下载质量 (快捷及批量)",
+    "quality": {
+      "thumbnail": "缩略图",
+      "sample": "预览图",
+      "original": "原图"
+    },
+    "language": "语言 / Language"
   }
 }
