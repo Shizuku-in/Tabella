@@ -33,6 +33,16 @@ impl StdError for ImportJobError {}
 
 pub(crate) async fn start_worker(state: AppState) {
     tracing::info!("Starting background import worker");
+
+    // Clean up any jobs that were left in a running state due to a server crash or restart.
+    if let Err(e) = sqlx::query(
+        "UPDATE import_jobs SET status = 'failed', last_error = 'Interrupted by server restart', error_code = 'internal_error', updated_at = now() WHERE status IN ('running', 'extracting', 'processing')"
+    )
+    .execute(&state.pool)
+    .await {
+        tracing::error!("Failed to clean up stuck jobs: {:?}", e);
+    }
+
     loop {
         match process_next_job(&state).await {
             Ok(true) => continue, // Processed a job, check for next one immediately
