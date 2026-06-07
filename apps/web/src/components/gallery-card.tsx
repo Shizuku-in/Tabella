@@ -60,7 +60,7 @@ export function GalleryCard({
         ...(isJustified
           ? {
               flexGrow: item.width / item.height,
-              flexBasis: `${Math.max(220, Math.round((item.width / item.height) * 240))}px`,
+              flexBasis: `${Math.round((item.width / item.height) * 240)}px`,
               width: 'auto',
             }
           : null),
