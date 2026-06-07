@@ -55,7 +55,6 @@ export function GalleryCard({
         overflow: 'hidden',
         cursor: 'pointer',
         borderRadius: 0.75,
-        maxHeight: isGrid ? 'none' : '60vh',
         breakInside: layoutMode === 'masonry' ? 'avoid' : 'auto',
         bgcolor: 'rgba(17, 20, 29, 0.04)',
         ...(isJustified
