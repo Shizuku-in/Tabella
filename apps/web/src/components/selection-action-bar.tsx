@@ -1,5 +1,6 @@
 import { Close, Download, SelectAll } from '@mui/icons-material'
 import { Button, Fade, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 
 export interface SelectionActionBarProps {
   selectionMode: boolean
@@ -16,6 +17,7 @@ export function SelectionActionBar({
   onSelectAll,
   onDownload,
 }: SelectionActionBarProps) {
+  const { t } = useTranslation()
   return (
     <Fade in={selectionMode}>
       <Paper
@@ -43,10 +45,10 @@ export function SelectionActionBar({
           </IconButton>
 
           <Typography variant="body2" sx={{ fontWeight: 600, flex: 1, px: 1 }}>
-            {selectedCount} Selected
+            {t('gallery.selection.selected', { count: selectedCount })}
           </Typography>
 
-          <Tooltip title="Select all loaded items">
+          <Tooltip title={t('gallery.selection.selectAll')}>
             <IconButton size="small" onClick={onSelectAll}>
               <SelectAll />
             </IconButton>
@@ -60,7 +62,7 @@ export function SelectionActionBar({
             onClick={onDownload}
             sx={{ borderRadius: 6, textTransform: 'none', px: 2 }}
           >
-            Download
+            {t('gallery.selection.download')}
           </Button>
         </Stack>
       </Paper>

@@ -19,6 +19,7 @@ import {
   Typography,
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
+import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -48,6 +49,7 @@ export function TopNavigation({
   onOpenSettings,
   onOpenAdvancedSearch,
 }: TopNavigationProps) {
+  const { t } = useTranslation()
   const location = useLocation()
   const isGalleryRoute = location.pathname === '/'
   const isAdminImportsRoute = location.pathname.startsWith('/admin/imports')
@@ -153,7 +155,7 @@ export function TopNavigation({
                   fontStyle: 'italic',
                 }}
               >
-                /Imports
+                {t('nav.imports')}
               </Typography>
             )}
 
@@ -169,7 +171,7 @@ export function TopNavigation({
                   fontStyle: 'italic',
                 }}
               >
-                /Users
+                {t('nav.users')}
               </Typography>
             )}
 
@@ -185,7 +187,7 @@ export function TopNavigation({
                   fontStyle: 'italic',
                 }}
               >
-                /Server
+                {t('nav.server')}
               </Typography>
             )}
 
@@ -201,7 +203,7 @@ export function TopNavigation({
                   fontStyle: 'italic',
                 }}
               >
-                /Profile
+                {t('nav.profile')}
               </Typography>
             )}
 
@@ -216,7 +218,7 @@ export function TopNavigation({
                 {showSearchControl && <SearchBar />}
 
                 {showAdvancedSearchControl && (
-                  <Tooltip title="Advanced Search">
+                  <Tooltip title={t('nav.advancedSearch')}>
                     <IconButton
                       color={isAdvancedSearchActive ? 'primary' : 'default'}
                       onClick={onOpenAdvancedSearch}
@@ -232,7 +234,7 @@ export function TopNavigation({
 
           <Stack direction="row" spacing={0.5} sx={{ flexShrink: 0, alignItems: 'center' }}>
             {isDownloading && (
-              <Tooltip title="Downloading archive...">
+              <Tooltip title={t('nav.downloading')}>
                 <IconButton color="primary" sx={{ p: 0.75, borderRadius: '50%' }}>
                   <Badge
                     overlap="circular"
@@ -252,7 +254,7 @@ export function TopNavigation({
             )}
 
             {topBarConfig.themeToggle && (
-              <Tooltip title={mode === 'light' ? 'Dark mode' : 'Light mode'}>
+              <Tooltip title={mode === 'light' ? t('nav.darkMode') : t('nav.lightMode')}>
                 <IconButton
                   color="default"
                   onClick={onToggleMode}
@@ -268,7 +270,7 @@ export function TopNavigation({
               </Tooltip>
             )}
 
-            <Tooltip title="Settings">
+            <Tooltip title={t('nav.settings')}>
               <IconButton
                 color="default"
                 onClick={onOpenSettings}

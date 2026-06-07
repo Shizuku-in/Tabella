@@ -1,0 +1,391 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "close": "Close",
+    "delete": "Delete",
+    "edit": "Edit",
+    "search": "Search",
+    "notFound": {
+      "title": "Page Not Found",
+      "description": "The page you are looking for does not exist, has been removed, or is temporarily unavailable.",
+      "back": "Back"
+    },
+    "pwa": {
+      "ready": "Ready for offline",
+      "readyDesc": "App is ready to work offline.",
+      "update": "Update available",
+      "updateDesc": "New content is available, click on reload button to update.",
+      "reload": "Reload"
+    }
+  },
+  "nav": {
+    "imports": "/Imports",
+    "users": "/Users",
+    "server": "/Server",
+    "profile": "/Profile",
+    "advancedSearch": "Advanced Search",
+    "downloading": "Downloading archive...",
+    "darkMode": "Dark mode",
+    "lightMode": "Light mode",
+    "settings": "Settings",
+    "guest": "Guest",
+    "viewer": "Viewer",
+    "menuProfile": "Profile",
+    "menuUsers": "Users",
+    "menuImports": "Import Jobs",
+    "menuServer": "Server Manage",
+    "menuAbout": "About",
+    "menuSignOut": "Sign out"
+  },
+  "settings": {
+    "title": "Gallery Settings",
+    "topBarButtons": "TopBar Buttons",
+    "topBar": {
+      "sort": "Sort",
+      "layout": "Layout",
+      "rating": "Rating",
+      "favorites": "Favorites Only",
+      "selectMultiple": "Select Multiple",
+      "search": "Search",
+      "advancedSearch": "Advanced Search",
+      "themeToggle": "Dark/Light Mode"
+    },
+    "masonryColumns": "Masonry Columns",
+    "gridColumns": "Grid Columns",
+    "display": "Display",
+    "displayOptions": {
+      "showResultsCount": "Show results count and sort",
+      "showMobileDetails": "Show image details on mobile",
+      "showLightboxTags": "Show tags in lightbox by default"
+    },
+    "hoverInfo": "Hover Info",
+    "hoverInfoOptions": {
+      "name": "Name",
+      "resolution": "Resolution",
+      "tags": "Tags",
+      "favorite": "Favorite",
+      "rating": "Rating",
+      "download": "Download"
+    },
+    "galleryQuality": "Image Quality (Gallery)",
+    "lightboxQuality": "Image Quality (Lightbox)",
+    "downloadQuality": "Download Quality (Bulk & Batch)",
+    "quality": {
+      "thumbnail": "Thumbnail",
+      "sample": "Sample",
+      "original": "Original"
+    },
+    "language": "Language"
+  },
+  "gallery": {
+    "loading": "Loading gallery...",
+    "resultsCount_one": "{{count}} result",
+    "resultsCount_other": "{{count}} results",
+    "loadingMore": " · Loading more",
+    "filters": {
+      "search": "Search: {{tags}}",
+      "rating": "Rating: {{rating}}",
+      "sort": "Sort: {{sort}}"
+    },
+    "sort": {
+      "oldest": "Oldest",
+      "filenameAsc": "Filename A-Z",
+      "filenameDesc": "Filename Z-A",
+      "newest": "Newest"
+    },
+    "layout": {
+      "grid": "Grid",
+      "masonry": "Masonry",
+      "justified": "Justified"
+    },
+    "ratingFilter": {
+      "all": "All ratings",
+      "safe": "Safe",
+      "suggestive": "Suggestive",
+      "explicit": "Explicit"
+    },
+    "quality": {
+      "thumbnail": "Thumbnail",
+      "sample": "Sample",
+      "original": "Original"
+    },
+    "info": {
+      "title": "Image Info",
+      "filename": "Filename",
+      "dimensions": "Dimensions",
+      "fileSize": "File size",
+      "sha256": "SHA256",
+      "imported": "Imported",
+      "source": "Source",
+      "uploader": "Uploader",
+      "rating": "Rating",
+      "tags": "Tags",
+      "addTag": "Add tag (namespace:name)",
+      "saving": "Saving...",
+      "ratings": {
+        "safe": "Safe",
+        "suggestive": "Suggestive",
+        "explicit": "Explicit"
+      }
+    },
+    "viewer": {
+      "download": "Download",
+      "removeFavorite": "Remove Favorite",
+      "favorite": "Favorite",
+      "info": "Info",
+      "delete": "Delete",
+      "exit": "Exit",
+      "hideTags": "Hide Tags",
+      "showTags": "Show Tags",
+      "deleteTitle": "Delete Image",
+      "deleteWarning": "This action cannot be undone.\nThe image and all associated data will be permanently deleted.",
+      "deleting": "Deleting..."
+    },
+    "advancedSearch": {
+      "title": "Advanced Search",
+      "includeTags": "Include Tags",
+      "excludeTags": "Exclude Tags",
+      "tagPlaceholder": "e.g. namespace:name",
+      "uploadedAfter": "Uploaded After",
+      "uploadedBefore": "Uploaded Before",
+      "minWidth": "Min Width (px)",
+      "minWidthPlaceholder": "e.g. 1920",
+      "minHeight": "Min Height (px)",
+      "minHeightPlaceholder": "e.g. 1080",
+      "minAspect": "Min Aspect Ratio (W/H)",
+      "minAspectPlaceholder": "e.g. 1.77 for 16:9",
+      "maxAspect": "Max Aspect Ratio (W/H)",
+      "maxAspectPlaceholder": "e.g. 0.56 for 9:16",
+      "clearAll": "Clear All",
+      "apply": "Apply Filters",
+      "errors": {
+        "positiveInteger": "{{label}} must be a positive integer.",
+        "greaterThanZero": "{{label}} must be greater than 0.",
+        "validNumber": "{{label}} must be a valid number."
+      }
+    },
+    "selection": {
+      "selected": "{{count}} Selected",
+      "selectAll": "Select all loaded items",
+      "download": "Download"
+    },
+    "errors": {
+      "loadFailed": "Unable to load gallery",
+      "refresh": "Please refresh and try again.",
+      "noMatching": "No matching images",
+      "noMatchingDesc": "Try clearing the search or relaxing the rating filter.",
+      "end": "End of gallery",
+      "scrollMore": "Scroll for more",
+      "downloadFail": "Failed to start download: {{message}}",
+      "downloadNetwork": "Network error while starting download."
+    }
+  },
+  "about": {
+    "title": "About",
+    "description": "A high-performance, self-hosted gallery.",
+    "techStack": "TECH STACK",
+    "version": "Version: {{version}}",
+    "viewSource": "View Source"
+  },
+  "auth": {
+    "guards": {
+      "checkingSession": "Checking session",
+      "restoringSession": "Restoring the current login state.",
+      "checkingAccess": "Checking access",
+      "verifyingPermissions": "Verifying account permissions."
+    },
+    "login": {
+      "checkingSession": "Checking session",
+      "restoring": "Restoring the current login state.",
+      "signIn": "Sign in",
+      "signInFailed": "Sign in failed. Please try again.",
+      "signingIn": "Signing in",
+      "description": "Private access for your Tabella gallery.",
+      "returnTo": "After login you will return to {{target}}.",
+      "username": "Username",
+      "password": "Password"
+    },
+    "profile": {
+      "title": "Profile Settings",
+      "role": "Role: {{role}}",
+      "accountDetails": "Account Details",
+      "username": "Username",
+      "changePassword": "Change Password",
+      "currentPassword": "Current Password",
+      "currentPasswordHelp": "Required if you want to set a new password",
+      "newPassword": "New Password",
+      "success": "Profile updated successfully!",
+      "fail": "Failed to update profile: {{message}}",
+      "errors": {
+        "invalidUsername": "Invalid username.",
+        "invalidCurrent": "Current password is incorrect.",
+        "invalidNew": "Invalid new password.",
+        "usernameRequired": "Username is required.",
+        "currentRequired": "Current password is required to set a new password.",
+        "newRequired": "New password is required when providing a current password.",
+        "passwordWeak": "Password must be at least 8 characters and contain lowercase letters and numbers.",
+        "requestFailed": "Failed to update profile: {{message}}"
+      }
+    }
+  },
+  "admin": {
+    "users": {
+      "title": "Users",
+      "create": "Create User",
+      "id": "ID",
+      "username": "Username",
+      "role": "Role",
+      "createdAt": "Created At",
+      "actions": "Actions",
+      "noUsers": "No users found.",
+      "createSuccess": "User created successfully.",
+      "createFail": "Failed to create user: {{message}}",
+      "updateSuccess": "User updated successfully.",
+      "updateFail": "Failed to update user: {{message}}",
+      "deleteSuccess": "User deleted successfully.",
+      "deleteFail": "Failed to delete user: {{message}}",
+      "confirmDeleteTitle": "Confirm Delete",
+      "confirmDeleteWarning": "Are you sure you want to delete user \"{{username}}\"?\nThis action cannot be undone.",
+      "dialog": {
+        "createUser": "Create User",
+        "editUser": "Edit User",
+        "username": "Username",
+        "newPassword": "New Password",
+        "password": "Password",
+        "passwordHelp": "Leave blank to keep the current password.",
+        "role": "Role",
+        "roles": {
+          "admin": "Admin",
+          "editor": "Editor",
+          "viewer": "Viewer"
+        },
+        "errors": {
+          "usernameRequired": "Username is required.",
+          "passwordRequired": "Password is required.",
+          "passwordWeak": "Password must be at least 8 characters, and include a lowercase letter and a number.",
+          "requestFailed": "Request failed."
+        }
+      }
+    },
+    "server": {
+      "title": "Server Settings",
+      "loading": "Loading settings...",
+      "loadFail": "Failed to load server settings.",
+      "updateSuccess": "Server settings updated successfully!",
+      "updateFail": "Failed to update server settings.",
+      "validateFail": "Failed to validate server settings.",
+      "downloads": "Downloads",
+      "maxDownloadImages": "Max Download Images",
+      "maxDownloadImagesHelp": "Maximum number of images allowed in a single archive download.",
+      "maxDownloadSize": "Max Download Size (Bytes)",
+      "maxDownloadSizeHelp": "Maximum total file size allowed in a single archive download.",
+      "downloadRetention": "Download Retention (Hours)",
+      "downloadRetentionHelp": "How long generated archives are kept before being automatically deleted.",
+      "imports": "Imports",
+      "batchSize": "Import Progress Batch Size",
+      "batchSizeHelp": "How many files to process before updating progress in the database. Lower values give more frequent UI updates but higher DB load.",
+      "imageProcessing": "Image Processing",
+      "thumbSize": "Thumbnail Max Size (px)",
+      "thumbSizeHelp": "Maximum dimension (width or height) for generated thumbnails. Default is 500.",
+      "thumbQuality": "Thumbnail Quality (WebP)",
+      "thumbQualityHelp": "WebP compression quality for thumbnails (1.0 - 100.0). Default is 75.",
+      "sampleSize": "Sample Max Size (px)",
+      "sampleSizeHelp": "Maximum dimension for sample images. Set to 0 to keep the original resolution. Default is 0.",
+      "sampleQuality": "Sample Quality (WebP)",
+      "sampleQualityHelp": "WebP compression quality for samples (1.0 - 100.0). Default is 80.",
+      "security": "Security & Sessions",
+      "sessionTtl": "Session TTL (Hours)",
+      "sessionTtlHelp": "How long a user session remains valid before requiring re-login.",
+      "secureCookies": "Secure Cookies",
+      "secureCookiesHelp": "Only send cookies over HTTPS. Recommended for production.",
+      "errors": {
+        "positiveInteger": "{{label}} must be a positive integer.",
+        "greaterThanZero": "{{label}} must be greater than 0.",
+        "mustBeInteger": "{{label}} must be an integer.",
+        "betweenMinMax": "{{label}} must be between {{min}} and {{max}}.",
+        "betweenMinMaxOrZero": "{{label}} must be between {{min}} and {{max}} (or 0).",
+        "mustBeNumber": "{{label}} must be a number."
+      }
+    },
+    "imports": {
+      "startSuccess": "Job started. Job ID: {{id}}",
+      "startFail": "Failed to start job: {{message}}",
+      "uploadFail": "Failed to upload: {{message}}",
+      "buttons": {
+        "package": "Package",
+        "folder": "Folder",
+        "server": "Server"
+      },
+      "columns": {
+        "jobId": "Job ID",
+        "date": "Date",
+        "status": "Status"
+      },
+      "uploadingRow": "Uploading...",
+      "uploading": "Uploading ({{progress}}%)",
+      "archiveFile": "Archive file",
+      "filesCount": "{{count}} files",
+      "progressExtracted": "Extracted {{processed}} / {{total}}",
+      "progressCount": "{{processed}} / {{total}} ({{percent}}%)",
+      "noJobs": "No import jobs found.",
+      "serverDialog": {
+        "title": "Server Import",
+        "description": "Scan a directory directly on the server's filesystem.",
+        "pathLabel": "Server Directory Path",
+        "import": "Import"
+      }
+    }
+  },
+  "api": {
+    "errors": {
+      "authenticationRequired": "Authentication required.",
+      "adminRequired": "Admin privileges required.",
+      "editorRequired": "Editor or admin privileges required.",
+      "missingCredentials": "Username and password are required.",
+      "invalidCredentials": "Invalid username or password.",
+      "invalidUsername": "Username cannot be empty.",
+      "duplicateUsername": "Username is already taken.",
+      "missingNewPassword": "New password is required when current password is provided.",
+      "missingCurrentPassword": "Current password is required to set a new password.",
+      "invalidPassword": "Current password is incorrect.",
+      "noFileUploaded": "No file was provided.",
+      "invalidMultipart": "Uploaded data could not be processed.",
+      "payloadTooLarge": "Uploaded payload is too large.",
+      "invalidSettings": "Server settings are invalid.",
+      "roleChangeNotAllowed": "You cannot change your own role.",
+      "selfDeleteNotAllowed": "You cannot delete your own account.",
+      "userNotFound": "User not found.",
+      "imageNotFound": "Image not found.",
+      "importJobNotFound": "Import job not found.",
+      "noImportableFiles": "No supported image files were found in the import source.",
+      "noFilesUploaded": "No files uploaded.",
+      "invalidUploadPath": "Upload path is invalid.",
+      "invalidCursor": "Invalid image pagination cursor.",
+      "cursorMissingImportedAt": "Image pagination cursor is missing imported_at.",
+      "cursorMissingFilename": "Image pagination cursor is missing filename.",
+      "noImagesSelected": "No images selected.",
+      "selectedImagesNotFound": "Selected images not found.",
+      "tooManyImagesRequested": "Cannot download more than {{max_images}} images at once.",
+      "downloadSizeLimitExceeded": "Total size exceeds the maximum limit of {{max_total_bytes}} bytes.",
+      "downloadJobNotFound": "Download job not found.",
+      "downloadJobAccessDenied": "You can only access your own download jobs.",
+      "downloadJobNotCompleted": "The download job is not completed yet.",
+      "downloadArchiveMissing": "The archive file no longer exists.",
+      "archiveGenerationFailed": "Download job failed.",
+      "importProcessingFailed": "Import job failed.",
+      "weakPasswordTooShort": "Password must be at least 8 characters long.",
+      "weakPasswordMissingLowercase": "Password must contain at least one lowercase letter.",
+      "weakPasswordMissingNumber": "Password must contain at least one number.",
+      "internalError": "Internal server error.",
+      "networkError": "Network error during upload.",
+      "uploadAborted": "Upload aborted.",
+      "fallbackAllowedNumber": "the allowed number of",
+      "DEFAULT_REQUEST_FAILED": "Request failed.",
+      "defaultRequestFailed": "Request failed."
+    }
+  }
+}

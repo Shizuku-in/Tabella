@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
 import { FullscreenState } from '../components/fullscreen-state.tsx'
@@ -5,12 +6,16 @@ import type { UserRole } from '../types.ts'
 import { useAuth } from './auth-provider.tsx'
 
 export function RequireAuth() {
+  const { t } = useTranslation()
   const { status } = useAuth()
   const location = useLocation()
 
   if (status === 'loading') {
     return (
-      <FullscreenState title="Checking session" description="Restoring the current login state." />
+      <FullscreenState
+        title={t('auth.guards.checkingSession')}
+        description={t('auth.guards.restoringSession')}
+      />
     )
   }
 
@@ -29,10 +34,16 @@ const ROLE_WEIGHT: Record<UserRole, number> = {
 }
 
 export function RequireRole({ role }: { role: UserRole }) {
+  const { t } = useTranslation()
   const { status, user } = useAuth()
 
   if (status === 'loading') {
-    return <FullscreenState title="Checking access" description="Verifying account permissions." />
+    return (
+      <FullscreenState
+        title={t('auth.guards.checkingAccess')}
+        description={t('auth.guards.verifyingPermissions')}
+      />
+    )
   }
 
   if (!user || ROLE_WEIGHT[user.role] < ROLE_WEIGHT[role]) {

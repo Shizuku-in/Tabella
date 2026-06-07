@@ -1,8 +1,10 @@
 import { ErrorOutlined, HomeOutlined } from '@mui/icons-material'
 import { Box, Button, Stack, Typography } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 import { Link as RouterLink } from 'react-router-dom'
 
 export function NotFoundPage() {
+  const { t } = useTranslation()
   return (
     <Box
       sx={{
@@ -30,11 +32,10 @@ export function NotFoundPage() {
             404
           </Typography>
           <Typography variant="h6" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-            Page Not Found
+            {t('common.notFound.title')}
           </Typography>
           <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-            The page you are looking for does not exist, has been removed, or is temporarily
-            unavailable.
+            {t('common.notFound.description')}
           </Typography>
         </Stack>
 
@@ -46,7 +47,7 @@ export function NotFoundPage() {
           startIcon={<HomeOutlined />}
           sx={{ mt: 2, borderRadius: 1, textTransform: 'none', px: 4 }}
         >
-          Back
+          {t('common.notFound.back')}
         </Button>
       </Stack>
     </Box>

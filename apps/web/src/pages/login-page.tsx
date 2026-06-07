@@ -12,6 +12,7 @@ import {
 import { alpha } from '@mui/material/styles'
 import type { FormEvent } from 'react'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Navigate, useSearchParams } from 'react-router-dom'
 
 import { useAuth } from '../auth/auth-provider.tsx'
@@ -19,6 +20,7 @@ import { FullscreenState } from '../components/fullscreen-state.tsx'
 import { getApiErrorMessage } from '../lib/api.ts'
 
 export function LoginPage() {
+  const { t } = useTranslation()
   const { status, login } = useAuth()
   const [searchParams] = useSearchParams()
   const [username, setUsername] = useState('')
@@ -30,7 +32,10 @@ export function LoginPage() {
 
   if (status === 'loading') {
     return (
-      <FullscreenState title="Checking session" description="Restoring the current login state." />
+      <FullscreenState
+        title={t('auth.login.checkingSession')}
+        description={t('auth.login.restoring')}
+      />
     )
   }
 
@@ -46,7 +51,7 @@ export function LoginPage() {
     try {
       await login({ username, password })
     } catch (error) {
-      setErrorMessage(getApiErrorMessage(error, 'Sign in failed. Please try again.'))
+      setErrorMessage(getApiErrorMessage(error, t('auth.login.signInFailed')))
     } finally {
       setSubmitting(false)
     }
@@ -91,13 +96,13 @@ export function LoginPage() {
             </Box>
             <Stack spacing={0.5}>
               <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                Sign in
+                {t('auth.login.signIn')}
               </Typography>
               <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                Private access for your Tabella gallery.
+                {t('auth.login.description')}
               </Typography>
               <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                After login you will return to {targetLabel}.
+                {t('auth.login.returnTo', { target: targetLabel })}
               </Typography>
             </Stack>
           </Stack>
@@ -116,7 +121,7 @@ export function LoginPage() {
           ) : null}
 
           <TextField
-            label="Username"
+            label={t('auth.login.username')}
             autoComplete="username"
             value={username}
             onChange={(event) => setUsername(event.target.value)}
@@ -124,7 +129,7 @@ export function LoginPage() {
             required
           />
           <TextField
-            label="Password"
+            label={t('auth.login.password')}
             type="password"
             autoComplete="current-password"
             value={password}
@@ -140,7 +145,7 @@ export function LoginPage() {
             startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : undefined}
             sx={{ mt: 0.5 }}
           >
-            {submitting ? 'Signing in' : 'Sign in'}
+            {submitting ? t('auth.login.signingIn') : t('auth.login.signIn')}
           </Button>
         </Stack>
       </Paper>

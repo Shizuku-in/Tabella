@@ -16,6 +16,7 @@ import {
 } from '@mui/icons-material'
 import { Avatar, IconButton, Menu, MenuItem, Stack, Tooltip, Typography } from '@mui/material'
 import { startTransition, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link as RouterLink, useLocation } from 'react-router-dom'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -25,22 +26,23 @@ import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import type { GallerySort, LayoutMode, RatingFilter } from '../types.ts'
 import { AboutDialog } from './about-dialog.tsx'
 
-const sortOptions: Array<{ value: GallerySort; label: string }> = [
-  { value: 'newest', label: 'Newest' },
-  { value: 'oldest', label: 'Oldest' },
-  { value: 'filename_asc', label: 'Filename A-Z' },
-  { value: 'filename_desc', label: 'Filename Z-A' },
-]
-
 export function SortControl() {
+  const { t } = useTranslation()
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const { sort, setSort } = useGallerySessionStore(
     useShallow((state) => ({ sort: state.sort, setSort: state.setSort })),
   )
 
+  const sortOptions: Array<{ value: GallerySort; label: string }> = [
+    { value: 'newest', label: t('gallery.sort.newest') },
+    { value: 'oldest', label: t('gallery.sort.oldest') },
+    { value: 'filename_asc', label: t('gallery.sort.filenameAsc') },
+    { value: 'filename_desc', label: t('gallery.sort.filenameDesc') },
+  ]
+
   return (
     <>
-      <Tooltip title="Sort">
+      <Tooltip title={t('settings.topBar.sort')}>
         <IconButton
           color={anchorEl ? 'primary' : 'default'}
           onClick={(event) => setAnchorEl(event.currentTarget)}
@@ -73,21 +75,22 @@ export function SortControl() {
   )
 }
 
-const layoutOptions: Array<{ value: LayoutMode; label: string }> = [
-  { value: 'grid', label: 'Grid' },
-  { value: 'masonry', label: 'Masonry' },
-  { value: 'justified', label: 'Justified' },
-]
-
 export function LayoutControl() {
+  const { t } = useTranslation()
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const { layoutMode, setLayoutMode } = useGalleryPreferencesStore(
     useShallow((state) => ({ layoutMode: state.layoutMode, setLayoutMode: state.setLayoutMode })),
   )
 
+  const layoutOptions: Array<{ value: LayoutMode; label: string }> = [
+    { value: 'grid', label: t('gallery.layout.grid') },
+    { value: 'masonry', label: t('gallery.layout.masonry') },
+    { value: 'justified', label: t('gallery.layout.justified') },
+  ]
+
   return (
     <>
-      <Tooltip title="Layout">
+      <Tooltip title={t('settings.topBar.layout')}>
         <IconButton
           color={anchorEl ? 'primary' : 'default'}
           onClick={(event) => setAnchorEl(event.currentTarget)}
@@ -122,14 +125,8 @@ export function LayoutControl() {
   )
 }
 
-const ratingOptions: Array<{ value: RatingFilter; label: string }> = [
-  { value: 'all', label: 'All ratings' },
-  { value: 'safe', label: 'Safe' },
-  { value: 'suggestive', label: 'Suggestive' },
-  { value: 'explicit', label: 'Explicit' },
-]
-
 export function RatingControl() {
+  const { t } = useTranslation()
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const { ratingFilter, setRatingFilter } = useGallerySessionStore(
     useShallow((state) => ({
@@ -138,9 +135,16 @@ export function RatingControl() {
     })),
   )
 
+  const ratingOptions: Array<{ value: RatingFilter; label: string }> = [
+    { value: 'all', label: t('gallery.ratingFilter.all') },
+    { value: 'safe', label: t('gallery.ratingFilter.safe') },
+    { value: 'suggestive', label: t('gallery.ratingFilter.suggestive') },
+    { value: 'explicit', label: t('gallery.ratingFilter.explicit') },
+  ]
+
   return (
     <>
-      <Tooltip title="Rating">
+      <Tooltip title={t('settings.topBar.rating')}>
         <IconButton
           color={ratingFilter !== 'all' || anchorEl ? 'primary' : 'default'}
           onClick={(event) => setAnchorEl(event.currentTarget)}
@@ -178,6 +182,7 @@ export function RatingControl() {
 }
 
 export function FavoritesControl() {
+  const { t } = useTranslation()
   const { favoritesOnly, setFavoritesOnly } = useGallerySessionStore(
     useShallow((state) => ({
       favoritesOnly: state.favoritesOnly,
@@ -186,7 +191,7 @@ export function FavoritesControl() {
   )
 
   return (
-    <Tooltip title="Favorites Only">
+    <Tooltip title={t('settings.topBar.favorites')}>
       <IconButton
         color={favoritesOnly ? 'primary' : 'default'}
         onClick={() => setFavoritesOnly(!favoritesOnly)}
@@ -203,6 +208,7 @@ export function FavoritesControl() {
 }
 
 export function SelectMultipleControl() {
+  const { t } = useTranslation()
   const { selectionMode, setSelectionMode } = useGallerySessionStore(
     useShallow((state) => ({
       selectionMode: state.selectionMode,
@@ -211,7 +217,7 @@ export function SelectMultipleControl() {
   )
 
   return (
-    <Tooltip title="Select Multiple">
+    <Tooltip title={t('settings.topBar.selectMultiple')}>
       <IconButton
         color={selectionMode ? 'primary' : 'default'}
         onClick={() => setSelectionMode(!selectionMode)}
@@ -228,6 +234,7 @@ export function SelectMultipleControl() {
 }
 
 export function UserControl() {
+  const { t } = useTranslation()
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
   const [aboutOpen, setAboutOpen] = useState(false)
   const { user, logout } = useAuth()
@@ -236,8 +243,10 @@ export function UserControl() {
   const isAdmin = user?.role === 'admin'
   const isEditor = user?.role === 'admin' || user?.role === 'editor'
   const userRoleDisplay = !user?.role
-    ? 'Viewer'
-    : user.role.charAt(0).toUpperCase() + user.role.slice(1)
+    ? t('nav.guest')
+    : user.role === 'admin' || user.role === 'editor'
+      ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+      : t('nav.viewer')
 
   const handleLogout = async () => {
     setAnchorEl(null)
@@ -276,7 +285,7 @@ export function UserControl() {
         <MenuItem disabled sx={{ opacity: '1 !important', pb: 1.5, pt: 1 }}>
           <Stack spacing={0}>
             <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-              {user?.username ?? 'Guest'}
+              {user?.username ?? t('nav.guest')}
             </Typography>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
               {userRoleDisplay}
@@ -291,7 +300,7 @@ export function UserControl() {
           onClick={() => setAnchorEl(null)}
         >
           <PersonOutlined fontSize="small" sx={{ mr: 1 }} />
-          Profile
+          {t('nav.menuProfile')}
         </MenuItem>
 
         {isAdmin && (
@@ -302,7 +311,7 @@ export function UserControl() {
             onClick={() => setAnchorEl(null)}
           >
             <GroupOutlined fontSize="small" sx={{ mr: 1 }} />
-            Users
+            {t('nav.menuUsers')}
           </MenuItem>
         )}
 
@@ -314,7 +323,7 @@ export function UserControl() {
             onClick={() => setAnchorEl(null)}
           >
             <PlaylistAdd fontSize="small" sx={{ mr: 1 }} />
-            Import Jobs
+            {t('nav.menuImports')}
           </MenuItem>
         )}
 
@@ -326,7 +335,7 @@ export function UserControl() {
             onClick={() => setAnchorEl(null)}
           >
             <AdminPanelSettingsOutlined fontSize="small" sx={{ mr: 1 }} />
-            Server Manage
+            {t('nav.menuServer')}
           </MenuItem>
         )}
 
@@ -337,12 +346,12 @@ export function UserControl() {
           }}
         >
           <InfoOutlined fontSize="small" sx={{ mr: 1 }} />
-          About
+          {t('nav.menuAbout')}
         </MenuItem>
 
         <MenuItem onClick={handleLogout}>
           <LogoutOutlined fontSize="small" sx={{ mr: 1 }} />
-          Sign out
+          {t('nav.menuSignOut')}
         </MenuItem>
       </Menu>
 

@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import React, { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { useAuth } from '../auth/auth-provider.tsx'
 import { ApiError, getApiErrorMessage, request, uploadWithProgress } from '../lib/api.ts'
@@ -26,6 +27,7 @@ interface ProfileFieldErrors {
 }
 
 export function ProfilePage() {
+  const { t } = useTranslation()
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
@@ -101,11 +103,7 @@ export function ProfilePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const nextErrors = validateProfileFields({
-      username,
-      currentPassword,
-      newPassword,
-    })
+    const nextErrors = validateProfileFields({ username, currentPassword, newPassword }, t)
     setErrors(nextErrors)
     if (Object.keys(nextErrors).length > 0) {
       return
@@ -123,7 +121,7 @@ export function ProfilePage() {
         }
       }
 
-      showSnackbar('Profile updated successfully!', 'success')
+      showSnackbar(t('auth.profile.success'), 'success')
       setCurrentPassword('')
       setNewPassword('')
       setAvatarFile(null)
@@ -150,7 +148,7 @@ export function ProfilePage() {
         ) {
           setErrors((prev) => ({
             ...prev,
-            username: getApiErrorMessage(error, 'Invalid username'),
+            username: getApiErrorMessage(error, t('auth.profile.errors.invalidUsername')),
           }))
           return
         }
@@ -160,7 +158,7 @@ export function ProfilePage() {
         ) {
           setErrors((prev) => ({
             ...prev,
-            currentPassword: getApiErrorMessage(error, 'Invalid current password'),
+            currentPassword: getApiErrorMessage(error, t('auth.profile.errors.invalidCurrent')),
           }))
           return
         }
@@ -172,13 +170,15 @@ export function ProfilePage() {
         ) {
           setErrors((prev) => ({
             ...prev,
-            newPassword: getApiErrorMessage(error, 'Invalid new password'),
+            newPassword: getApiErrorMessage(error, t('auth.profile.errors.invalidNew')),
           }))
           return
         }
       }
       showSnackbar(
-        `Failed to update profile: ${getApiErrorMessage(error, 'Request failed.')}`,
+        t('auth.profile.fail', {
+          message: getApiErrorMessage(error, t('auth.profile.errors.requestFailed')),
+        }),
         'error',
       )
     }
@@ -192,7 +192,7 @@ export function ProfilePage() {
 
   return (
     <Stack spacing={4} sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
-      <Typography variant="h5">Profile Settings</Typography>
+      <Typography variant="h5">{t('auth.profile.title')}</Typography>
 
       <Paper sx={{ p: 4 }}>
         <Stack spacing={4}>
@@ -262,7 +262,7 @@ export function ProfilePage() {
                 variant="body2"
                 sx={{ color: 'text.secondary', textTransform: 'capitalize' }}
               >
-                Role: {user?.role}
+                {t('auth.profile.role', { role: user?.role })}
               </Typography>
               <input
                 type="file"
@@ -277,11 +277,11 @@ export function ProfilePage() {
           <form onSubmit={handleSubmit} noValidate>
             <Stack spacing={3}>
               <Typography variant="h6" sx={{ fontSize: '1.1rem' }}>
-                Account Details
+                {t('auth.profile.accountDetails')}
               </Typography>
 
               <TextField
-                label="Username"
+                label={t('auth.profile.username')}
                 required
                 value={username}
                 onChange={(e) => {
@@ -296,11 +296,11 @@ export function ProfilePage() {
               />
 
               <Typography variant="h6" sx={{ fontSize: '1.1rem', pt: 2 }}>
-                Change Password
+                {t('auth.profile.changePassword')}
               </Typography>
 
               <TextField
-                label="Current Password"
+                label={t('auth.profile.currentPassword')}
                 type="password"
                 value={currentPassword}
                 onChange={(e) => {
@@ -315,11 +315,11 @@ export function ProfilePage() {
                 }}
                 error={Boolean(errors.currentPassword)}
                 fullWidth
-                helperText={errors.currentPassword ?? 'Required if you want to set a new password'}
+                helperText={errors.currentPassword ?? t('auth.profile.currentPasswordHelp')}
               />
 
               <TextField
-                label="New Password"
+                label={t('auth.profile.newPassword')}
                 type="password"
                 value={newPassword}
                 onChange={(e) => {
@@ -344,7 +344,7 @@ export function ProfilePage() {
                   startIcon={<Save />}
                   disabled={!hasChanges || profileMutation.isPending || avatarMutation.isPending}
                 >
-                  Save
+                  {t('common.save')}
                 </Button>
               </Box>
             </Stack>
@@ -366,30 +366,42 @@ export function ProfilePage() {
   )
 }
 
-function validateProfileFields({
-  username,
-  currentPassword,
-  newPassword,
-}: {
-  username: string
-  currentPassword: string
-  newPassword: string
-}): ProfileFieldErrors {
+function validateProfileFields(
+  {
+    username,
+    currentPassword,
+    newPassword,
+  }: {
+    username: string
+    currentPassword: string
+    newPassword: string
+  },
+  t: import('i18next').TFunction,
+): ProfileFieldErrors {
   const errors: ProfileFieldErrors = {}
   const trimmedUsername = username.trim()
   const trimmedCurrentPassword = currentPassword.trim()
   const trimmedNewPassword = newPassword.trim()
 
   if (!trimmedUsername) {
-    errors.username = 'Username is required.'
+    errors.username = t('auth.profile.errors.usernameRequired')
   }
 
-  if (trimmedNewPassword && !trimmedCurrentPassword) {
-    errors.currentPassword = 'Current password is required to set a new password.'
+  if (trimmedNewPassword) {
+    if (!trimmedCurrentPassword) {
+      errors.currentPassword = t('auth.profile.errors.currentRequired')
+    }
+    if (
+      trimmedNewPassword.length < 8 ||
+      !/[a-z]/.test(trimmedNewPassword) ||
+      !/[0-9]/.test(trimmedNewPassword)
+    ) {
+      errors.newPassword = t('auth.profile.errors.passwordWeak')
+    }
   }
 
   if (trimmedCurrentPassword && !trimmedNewPassword) {
-    errors.newPassword = 'New password is required when current password is provided.'
+    errors.newPassword = t('auth.profile.errors.newRequired')
   }
 
   return errors

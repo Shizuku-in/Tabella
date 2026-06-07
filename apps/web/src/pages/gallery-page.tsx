@@ -1,6 +1,7 @@
 import { Alert, Box, CircularProgress, Snackbar, Stack, Typography } from '@mui/material'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
 import { GalleryGridLayout } from '../components/gallery-grid-layout.tsx'
@@ -13,6 +14,7 @@ import { useGalleryQuery } from '../hooks/use-gallery-query.ts'
 import { createDownloadJob, getApiErrorMessage, toggleFavorite } from '../lib/api.ts'
 
 export function GalleryPage() {
+  const { t } = useTranslation()
   const {
     layoutMode,
     masonryColumns,
@@ -130,8 +132,8 @@ export function GalleryPage() {
       setSelectionMode(false)
     } catch (error) {
       console.error('Download error:', error)
-      const message = getApiErrorMessage(error, 'Network error while starting download.')
-      showSnackbar(`Failed to start download: ${message}`, 'error')
+      const message = getApiErrorMessage(error, t('gallery.errors.downloadNetwork'))
+      showSnackbar(t('gallery.errors.downloadFail', { message }), 'error')
     }
   }
 
@@ -148,9 +150,9 @@ export function GalleryPage() {
       <Box sx={{ minHeight: 320, display: 'grid', placeItems: 'center', color: 'text.secondary' }}>
         <Stack spacing={0.75} sx={{ alignItems: 'center', textAlign: 'center' }}>
           <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
-            Unable to load gallery
+            {t('gallery.errors.loadFailed')}
           </Typography>
-          <Typography variant="body2">Please refresh and try again.</Typography>
+          <Typography variant="body2">{t('gallery.errors.refresh')}</Typography>
         </Stack>
       </Box>
     )
@@ -190,11 +192,9 @@ export function GalleryPage() {
         >
           <Stack spacing={0.75} sx={{ alignItems: 'center', textAlign: 'center' }}>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
-              No matching images
+              {t('gallery.errors.noMatching')}
             </Typography>
-            <Typography variant="body2">
-              Try clearing the search or relaxing the rating filter.
-            </Typography>
+            <Typography variant="body2">{t('gallery.errors.noMatchingDesc')}</Typography>
           </Stack>
         </Box>
       ) : (
@@ -221,9 +221,9 @@ export function GalleryPage() {
             {galleryQuery.isFetchingNextPage ? (
               <CircularProgress size={22} />
             ) : galleryQuery.hasNextPage ? (
-              <Typography variant="caption">Scroll for more</Typography>
+              <Typography variant="caption">{t('gallery.errors.scrollMore')}</Typography>
             ) : (
-              <Typography variant="caption">End of gallery</Typography>
+              <Typography variant="caption">{t('gallery.errors.end')}</Typography>
             )}
           </Box>
         </>

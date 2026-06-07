@@ -11,6 +11,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material'
+import { useTranslation } from 'react-i18next'
 
 import pkg from '../../package.json'
 
@@ -38,6 +39,7 @@ const FRONTEND_STACK: TechItem[] = [
 ]
 
 export function AboutDialog({ open, onClose }: AboutDialogProps) {
+  const { t } = useTranslation()
   const theme = useTheme()
   const isDark = theme.palette.mode === 'dark'
 
@@ -72,7 +74,7 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>About</DialogTitle>
+      <DialogTitle sx={{ textAlign: 'center', pb: 1 }}>{t('about.title')}</DialogTitle>
       <DialogContent>
         <Stack spacing={3} sx={{ pt: 1, pb: 1, alignItems: 'center' }}>
           <Stack spacing={1} sx={{ alignItems: 'center' }}>
@@ -88,7 +90,7 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
               Tabella
             </Typography>
             <Typography variant="body2" sx={{ color: 'text.secondary', textAlign: 'center' }}>
-              A high-performance, self-hosted gallery.
+              {t('about.description')}
             </Typography>
           </Stack>
 
@@ -103,7 +105,7 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
                 lineHeight: 1,
               }}
             >
-              TECH STACK
+              {t('about.techStack')}
             </Typography>
             <Stack spacing={1.5} sx={{ alignItems: 'center' }}>
               <Stack direction="row" sx={{ gap: 3, justifyContent: 'center' }}>
@@ -117,7 +119,7 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
 
           <Stack spacing={1} sx={{ mt: 2, alignItems: 'center' }}>
             <Typography variant="body2" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-              Version: {pkg.version}
+              {t('about.version', { version: pkg.version })}
             </Typography>
             <Link
               href="https://github.com/Shizuku-in/Tabella"
@@ -131,14 +133,14 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
               }}
             >
               <GitHub fontSize="small" />
-              View Source
+              {t('about.viewSource')}
             </Link>
           </Stack>
         </Stack>
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
         <Button onClick={onClose} variant="outlined">
-          Close
+          {t('common.close')}
         </Button>
       </DialogActions>
     </Dialog>

@@ -18,6 +18,7 @@ import {
 import { alpha } from '@mui/material/styles'
 import type { ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
@@ -37,6 +38,7 @@ const CustomPopper = function (props: PopperProps) {
 }
 
 export function SearchBar() {
+  const { t } = useTranslation()
   const { searchTags, setSearchTags } = useGallerySessionStore(
     useShallow((state) => ({
       searchTags: state.searchTags,
@@ -132,7 +134,7 @@ export function SearchBar() {
           {...params}
           inputRef={isMobileView ? mobileInputRef : searchInputRef}
           variant="standard"
-          placeholder={searchTags.length === 0 ? 'Search' : ''}
+          placeholder={searchTags.length === 0 ? t('common.search') : ''}
           fullWidth
           onKeyDown={(event) => {
             if (event.key === 'Escape' && searchTags.length === 0) {
@@ -187,7 +189,7 @@ export function SearchBar() {
         </Box>
       )}
 
-      <Tooltip title="Search">
+      <Tooltip title={t('common.search')}>
         <IconButton
           color={searchVisible || searchTags.length > 0 ? 'primary' : 'default'}
           aria-label="toggle search"

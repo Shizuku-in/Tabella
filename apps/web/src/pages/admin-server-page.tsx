@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Fragment, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { getApiErrorMessage, request } from '../lib/api.ts'
 
@@ -55,12 +56,13 @@ interface ServerSettingsFieldErrors {
 }
 
 export function AdminServerPage() {
+  const { t } = useTranslation()
   const queryClient = useQueryClient()
   const [settings, setSettings] = useState<ServerSettingsForm | null>(null)
   const [errors, setErrors] = useState<ServerSettingsFieldErrors>({})
   const [isDirty, setIsDirty] = useState(false)
   const [snackbarOpen, setSnackbarOpen] = useState(false)
-  const [snackbarMessage, setSnackbarMessage] = useState('Server settings updated successfully!')
+  const [snackbarMessage, setSnackbarMessage] = useState('')
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success')
 
   const settingsQuery = useQuery({
@@ -90,12 +92,12 @@ export function AdminServerPage() {
       setSettings(toFormState(data))
       setIsDirty(false)
       setSnackbarSeverity('success')
-      setSnackbarMessage('Server settings updated successfully!')
+      setSnackbarMessage(t('admin.server.updateSuccess'))
       setSnackbarOpen(true)
     },
     onError: (error) => {
       setSnackbarSeverity('error')
-      setSnackbarMessage(getApiErrorMessage(error, 'Failed to update server settings.'))
+      setSnackbarMessage(getApiErrorMessage(error, t('admin.server.updateFail')))
       setSnackbarOpen(true)
     },
   })
@@ -119,7 +121,7 @@ export function AdminServerPage() {
   const handleSave = (e?: React.FormEvent) => {
     e?.preventDefault()
     if (settings) {
-      const nextErrors = validateServerSettingsFields(settings)
+      const nextErrors = validateServerSettingsFields(settings, t)
       setErrors(nextErrors)
       if (Object.keys(nextErrors).length > 0) {
         return
@@ -129,20 +131,20 @@ export function AdminServerPage() {
         updateMutation.mutate(parseFormState(settings))
       } catch (error) {
         setSnackbarSeverity('error')
-        setSnackbarMessage(getApiErrorMessage(error, 'Failed to validate server settings.'))
+        setSnackbarMessage(getApiErrorMessage(error, t('admin.server.validateFail')))
         setSnackbarOpen(true)
       }
     }
   }
 
   if (settingsQuery.isLoading || !settings) {
-    return <Typography sx={{ p: 4 }}>Loading settings...</Typography>
+    return <Typography sx={{ p: 4 }}>{t('admin.server.loading')}</Typography>
   }
 
   if (settingsQuery.isError) {
     return (
       <Typography color="error" sx={{ p: 4 }}>
-        Failed to load server settings.
+        {t('admin.server.loadFail')}
       </Typography>
     )
   }
@@ -153,7 +155,7 @@ export function AdminServerPage() {
         <Stack spacing={3} sx={{ p: { xs: 2, sm: 4 }, maxWidth: 800, mx: 'auto' }}>
           <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography variant="h5" sx={{ fontWeight: 600 }}>
-              Server Settings
+              {t('admin.server.title')}
             </Typography>
             <Button
               type="submit"
@@ -161,7 +163,7 @@ export function AdminServerPage() {
               startIcon={<Save />}
               disabled={updateMutation.isPending || !isDirty}
             >
-              {updateMutation.isPending ? 'Saving...' : 'Save'}
+              {updateMutation.isPending ? t('common.saving') : t('common.save')}
             </Button>
           </Stack>
 
@@ -185,44 +187,39 @@ export function AdminServerPage() {
                   variant="h6"
                   sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}
                 >
-                  Downloads
+                  {t('admin.server.downloads')}
                 </Typography>
                 <TextField
-                  label="Max Download Images"
+                  label={t('admin.server.maxDownloadImages')}
                   type="number"
                   required
                   value={settings.max_download_images}
                   onChange={(e) => handleNumberChange('max_download_images', e.target.value)}
                   error={Boolean(errors.max_download_images)}
-                  helperText={
-                    errors.max_download_images ??
-                    'Maximum number of images allowed in a single archive download.'
-                  }
+                  helperText={errors.max_download_images ?? t('admin.server.maxDownloadImagesHelp')}
                   fullWidth
                 />
                 <TextField
-                  label="Max Download Size (Bytes)"
+                  label={t('admin.server.maxDownloadSize')}
                   type="number"
                   required
                   value={settings.max_download_total_bytes}
                   onChange={(e) => handleNumberChange('max_download_total_bytes', e.target.value)}
                   error={Boolean(errors.max_download_total_bytes)}
                   helperText={
-                    errors.max_download_total_bytes ??
-                    'Maximum total file size allowed in a single archive download.'
+                    errors.max_download_total_bytes ?? t('admin.server.maxDownloadSizeHelp')
                   }
                   fullWidth
                 />
                 <TextField
-                  label="Download Retention (Hours)"
+                  label={t('admin.server.downloadRetention')}
                   type="number"
                   required
                   value={settings.download_retention_hours}
                   onChange={(e) => handleNumberChange('download_retention_hours', e.target.value)}
                   error={Boolean(errors.download_retention_hours)}
                   helperText={
-                    errors.download_retention_hours ??
-                    'How long generated archives are kept before being automatically deleted.'
+                    errors.download_retention_hours ?? t('admin.server.downloadRetentionHelp')
                   }
                   fullWidth
                 />
@@ -233,19 +230,16 @@ export function AdminServerPage() {
                   variant="h6"
                   sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}
                 >
-                  Imports
+                  {t('admin.server.imports')}
                 </Typography>
                 <TextField
-                  label="Import Progress Batch Size"
+                  label={t('admin.server.batchSize')}
                   type="number"
                   required
                   value={settings.import_progress_batch_size}
                   onChange={(e) => handleNumberChange('import_progress_batch_size', e.target.value)}
                   error={Boolean(errors.import_progress_batch_size)}
-                  helperText={
-                    errors.import_progress_batch_size ??
-                    'How many files to process before updating progress in the database. Lower values give more frequent UI updates but higher DB load.'
-                  }
+                  helperText={errors.import_progress_batch_size ?? t('admin.server.batchSizeHelp')}
                   fullWidth
                 />
               </Stack>
@@ -255,58 +249,46 @@ export function AdminServerPage() {
                   variant="h6"
                   sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}
                 >
-                  Image Processing
+                  {t('admin.server.imageProcessing')}
                 </Typography>
                 <TextField
-                  label="Thumbnail Max Size (px)"
+                  label={t('admin.server.thumbSize')}
                   type="number"
                   required
                   value={settings.thumbnail_size}
                   onChange={(e) => handleNumberChange('thumbnail_size', e.target.value)}
                   error={Boolean(errors.thumbnail_size)}
-                  helperText={
-                    errors.thumbnail_size ??
-                    'Maximum dimension (width or height) for generated thumbnails. Default is 500.'
-                  }
+                  helperText={errors.thumbnail_size ?? t('admin.server.thumbSizeHelp')}
                   fullWidth
                 />
                 <TextField
-                  label="Thumbnail Quality (WebP)"
+                  label={t('admin.server.thumbQuality')}
                   type="number"
                   required
                   value={settings.thumbnail_quality}
                   onChange={(e) => handleNumberChange('thumbnail_quality', e.target.value)}
                   error={Boolean(errors.thumbnail_quality)}
-                  helperText={
-                    errors.thumbnail_quality ??
-                    'WebP compression quality for thumbnails (1.0 - 100.0). Default is 75.'
-                  }
+                  helperText={errors.thumbnail_quality ?? t('admin.server.thumbQualityHelp')}
                   fullWidth
                 />
                 <TextField
-                  label="Sample Max Size (px)"
+                  label={t('admin.server.sampleSize')}
                   type="number"
                   required
                   value={settings.sample_size}
                   onChange={(e) => handleNumberChange('sample_size', e.target.value)}
                   error={Boolean(errors.sample_size)}
-                  helperText={
-                    errors.sample_size ??
-                    'Maximum dimension for sample images. Set to 0 to keep the original resolution. Default is 0.'
-                  }
+                  helperText={errors.sample_size ?? t('admin.server.sampleSizeHelp')}
                   fullWidth
                 />
                 <TextField
-                  label="Sample Quality (WebP)"
+                  label={t('admin.server.sampleQuality')}
                   type="number"
                   required
                   value={settings.sample_quality}
                   onChange={(e) => handleNumberChange('sample_quality', e.target.value)}
                   error={Boolean(errors.sample_quality)}
-                  helperText={
-                    errors.sample_quality ??
-                    'WebP compression quality for samples (1.0 - 100.0). Default is 80.'
-                  }
+                  helperText={errors.sample_quality ?? t('admin.server.sampleQualityHelp')}
                   fullWidth
                 />
               </Stack>
@@ -316,19 +298,16 @@ export function AdminServerPage() {
                   variant="h6"
                   sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}
                 >
-                  Security & Sessions
+                  {t('admin.server.security')}
                 </Typography>
                 <TextField
-                  label="Session TTL (Hours)"
+                  label={t('admin.server.sessionTtl')}
                   type="number"
                   required
                   value={settings.session_ttl_hours}
                   onChange={(e) => handleNumberChange('session_ttl_hours', e.target.value)}
                   error={Boolean(errors.session_ttl_hours)}
-                  helperText={
-                    errors.session_ttl_hours ??
-                    'How long a user session remains valid before requiring re-login.'
-                  }
+                  helperText={errors.session_ttl_hours ?? t('admin.server.sessionTtlHelp')}
                   fullWidth
                 />
                 <FormControlLabel
@@ -340,9 +319,9 @@ export function AdminServerPage() {
                   }
                   label={
                     <Stack>
-                      <Typography>Secure Cookies</Typography>
+                      <Typography>{t('admin.server.secureCookies')}</Typography>
                       <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        Only send cookies over HTTPS. Recommended for production.
+                        {t('admin.server.secureCookiesHelp')}
                       </Typography>
                     </Stack>
                   }
@@ -401,17 +380,20 @@ function parseFormState(settings: ServerSettingsForm): ServerSettings {
   }
 }
 
-function validateServerSettingsFields(settings: ServerSettingsForm): ServerSettingsFieldErrors {
+function validateServerSettingsFields(
+  settings: ServerSettingsForm,
+  t: import('i18next').TFunction,
+): ServerSettingsFieldErrors {
   const errors: ServerSettingsFieldErrors = {}
 
   const validatePositiveInteger = (value: string, label: string) => {
     const trimmed = value.trim()
     if (!/^\d+$/.test(trimmed)) {
-      return `${label} must be a positive integer.`
+      return t('admin.server.errors.positiveInteger', { label })
     }
     const parsed = Number.parseInt(trimmed, 10)
     if (!Number.isSafeInteger(parsed) || parsed <= 0) {
-      return `${label} must be greater than 0.`
+      return t('admin.server.errors.greaterThanZero', { label })
     }
     return undefined
   }
@@ -425,12 +407,14 @@ function validateServerSettingsFields(settings: ServerSettingsForm): ServerSetti
   ) => {
     const trimmed = value.trim()
     if (!/^\d+$/.test(trimmed)) {
-      return `${label} must be an integer.`
+      return t('admin.server.errors.mustBeInteger', { label })
     }
     const parsed = Number.parseInt(trimmed, 10)
     if (allowZero && parsed === 0) return undefined
     if (!Number.isSafeInteger(parsed) || parsed < min || parsed > max) {
-      return `${label} must be between ${min} and ${max}${allowZero ? ' (or 0)' : ''}.`
+      return allowZero
+        ? t('admin.server.errors.betweenMinMaxOrZero', { label, min, max })
+        : t('admin.server.errors.betweenMinMax', { label, min, max })
     }
     return undefined
   }
@@ -438,48 +422,76 @@ function validateServerSettingsFields(settings: ServerSettingsForm): ServerSetti
   const validateFloatRange = (value: string, label: string, min: number, max: number) => {
     const trimmed = value.trim()
     if (!/^\d+(\.\d+)?$/.test(trimmed)) {
-      return `${label} must be a number.`
+      return t('admin.server.errors.mustBeNumber', { label })
     }
     const parsed = Number.parseFloat(trimmed)
     if (Number.isNaN(parsed) || parsed < min || parsed > max) {
-      return `${label} must be between ${min} and ${max}.`
+      return t('admin.server.errors.betweenMinMax', { label, min, max })
     }
     return undefined
   }
 
-  const maxImages = validatePositiveInteger(settings.max_download_images, 'Max download images')
+  const maxImages = validatePositiveInteger(
+    settings.max_download_images,
+    t('admin.server.maxDownloadImages'),
+  )
   if (maxImages) errors.max_download_images = maxImages
 
-  const maxBytes = validatePositiveInteger(settings.max_download_total_bytes, 'Max download size')
+  const maxBytes = validatePositiveInteger(
+    settings.max_download_total_bytes,
+    t('admin.server.maxDownloadSize'),
+  )
   if (maxBytes) errors.max_download_total_bytes = maxBytes
 
-  const retention = validatePositiveInteger(settings.download_retention_hours, 'Download retention')
+  const retention = validatePositiveInteger(
+    settings.download_retention_hours,
+    t('admin.server.downloadRetention'),
+  )
   if (retention) errors.download_retention_hours = retention
 
-  const sessionTtl = validatePositiveInteger(settings.session_ttl_hours, 'Session TTL')
+  const sessionTtl = validatePositiveInteger(
+    settings.session_ttl_hours,
+    t('admin.server.sessionTtl'),
+  )
   if (sessionTtl) errors.session_ttl_hours = sessionTtl
 
   const batchSize = validatePositiveInteger(
     settings.import_progress_batch_size,
-    'Import progress batch size',
+    t('admin.server.batchSize'),
   )
   if (batchSize) errors.import_progress_batch_size = batchSize
 
-  const thumbSize = validateIntegerRange(settings.thumbnail_size, 'Thumbnail size', 100, 4000)
+  const thumbSize = validateIntegerRange(
+    settings.thumbnail_size,
+    t('admin.server.thumbSize'),
+    100,
+    4000,
+  )
   if (thumbSize) errors.thumbnail_size = thumbSize
 
   const thumbQuality = validateFloatRange(
     settings.thumbnail_quality,
-    'Thumbnail quality',
+    t('admin.server.thumbQuality'),
     1.0,
     100.0,
   )
   if (thumbQuality) errors.thumbnail_quality = thumbQuality
 
-  const sampleSize = validateIntegerRange(settings.sample_size, 'Sample size', 100, 16000, true)
+  const sampleSize = validateIntegerRange(
+    settings.sample_size,
+    t('admin.server.sampleSize'),
+    100,
+    16000,
+    true,
+  )
   if (sampleSize) errors.sample_size = sampleSize
 
-  const sampleQuality = validateFloatRange(settings.sample_quality, 'Sample quality', 1.0, 100.0)
+  const sampleQuality = validateFloatRange(
+    settings.sample_quality,
+    t('admin.server.sampleQuality'),
+    1.0,
+    100.0,
+  )
   if (sampleQuality) errors.sample_quality = sampleQuality
 
   return errors
