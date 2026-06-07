@@ -18,22 +18,22 @@
       "ready": "准备好离线使用",
       "readyDesc": "应用程序已准备好离线工作。",
       "update": "有可用更新",
-      "updateDesc": "有新内容可用，请点击重新加载按钮进行更新。",
+      "updateDesc": "发现新版本，点击“重新加载”即可更新。",
       "reload": "重新加载"
     }
   },
   "nav": {
-    "imports": "/导入管理 (Imports)",
-    "users": "/用户管理 (Users)",
-    "server": "/服务器 (Server)",
-    "profile": "/个人中心 (Profile)",
+    "imports": "/Imports",
+    "users": "/Users",
+    "server": "/Server",
+    "profile": "/Profile",
     "advancedSearch": "高级搜索",
     "downloading": "正在打包下载...",
     "darkMode": "深色模式",
     "lightMode": "浅色模式",
     "settings": "设置",
     "guest": "访客",
-    "viewer": "观察者",
+    "viewer": "查看者",
     "menuProfile": "个人资料",
     "menuUsers": "用户管理",
     "menuImports": "导入任务",
@@ -52,7 +52,7 @@
       "selectMultiple": "多选模式",
       "search": "搜索框",
       "advancedSearch": "高级搜索",
-      "themeToggle": "深色/浅色模式"
+      "themeToggle": "主题切换"
     },
     "masonryColumns": "瀑布流列数",
     "gridColumns": "网格列数",
@@ -73,7 +73,7 @@
     },
     "galleryQuality": "画廊图片质量",
     "lightboxQuality": "大图预览质量",
-    "downloadQuality": "下载质量 (快捷及批量)",
+    "downloadQuality": "下载质量 (快捷/批量)",
     "quality": {
       "thumbnail": "缩略图",
       "sample": "预览图",
@@ -98,9 +98,9 @@
       "newest": "最新上传"
     },
     "layout": {
-      "grid": "网格视图",
-      "masonry": "瀑布流视图",
-      "justified": "自适应视图"
+      "grid": "Grid",
+      "masonry": "Masonry",
+      "justified": "Justified"
     },
     "ratingFilter": {
       "all": "全部评级",
@@ -118,7 +118,7 @@
       "filename": "文件名",
       "dimensions": "分辨率",
       "fileSize": "文件大小",
-      "sha256": "SHA256 哈希值",
+      "sha256": "SHA256",
       "imported": "导入时间",
       "source": "来源地址",
       "uploader": "上传者",
@@ -157,9 +157,9 @@
       "minHeight": "最小高度 (px)",
       "minHeightPlaceholder": "例如：1080",
       "minAspect": "最小宽高比 (W/H)",
-      "minAspectPlaceholder": "例如：16:9输入1.77",
+      "minAspectPlaceholder": "例如：16:9 输入 1.77",
       "maxAspect": "最大宽高比 (W/H)",
-      "maxAspectPlaceholder": "例如：9:16输入0.56",
+      "maxAspectPlaceholder": "例如：9:16 输入 0.56",
       "clearAll": "清除全部",
       "apply": "应用筛选",
       "errors": {
@@ -178,7 +178,7 @@
       "refresh": "请刷新重试。",
       "noMatching": "没有匹配的图片",
       "noMatchingDesc": "尝试清除搜索条件或放宽评分筛选。",
-      "end": "图库已到底部",
+      "end": "已加载完全部内容",
       "scrollMore": "滚动加载更多",
       "downloadFail": "启动下载失败：{{message}}",
       "downloadNetwork": "启动下载时出现网络错误。"
@@ -186,7 +186,7 @@
   },
   "about": {
     "title": "关于",
-    "description": "一个高性能、自托管的画廊。",
+    "description": "一个高性能的私有画廊系统。",
     "techStack": "技术栈",
     "version": "版本: {{version}}",
     "viewSource": "查看源码"
