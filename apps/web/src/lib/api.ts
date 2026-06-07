@@ -25,6 +25,50 @@ export class ApiError extends Error {
   }
 }
 
+const ERROR_MESSAGE_MAP: Record<string, string> = {
+  [API_ERROR_CODES.AUTHENTICATION_REQUIRED]: 'api.errors.authenticationRequired',
+  [API_ERROR_CODES.ADMIN_REQUIRED]: 'api.errors.adminRequired',
+  [API_ERROR_CODES.EDITOR_REQUIRED]: 'api.errors.editorRequired',
+  [API_ERROR_CODES.MISSING_CREDENTIALS]: 'api.errors.missingCredentials',
+  [API_ERROR_CODES.INVALID_CREDENTIALS]: 'api.errors.invalidCredentials',
+  [API_ERROR_CODES.INVALID_USERNAME]: 'api.errors.invalidUsername',
+  [API_ERROR_CODES.DUPLICATE_USERNAME]: 'api.errors.duplicateUsername',
+  [API_ERROR_CODES.MISSING_NEW_PASSWORD]: 'api.errors.missingNewPassword',
+  [API_ERROR_CODES.MISSING_CURRENT_PASSWORD]: 'api.errors.missingCurrentPassword',
+  [API_ERROR_CODES.INVALID_PASSWORD]: 'api.errors.invalidPassword',
+  [API_ERROR_CODES.NO_FILE_UPLOADED]: 'api.errors.noFileUploaded',
+  [API_ERROR_CODES.INVALID_MULTIPART]: 'api.errors.invalidMultipart',
+  [API_ERROR_CODES.PAYLOAD_TOO_LARGE]: 'api.errors.payloadTooLarge',
+  [API_ERROR_CODES.INVALID_SETTINGS]: 'api.errors.invalidSettings',
+  [API_ERROR_CODES.ROLE_CHANGE_NOT_ALLOWED]: 'api.errors.roleChangeNotAllowed',
+  [API_ERROR_CODES.SELF_DELETE_NOT_ALLOWED]: 'api.errors.selfDeleteNotAllowed',
+  [API_ERROR_CODES.USER_NOT_FOUND]: 'api.errors.userNotFound',
+  [API_ERROR_CODES.IMAGE_NOT_FOUND]: 'api.errors.imageNotFound',
+  [API_ERROR_CODES.IMPORT_JOB_NOT_FOUND]: 'api.errors.importJobNotFound',
+  [API_ERROR_CODES.NO_IMPORTABLE_FILES]: 'api.errors.noImportableFiles',
+  [API_ERROR_CODES.NO_FILES_UPLOADED]: 'api.errors.noFilesUploaded',
+  [API_ERROR_CODES.INVALID_UPLOAD_PATH]: 'api.errors.invalidUploadPath',
+  [API_ERROR_CODES.INVALID_CURSOR]: 'api.errors.invalidCursor',
+  [API_ERROR_CODES.CURSOR_MISSING_IMPORTED_AT]: 'api.errors.cursorMissingImportedAt',
+  [API_ERROR_CODES.CURSOR_MISSING_FILENAME]: 'api.errors.cursorMissingFilename',
+  [API_ERROR_CODES.NO_IMAGES_SELECTED]: 'api.errors.noImagesSelected',
+  [API_ERROR_CODES.SELECTED_IMAGES_NOT_FOUND]: 'api.errors.selectedImagesNotFound',
+  [API_ERROR_CODES.TOO_MANY_IMAGES_REQUESTED]: 'api.errors.tooManyImagesRequested',
+  [API_ERROR_CODES.DOWNLOAD_SIZE_LIMIT_EXCEEDED]: 'api.errors.downloadSizeLimitExceeded',
+  [API_ERROR_CODES.DOWNLOAD_JOB_NOT_FOUND]: 'api.errors.downloadJobNotFound',
+  [API_ERROR_CODES.DOWNLOAD_JOB_ACCESS_DENIED]: 'api.errors.downloadJobAccessDenied',
+  [API_ERROR_CODES.DOWNLOAD_JOB_NOT_COMPLETED]: 'api.errors.downloadJobNotCompleted',
+  [API_ERROR_CODES.DOWNLOAD_ARCHIVE_MISSING]: 'api.errors.downloadArchiveMissing',
+  [API_ERROR_CODES.ARCHIVE_GENERATION_FAILED]: 'api.errors.archiveGenerationFailed',
+  [API_ERROR_CODES.IMPORT_PROCESSING_FAILED]: 'api.errors.importProcessingFailed',
+  [API_ERROR_CODES.WEAK_PASSWORD_TOO_SHORT]: 'api.errors.weakPasswordTooShort',
+  [API_ERROR_CODES.WEAK_PASSWORD_MISSING_LOWERCASE]: 'api.errors.weakPasswordMissingLowercase',
+  [API_ERROR_CODES.WEAK_PASSWORD_MISSING_NUMBER]: 'api.errors.weakPasswordMissingNumber',
+  [API_ERROR_CODES.INTERNAL_ERROR]: 'api.errors.internalError',
+  [API_ERROR_CODES.NETWORK_ERROR]: 'api.errors.networkError',
+  [API_ERROR_CODES.UPLOAD_ABORTED]: 'api.errors.uploadAborted',
+}
+
 function normalizeErrorParams(value: unknown): ApiErrorParams {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
     return value as Record<string, unknown>
@@ -37,10 +81,13 @@ export function formatApiErrorMessage(
   params?: ApiErrorParams,
   fallbackMessage = 'Request failed.',
 ): string {
-  if (!code) return i18n.t('api.errors.DEFAULT_REQUEST_FAILED', { defaultValue: fallbackMessage })
+  if (!code) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return i18n.t('api.errors.defaultRequestFailed' as any, { defaultValue: fallbackMessage })
+  }
 
-  const translationKey = `api.errors.${code}`
-  if (i18n.exists(translationKey)) {
+  const translationKey = ERROR_MESSAGE_MAP[code]
+  if (translationKey) {
     const interpParams = { ...params }
     if (code === API_ERROR_CODES.TOO_MANY_IMAGES_REQUESTED && !interpParams.max_images) {
       interpParams.max_images = i18n.t('api.errors.fallbackAllowedNumber')
@@ -53,7 +100,7 @@ export function formatApiErrorMessage(
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return i18n.t('api.errors.DEFAULT_REQUEST_FAILED' as any, { defaultValue: fallbackMessage })
+  return i18n.t('api.errors.defaultRequestFailed' as any, { defaultValue: fallbackMessage })
 }
 
 export function getApiErrorMessage(error: unknown, fallbackMessage = 'Request failed.'): string {

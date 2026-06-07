@@ -505,7 +505,6 @@ function validateAdvancedSearchFields(
     minHeight: string
     aspectRatioMin: string
     aspectRatioMax: string
-     
   },
   t: any,
 ): AdvancedSearchFieldErrors {
