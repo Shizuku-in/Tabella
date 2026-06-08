@@ -18,8 +18,6 @@ use super::{
     guards::{require_admin, require_editor},
 };
 
-const MAX_ADMIN_UPLOAD_BYTES: usize = 1_024 * 1_024 * 1_024;
-
 pub(crate) fn routes(state: AppState) -> Router {
     Router::new()
         .route(
@@ -28,7 +26,7 @@ pub(crate) fn routes(state: AppState) -> Router {
         )
         .route(
             "/api/admin/imports/upload",
-            post(upload_import_files).layer(DefaultBodyLimit::max(MAX_ADMIN_UPLOAD_BYTES)),
+            post(upload_import_files).layer(DefaultBodyLimit::disable()),
         )
         .route("/api/admin/imports/{job_id}", get(get_import_job))
         .with_state(state)
