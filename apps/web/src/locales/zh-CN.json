@@ -194,7 +194,7 @@
   "auth": {
     "guards": {
       "checkingSession": "检查登录状态",
-      "restoringSession": "正在恢复当前登录状态。",
+      "restoringSession": "正在恢复当前登录状态",
       "checkingAccess": "检查访问权限",
       "verifyingPermissions": "正在验证账户权限。"
     },
