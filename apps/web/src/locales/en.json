@@ -381,7 +381,7 @@
       "weakPasswordMissingLowercase": "Password must contain at least one lowercase letter.",
       "weakPasswordMissingNumber": "Password must contain at least one number.",
       "internalError": "Internal server error.",
-      "networkError": "Network error during upload.",
+      "networkError": "Network error. Please check your connection.",
       "uploadAborted": "Upload aborted.",
       "fallbackAllowedNumber": "the allowed number of",
       "DEFAULT_REQUEST_FAILED": "Request failed.",

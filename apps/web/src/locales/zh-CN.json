@@ -381,7 +381,7 @@
       "weakPasswordMissingLowercase": "密码必须至少包含一个小写字母。",
       "weakPasswordMissingNumber": "密码必须至少包含一个数字。",
       "internalError": "服务器内部错误。",
-      "networkError": "上传过程中发生网络错误。",
+      "networkError": "网络连接失败，请检查网络设置或稍后重试。",
       "uploadAborted": "上传被中止。",
       "fallbackAllowedNumber": "所允许的最大",
       "DEFAULT_REQUEST_FAILED": "请求失败。",

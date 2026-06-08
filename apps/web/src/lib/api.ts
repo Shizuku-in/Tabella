@@ -127,11 +127,19 @@ export async function request<T>(input: string, init?: RequestInit): Promise<T> 
     headers.set('Content-Type', 'application/json')
   }
 
-  const response = await fetch(input, {
-    credentials: 'include',
-    ...init,
-    headers,
-  })
+  let response: Response
+  try {
+    response = await fetch(input, {
+      credentials: 'include',
+      ...init,
+      headers,
+    })
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw error // Let React Query or standard abort controllers handle it
+    }
+    throw new ApiError(0, 'Network error', API_ERROR_CODES.NETWORK_ERROR)
+  }
 
   if (response.status === 204) {
     return undefined as T
