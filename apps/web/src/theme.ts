@@ -179,6 +179,17 @@ export function buildTheme(mode: PaletteMode) {
           },
         },
       },
+      MuiTooltip: {
+        defaultProps: {
+          slotProps: {
+            popper: {
+              popperOptions: {
+                strategy: 'fixed',
+              },
+            },
+          },
+        },
+      },
     },
   })
 }
