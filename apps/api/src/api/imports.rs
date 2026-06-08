@@ -135,6 +135,23 @@ async fn get_import_job(
     })))
 }
 
+#[derive(serde::Serialize, sqlx::FromRow)]
+#[serde(rename_all = "camelCase")]
+struct ListImportJobRow {
+    id: uuid::Uuid,
+    status: String,
+    source_type: String,
+    total_items: i32,
+    processed_items: i32,
+    succeeded_items: i32,
+    failed_items: i32,
+    #[serde(with = "time::serde::rfc3339")]
+    created_at: time::OffsetDateTime,
+    last_error: Option<String>,
+    error_code: Option<String>,
+    error_params: Option<serde_json::Value>,
+}
+
 async fn list_import_jobs(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -142,7 +159,7 @@ async fn list_import_jobs(
     let _user = require_editor(&state, &jar).await?;
 
     let limit = 50i64;
-    let rows = sqlx::query(
+    let items: Vec<ListImportJobRow> = sqlx::query_as(
         r#"
         SELECT id, status, source_type, total_items, processed_items, succeeded_items, failed_items, created_at, last_error, error_code, error_params
         FROM import_jobs
@@ -154,27 +171,6 @@ async fn list_import_jobs(
     .fetch_all(&state.pool)
     .await
     .map_err(|e| ApiError::internal(e.into()))?;
-
-    use sqlx::Row;
-    let mut items = Vec::new();
-    for row in rows {
-        items.push(json!({
-            "id": row.try_get::<uuid::Uuid, _>("id").unwrap_or_default(),
-            "status": row.try_get::<String, _>("status").unwrap_or_default(),
-            "sourceType": row.try_get::<String, _>("source_type").unwrap_or_else(|_| "server".to_string()),
-            "totalItems": row.try_get::<i32, _>("total_items").unwrap_or_default(),
-            "processedItems": row.try_get::<i32, _>("processed_items").unwrap_or_default(),
-            "succeededItems": row.try_get::<i32, _>("succeeded_items").unwrap_or_default(),
-            "failedItems": row.try_get::<i32, _>("failed_items").unwrap_or_default(),
-            "lastError": row.try_get::<Option<String>, _>("last_error").unwrap_or(None),
-            "errorCode": row.try_get::<Option<String>, _>("error_code").unwrap_or(None),
-            "errorParams": row.try_get::<Option<serde_json::Value>, _>("error_params").unwrap_or(None),
-            "createdAt": row.try_get::<time::OffsetDateTime, _>("created_at")
-                .unwrap_or_else(|_| time::OffsetDateTime::now_utc())
-                .format(&time::format_description::well_known::Rfc3339)
-                .unwrap_or_default(),
-        }));
-    }
 
     Ok(Json(json!({ "items": items })))
 }
