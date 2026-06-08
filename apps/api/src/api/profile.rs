@@ -108,7 +108,10 @@ async fn update_profile(
         has_updates = true;
     }
 
-    if let (Some(new_password), Some(current_password)) = (new_password, current_password) {
+    let mut password_changed = false;
+    if let (Some(current_password), Some(new_password)) =
+        (current_password.as_deref(), new_password.as_deref())
+    {
         let current_hash: String =
             sqlx::query_scalar("select password_hash from users where id = $1")
                 .bind(user.id)
@@ -116,7 +119,7 @@ async fn update_profile(
                 .await
                 .map_err(|e| ApiError::internal(e.into()))?;
 
-        if !crate::auth::verify_password(&current_password, &current_hash)
+        if !crate::auth::verify_password(current_password, &current_hash)
             .map_err(ApiError::internal)?
         {
             return Err(ApiError::bad_request(
@@ -125,13 +128,14 @@ async fn update_profile(
             ));
         }
 
-        crate::api::users::validate_password(&new_password)?;
+        crate::api::users::validate_password(new_password)?;
 
-        let new_hash = hash_password(&new_password).map_err(ApiError::internal)?;
+        let new_hash = hash_password(new_password).map_err(ApiError::internal)?;
 
         query_builder.push(", password_hash = ");
         query_builder.push_bind(new_hash);
         has_updates = true;
+        password_changed = true;
     }
 
     if !has_updates {
@@ -158,11 +162,7 @@ async fn update_profile(
             ApiError::internal(err.into())
         })?;
 
-    if payload
-        .new_password
-        .as_deref()
-        .is_some_and(|s| !s.is_empty())
-    {
+    if password_changed {
         if let Some(current_session_id) =
             crate::auth::session_id_from_jar(&jar, &state.config.session_cookie_name)
         {
