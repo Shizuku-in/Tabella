@@ -230,7 +230,7 @@ async fn get_download_job(
     let record_user_id: i64 = sqlx::Row::try_get(&record, "user_id").unwrap();
 
     if record_user_id != user.id {
-        return Err(ApiError::unauthorized(
+        return Err(ApiError::forbidden(
             crate::api::error_codes::DOWNLOAD_JOB_ACCESS_DENIED,
             "You can only view your own download jobs",
         ));
@@ -277,7 +277,7 @@ async fn download_job_file(
     let record_user_id: i64 = sqlx::Row::try_get(&record, "user_id").unwrap();
 
     if record_user_id != user.id {
-        return Err(ApiError::unauthorized(
+        return Err(ApiError::forbidden(
             crate::api::error_codes::DOWNLOAD_JOB_ACCESS_DENIED,
             "You can only download your own files",
         ));
