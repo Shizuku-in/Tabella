@@ -36,6 +36,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/auth-provider.tsx'
 import { useServerEvents } from '../hooks/use-server-events.ts'
 import {
+  ApiError,
   formatApiErrorMessage,
   getApiErrorMessage,
   request,
@@ -193,7 +194,7 @@ export function AdminImportsPage() {
       jobsQuery.refetch()
     },
     onError: (err: unknown) => {
-      if (err instanceof DOMException && err.name === 'AbortError') {
+      if (err instanceof ApiError && err.code === 'UPLOAD_ABORTED') {
         showSnackbar('Upload cancelled', 'success')
       } else {
         showSnackbar(

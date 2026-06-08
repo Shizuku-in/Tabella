@@ -185,11 +185,10 @@ export async function uploadWithProgress<T>(
 
     if (signal) {
       if (signal.aborted) {
-        return reject(new DOMException('Aborted', 'AbortError'))
+        return reject(new ApiError(0, 'Upload aborted', API_ERROR_CODES.UPLOAD_ABORTED))
       }
       signal.addEventListener('abort', () => {
         xhr.abort()
-        reject(new DOMException('Aborted', 'AbortError'))
       })
     }
 
@@ -200,9 +199,7 @@ export async function uploadWithProgress<T>(
       }
     })
 
-    xhr.addEventListener('abort', () => {
-      reject(new DOMException('Aborted', 'AbortError'))
-    })
+
 
     xhr.addEventListener('load', () => {
       if (xhr.status >= 200 && xhr.status < 300) {
