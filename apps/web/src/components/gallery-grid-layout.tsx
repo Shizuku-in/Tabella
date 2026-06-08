@@ -1,4 +1,4 @@
-import { Box, useMediaQuery,useTheme } from '@mui/material'
+import { Box, useMediaQuery, useTheme } from '@mui/material'
 import { useRef } from 'react'
 
 import type { ColumnConfig } from '../gallery/gallery-preferences-store.ts'

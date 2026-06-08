@@ -1,4 +1,5 @@
 import {
+  Close as CloseIcon,
   CloudUploadOutlined,
   Done,
   Error as ErrorIcon,
@@ -14,6 +15,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  IconButton,
   LinearProgress,
   type LinearProgressProps,
   Paper,
@@ -51,6 +53,7 @@ interface LocalUploadJob {
   totalItems: number
   processedItems: number
   createdAt: string
+  abortController?: AbortController
 }
 
 function formatBytes(bytes: number, decimals = 2) {
@@ -137,6 +140,7 @@ export function AdminImportsPage() {
       }
 
       const tempId = 'upload_' + Date.now() + Math.floor(Math.random() * 1000)
+      const abortController = new AbortController()
       setActiveUploads((prev) => ({
         ...prev,
         [tempId]: {
@@ -149,6 +153,7 @@ export function AdminImportsPage() {
           totalItems: files.length,
           processedItems: 0,
           createdAt: new Date().toISOString(),
+          abortController,
         },
       }))
 
@@ -167,6 +172,7 @@ export function AdminImportsPage() {
               },
             }))
           },
+          abortController.signal,
         )
         return { tempId, data: result }
       } catch (err) {
@@ -186,13 +192,17 @@ export function AdminImportsPage() {
       })
       jobsQuery.refetch()
     },
-    onError: (err) => {
-      showSnackbar(
-        t('admin.imports.uploadFail', {
-          message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')),
-        }),
-        'error',
-      )
+    onError: (err: unknown) => {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        showSnackbar('Upload cancelled', 'success')
+      } else {
+        showSnackbar(
+          t('admin.imports.uploadFail', {
+            message: getApiErrorMessage(err, t('admin.users.dialog.errors.requestFailed')),
+          }),
+          'error',
+        )
+      }
     },
   })
 
@@ -315,6 +325,11 @@ export function AdminImportsPage() {
                         </Stack>
                         <LinearProgress variant="determinate" value={job.progress} color="info" />
                       </Stack>
+                      {job.abortController && (
+                        <IconButton color="error" onClick={() => job.abortController?.abort()}>
+                          <CloseIcon />
+                        </IconButton>
+                      )}
                     </Stack>
                   </TableCell>
                 </TableRow>

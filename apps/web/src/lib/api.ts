@@ -172,15 +172,30 @@ export async function uploadWithProgress<T>(
   url: string,
   formData: FormData,
   onProgress: (percent: number, loaded: number, total: number) => void,
+  signal?: AbortSignal,
 ): Promise<T> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
+
+    if (signal) {
+      if (signal.aborted) {
+        return reject(new DOMException('Aborted', 'AbortError'))
+      }
+      signal.addEventListener('abort', () => {
+        xhr.abort()
+        reject(new DOMException('Aborted', 'AbortError'))
+      })
+    }
 
     xhr.upload.addEventListener('progress', (event) => {
       if (event.lengthComputable) {
         const percent = Math.round((event.loaded / event.total) * 100)
         onProgress(percent, event.loaded, event.total)
       }
+    })
+
+    xhr.addEventListener('abort', () => {
+      reject(new DOMException('Aborted', 'AbortError'))
     })
 
     xhr.addEventListener('load', () => {
