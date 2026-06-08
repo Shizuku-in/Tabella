@@ -191,12 +191,24 @@ pub(crate) async fn update_user(
         .map_err(|e| ApiError::internal(e.into()))?;
 
     if role_changed || password_changed {
-        // Invalidate all existing sessions for this user because their credentials or role changed
-        sqlx::query("delete from sessions where user_id = $1")
-            .bind(id)
-            .execute(&state.pool)
-            .await
-            .map_err(|e| ApiError::internal(e.into()))?;
+        // Invalidate all existing sessions for this user because their credentials or role changed,
+        // but preserve the current session if the admin is editing themselves.
+        if let Some(current_session_id) =
+            crate::auth::session_id_from_jar(&jar, &state.config.session_cookie_name)
+        {
+            sqlx::query("delete from sessions where user_id = $1 and id != $2")
+                .bind(id)
+                .bind(current_session_id)
+                .execute(&state.pool)
+                .await
+                .map_err(|e| ApiError::internal(e.into()))?;
+        } else {
+            sqlx::query("delete from sessions where user_id = $1")
+                .bind(id)
+                .execute(&state.pool)
+                .await
+                .map_err(|e| ApiError::internal(e.into()))?;
+        }
     }
 
     Ok(StatusCode::OK)
