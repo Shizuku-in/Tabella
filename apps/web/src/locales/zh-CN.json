@@ -47,7 +47,7 @@
     "topBar": {
       "sort": "排序",
       "layout": "布局切换",
-      "rating": "按年龄评级筛选",
+      "rating": "年龄评级",
       "favorites": "仅看收藏",
       "selectMultiple": "多选模式",
       "search": "搜索框",
