@@ -368,7 +368,7 @@
       "cursorMissingImportedAt": "图片分页游标缺少 imported_at 字段。",
       "cursorMissingFilename": "图片分页游标缺少 filename 字段。",
       "noImagesSelected": "未选择任何图片。",
-      "selectedImagesNotFound": "未找到选中的图片。",
+      "selectedImagesNotFound": "部分选中的图片已失效或被删除，请刷新后重试。",
       "tooManyImagesRequested": "一次下载不能超过 {{max_images}} 张图片。",
       "downloadSizeLimitExceeded": "总大小超过了最大限制的 {{max_total_bytes}} 字节。",
       "downloadJobNotFound": "未找到该下载任务。",

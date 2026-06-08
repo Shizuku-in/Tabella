@@ -368,7 +368,7 @@
       "cursorMissingImportedAt": "Image pagination cursor is missing imported_at.",
       "cursorMissingFilename": "Image pagination cursor is missing filename.",
       "noImagesSelected": "No images selected.",
-      "selectedImagesNotFound": "Selected images not found.",
+      "selectedImagesNotFound": "Some selected images could not be found. Please refresh and try again.",
       "tooManyImagesRequested": "Cannot download more than {{max_images}} images at once.",
       "downloadSizeLimitExceeded": "Total size exceeds the maximum limit of {{max_total_bytes}} bytes.",
       "downloadJobNotFound": "Download job not found.",

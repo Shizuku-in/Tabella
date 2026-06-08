@@ -90,10 +90,10 @@ async fn create_download_job(
     .await
     .map_err(|e| ApiError::internal(e.into()))?;
 
-    if records.is_empty() {
+    if records.len() != query_ids.len() {
         return Err(ApiError::bad_request(
             crate::api::error_codes::SELECTED_IMAGES_NOT_FOUND,
-            "Selected images not found",
+            "Some or all selected images were not found",
         ));
     }
 
