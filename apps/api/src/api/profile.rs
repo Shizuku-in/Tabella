@@ -158,6 +158,19 @@ async fn update_profile(
             ApiError::internal(err.into())
         })?;
 
+    if payload.new_password.as_deref().is_some_and(|s| !s.is_empty()) {
+        if let Some(current_session_id) =
+            crate::auth::session_id_from_jar(&jar, &state.config.session_cookie_name)
+        {
+            sqlx::query("delete from sessions where user_id = $1 and id != $2")
+                .bind(user.id)
+                .bind(current_session_id)
+                .execute(&state.pool)
+                .await
+                .map_err(|e| ApiError::internal(e.into()))?;
+        }
+    }
+
     use crate::dto::UserRole;
     use sqlx::Row;
     let role_str: String = row.get("role");

@@ -85,6 +85,10 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
     }
   }
 
+  const isDirty = user
+    ? password !== '' || role !== user.role
+    : username !== '' || password !== '' || role !== 'viewer'
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
@@ -143,7 +147,7 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>{t('common.cancel')}</Button>
-          <Button type="submit" variant="contained" disabled={loading}>
+          <Button type="submit" variant="outlined" disabled={loading || !isDirty}>
             {t('common.save')}
           </Button>
         </DialogActions>

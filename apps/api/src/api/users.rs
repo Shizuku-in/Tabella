@@ -122,6 +122,22 @@ pub(crate) async fn update_user(
 ) -> Result<StatusCode, ApiError> {
     let admin = require_admin(&state, &jar).await?;
 
+    let current_role: Option<String> = sqlx::query_scalar("select role from users where id = $1")
+        .bind(id)
+        .fetch_optional(&state.pool)
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
+
+    let current_role = match current_role {
+        Some(r) => r,
+        None => {
+            return Err(ApiError::not_found(
+                crate::api::error_codes::USER_NOT_FOUND,
+                "User not found",
+            ));
+        }
+    };
+
     if let Some(ref new_role) = payload.role
         && id == admin.id
         && *new_role != admin.role
@@ -135,6 +151,8 @@ pub(crate) async fn update_user(
     let mut query_builder = sqlx::QueryBuilder::new("update users set updated_at = now()");
 
     let mut has_updates = false;
+    let mut role_changed = false;
+    let mut password_changed = false;
 
     if let Some(role) = payload.role {
         let role_str = match role {
@@ -142,9 +160,12 @@ pub(crate) async fn update_user(
             UserRole::Editor => "editor",
             UserRole::Viewer => "viewer",
         };
-        query_builder.push(", role = ");
-        query_builder.push_bind(role_str);
-        has_updates = true;
+        if role_str != current_role {
+            query_builder.push(", role = ");
+            query_builder.push_bind(role_str);
+            has_updates = true;
+            role_changed = true;
+        }
     }
 
     if let Some(password) = payload.password {
@@ -153,6 +174,7 @@ pub(crate) async fn update_user(
         query_builder.push(", password_hash = ");
         query_builder.push_bind(password_hash);
         has_updates = true;
+        password_changed = true;
     }
 
     if !has_updates {
@@ -162,17 +184,19 @@ pub(crate) async fn update_user(
     query_builder.push(" where id = ");
     query_builder.push_bind(id);
 
-    let result = query_builder
+    let _result = query_builder
         .build()
         .execute(&state.pool)
         .await
         .map_err(|e| ApiError::internal(e.into()))?;
 
-    if result.rows_affected() == 0 {
-        return Err(ApiError::not_found(
-            crate::api::error_codes::USER_NOT_FOUND,
-            "User not found",
-        ));
+    if role_changed || password_changed {
+        // Invalidate all existing sessions for this user because their credentials or role changed
+        sqlx::query("delete from sessions where user_id = $1")
+            .bind(id)
+            .execute(&state.pool)
+            .await
+            .map_err(|e| ApiError::internal(e.into()))?;
     }
 
     Ok(StatusCode::OK)
