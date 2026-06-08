@@ -1,6 +1,6 @@
 import i18n from '../i18n.ts'
 import type { AuthUserResponse, GallerySort, Rating } from '../types.ts'
-import { API_ERROR_CODES } from './api-error-codes.ts'
+import { API_ERROR_CODES, type ApiErrorCode } from './api-error-codes.ts'
 
 export type ApiErrorParams = Record<string, unknown> | null
 
@@ -67,7 +67,7 @@ const ERROR_MESSAGE_MAP: Record<string, string> = {
   [API_ERROR_CODES.INTERNAL_ERROR]: 'api.errors.internalError',
   [API_ERROR_CODES.NETWORK_ERROR]: 'api.errors.networkError',
   [API_ERROR_CODES.UPLOAD_ABORTED]: 'api.errors.uploadAborted',
-}
+} satisfies Record<ApiErrorCode, string>
 
 function normalizeErrorParams(value: unknown): ApiErrorParams {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
@@ -97,6 +97,12 @@ export function formatApiErrorMessage(
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return i18n.t(translationKey as any, interpParams as any)
+  }
+
+  if (code) {
+    console.warn(
+      `[API] Unknown error code received from backend: "${code}". Falling back to generic message.`,
+    )
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
