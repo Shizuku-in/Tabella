@@ -207,8 +207,6 @@ export async function uploadWithProgress<T>(
       }
     })
 
-
-
     xhr.addEventListener('load', () => {
       if (xhr.status >= 200 && xhr.status < 300) {
         try {

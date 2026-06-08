@@ -158,7 +158,11 @@ async fn update_profile(
             ApiError::internal(err.into())
         })?;
 
-    if payload.new_password.as_deref().is_some_and(|s| !s.is_empty()) {
+    if payload
+        .new_password
+        .as_deref()
+        .is_some_and(|s| !s.is_empty())
+    {
         if let Some(current_session_id) =
             crate::auth::session_id_from_jar(&jar, &state.config.session_cookie_name)
         {
