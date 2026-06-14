@@ -37,6 +37,15 @@ async fn main() -> anyhow::Result<()> {
     init_tracing();
 
     let config = Config::from_env().context("failed to load configuration")?;
+
+    if !config.secure_cookies {
+        tracing::warn!(
+            "TABELLA_SECURE_COOKIES=false: session cookies are sent without the Secure attribute. \
+             If this service is served over HTTPS, set TABELLA_SECURE_COOKIES=true, otherwise the \
+             session cookie may be exposed over plaintext connections."
+        );
+    }
+
     let pool = PgPoolOptions::new()
         .max_connections(8)
         .connect(&config.database_url)

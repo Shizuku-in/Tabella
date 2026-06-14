@@ -1,9 +1,53 @@
+use sqlx::PgPool;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ParsedTag {
     pub(crate) namespace: String,
     pub(crate) name: String,
     pub(crate) normalized_namespace: String,
     pub(crate) normalized_name: String,
+}
+
+/// Finds an existing tag by its normalized identity, inserting it if absent,
+/// and returns the tag id. Safe to call concurrently thanks to the
+/// `ON CONFLICT` upsert.
+pub(crate) async fn upsert_tag(pool: &PgPool, tag: &ParsedTag) -> Result<i64, sqlx::Error> {
+    sqlx::query_scalar(
+        r#"
+        WITH new_tag AS (
+            INSERT INTO tags (namespace, name, normalized_namespace, normalized_name)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (normalized_namespace, normalized_name) DO NOTHING
+            RETURNING id
+        )
+        SELECT id FROM new_tag
+        UNION ALL
+        SELECT id FROM tags WHERE normalized_namespace = $3 AND normalized_name = $4
+        LIMIT 1
+        "#,
+    )
+    .bind(&tag.namespace)
+    .bind(&tag.name)
+    .bind(&tag.normalized_namespace)
+    .bind(&tag.normalized_name)
+    .fetch_one(pool)
+    .await
+}
+
+/// Upserts a tag and links it to the given image. Idempotent: re-linking an
+/// already-attached tag is a no-op.
+pub(crate) async fn attach_tag_to_image(
+    pool: &PgPool,
+    image_id: i64,
+    tag: &ParsedTag,
+) -> Result<(), sqlx::Error> {
+    let tag_id = upsert_tag(pool, tag).await?;
+    sqlx::query("INSERT INTO image_tags (image_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING")
+        .bind(image_id)
+        .bind(tag_id)
+        .execute(pool)
+        .await?;
+    Ok(())
 }
 
 pub(crate) fn parse_tag(tag: &str) -> Option<ParsedTag> {

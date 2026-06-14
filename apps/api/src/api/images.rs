@@ -414,36 +414,9 @@ async fn update_image(
                 continue;
             };
 
-            let tag_id: i64 = sqlx::query_scalar(
-                r#"
-                WITH new_tag AS (
-                    INSERT INTO tags (namespace, name, normalized_namespace, normalized_name)
-                    VALUES ($1, $2, $3, $4)
-                    ON CONFLICT (normalized_namespace, normalized_name) DO NOTHING
-                    RETURNING id
-                )
-                SELECT id FROM new_tag
-                UNION ALL
-                SELECT id FROM tags WHERE normalized_namespace = $3 AND normalized_name = $4
-                LIMIT 1
-                "#,
-            )
-            .bind(&tag.namespace)
-            .bind(&tag.name)
-            .bind(&tag.normalized_namespace)
-            .bind(&tag.normalized_name)
-            .fetch_one(&state.pool)
-            .await
-            .map_err(|e| ApiError::internal(e.into()))?;
-
-            sqlx::query(
-                "INSERT INTO image_tags (image_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-            )
-            .bind(image_id)
-            .bind(tag_id)
-            .execute(&state.pool)
-            .await
-            .map_err(|e| ApiError::internal(e.into()))?;
+            crate::tags::attach_tag_to_image(&state.pool, image_id, &tag)
+                .await
+                .map_err(|e| ApiError::internal(e.into()))?;
         }
     }
 

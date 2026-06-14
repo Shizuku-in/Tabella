@@ -31,6 +31,110 @@ impl fmt::Display for ImportJobError {
 
 impl StdError for ImportJobError {}
 
+/// Progress messages streamed from the blocking ZIP extraction back to the
+/// async runtime so DB/SSE updates stay off the blocking thread.
+enum ExtractProgress {
+    /// Total number of entries in the archive.
+    Total(i32),
+    /// Number of entries extracted so far.
+    Processed(i32),
+}
+
+fn is_supported_image_ext(ext: &str) -> bool {
+    matches!(ext, "jpg" | "jpeg" | "png" | "webp" | "gif")
+}
+
+fn lowercase_ext(path: &Path) -> String {
+    path.extension()
+        .and_then(|s| s.to_str())
+        .unwrap_or("")
+        .to_lowercase()
+}
+
+/// Walks a directory looking for the first zip/7z archive (blocking).
+fn find_archive_in_dir(dir: &Path) -> Option<PathBuf> {
+    for entry in WalkDir::new(dir).into_iter().filter_map(|e| e.ok()) {
+        if entry.file_type().is_file() {
+            let ext = lowercase_ext(entry.path());
+            if ext == "zip" || ext == "7z" {
+                return Some(entry.path().to_path_buf());
+            }
+        }
+    }
+    None
+}
+
+/// Walks a directory collecting all supported image files (blocking).
+fn scan_image_files(dir: &Path) -> Vec<PathBuf> {
+    let mut files = Vec::new();
+    for entry in WalkDir::new(dir).into_iter().filter_map(|e| e.ok()) {
+        if entry.file_type().is_file() && is_supported_image_ext(&lowercase_ext(entry.path())) {
+            files.push(entry.path().to_path_buf());
+        }
+    }
+    files
+}
+
+/// Extracts a ZIP archive on a blocking thread, streaming progress over
+/// `progress_tx`, and returns the collected image file paths.
+fn extract_zip_blocking(
+    archive_path: &Path,
+    temp_extract_dir: &Path,
+    progress_batch_size: usize,
+    progress_tx: &tokio::sync::mpsc::UnboundedSender<ExtractProgress>,
+) -> Result<Vec<PathBuf>> {
+    let file = std::fs::File::open(archive_path)?;
+    let mut archive = zip::ZipArchive::new(file)?;
+    let total_files = archive.len() as i32;
+    let _ = progress_tx.send(ExtractProgress::Total(total_files));
+
+    std::fs::create_dir_all(temp_extract_dir)?;
+
+    let mut files_to_process = Vec::new();
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i)?;
+        let outpath = match file.enclosed_name() {
+            Some(path) => path.to_owned(),
+            None => continue,
+        };
+
+        let outpath = temp_extract_dir.join(outpath);
+        if (*file.name()).ends_with('/') {
+            std::fs::create_dir_all(&outpath)?;
+        } else {
+            if let Some(p) = outpath.parent()
+                && !p.exists()
+            {
+                std::fs::create_dir_all(p)?;
+            }
+            let mut outfile = std::fs::File::create(&outpath)?;
+            std::io::copy(&mut file, &mut outfile)?;
+
+            if is_supported_image_ext(&lowercase_ext(&outpath)) {
+                files_to_process.push(outpath);
+            }
+        }
+
+        // Report extraction progress at configured batch intervals
+        if i % progress_batch_size == 0 && i > 0 {
+            let _ = progress_tx.send(ExtractProgress::Processed(i as i32));
+        }
+    }
+
+    Ok(files_to_process)
+}
+
+/// Extracts a 7z archive on a blocking thread and returns the collected image
+/// file paths.
+fn extract_7z_blocking(archive_path: &Path, temp_extract_dir: &Path) -> Result<Vec<PathBuf>> {
+    std::fs::create_dir_all(temp_extract_dir)?;
+
+    sevenz_rust::decompress_file(archive_path, temp_extract_dir)
+        .map_err(|e| anyhow::anyhow!("7z extraction failed: {:?}", e))?;
+
+    Ok(scan_image_files(temp_extract_dir))
+}
+
 pub(crate) async fn start_worker(state: AppState) {
     tracing::info!("Starting background import worker");
 
@@ -196,51 +300,25 @@ async fn run_import_job(
 
     // If it's a package upload but the path points to the temp directory, we must find the archive inside it
     if source_type == "package" && source_path.is_dir() {
-        let mut found = false;
-        for entry in WalkDir::new(&source_path)
-            .into_iter()
-            .filter_map(|e| e.ok())
-        {
-            if entry.file_type().is_file() {
-                let ext = entry
-                    .path()
-                    .extension()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or("")
-                    .to_lowercase();
-                if ext == "zip" || ext == "7z" {
-                    source_path = entry.path().to_path_buf();
-                    found = true;
-                    break;
-                }
-            }
-        }
-        if !found {
-            anyhow::bail!("No archive (zip/7z) found in package upload directory");
+        let dir = source_path.clone();
+        let found = tokio::task::spawn_blocking(move || find_archive_in_dir(&dir))
+            .await
+            .context("archive scan task panicked")?;
+        match found {
+            Some(archive_path) => source_path = archive_path,
+            None => anyhow::bail!("No archive (zip/7z) found in package upload directory"),
         }
     }
 
     // Collect all image files
-    let mut files_to_process = Vec::new();
+    let files_to_process: Vec<PathBuf>;
 
     if source_path.is_dir() {
-        // Folder or server import: scan for images
-        for entry in WalkDir::new(&source_path)
-            .into_iter()
-            .filter_map(|e| e.ok())
-        {
-            if entry.file_type().is_file() {
-                let ext = entry
-                    .path()
-                    .extension()
-                    .and_then(|s| s.to_str())
-                    .unwrap_or("")
-                    .to_lowercase();
-                if matches!(ext.as_str(), "jpg" | "jpeg" | "png" | "webp" | "gif") {
-                    files_to_process.push(entry.path().to_path_buf());
-                }
-            }
-        }
+        // Folder or server import: scan for images (blocking directory walk).
+        let dir = source_path.clone();
+        files_to_process = tokio::task::spawn_blocking(move || scan_image_files(&dir))
+            .await
+            .context("image scan task panicked")?;
     } else if source_path.is_file() {
         let ext = source_path
             .extension()
@@ -264,73 +342,69 @@ async fn run_import_job(
                 data: serde_json::json!({ "id": job_id }),
             });
 
-            let file = std::fs::File::open(&source_path)?;
-            let mut archive = zip::ZipArchive::new(file)?;
-            let total_files = archive.len() as i32;
-
-            sqlx::query(
-                "UPDATE import_jobs SET total_items = $1, updated_at = now() WHERE id = $2",
-            )
-            .bind(total_files)
-            .bind(job_id)
-            .execute(pool)
-            .await?;
-            let _ = tx.send(ServerEvent {
-                event: "import_job_updated".to_string(),
-                data: serde_json::json!({ "id": job_id }),
-            });
-
             // Keep raw extracted files outside the authenticated media tree.
             let temp_extract_dir = config
                 .temp_root
                 .join("temp_extract")
                 .join(job_id.to_string());
-            std::fs::create_dir_all(&temp_extract_dir)?;
 
-            for i in 0..archive.len() {
-                let mut file = archive.by_index(i)?;
-                let outpath = match file.enclosed_name() {
-                    Some(path) => path.to_owned(),
-                    None => continue,
-                };
+            // Run the blocking ZIP extraction on a dedicated thread, streaming
+            // progress back over a channel so the DB/SSE updates stay on the
+            // async runtime.
+            let (progress_tx, mut progress_rx) =
+                tokio::sync::mpsc::unbounded_channel::<ExtractProgress>();
+            let archive_path = source_path.clone();
+            let extract_dir = temp_extract_dir.clone();
+            let mut handle = tokio::task::spawn_blocking(move || {
+                extract_zip_blocking(
+                    &archive_path,
+                    &extract_dir,
+                    progress_batch_size,
+                    &progress_tx,
+                )
+            });
 
-                let outpath = temp_extract_dir.join(outpath);
-                if (*file.name()).ends_with('/') {
-                    std::fs::create_dir_all(&outpath)?;
-                } else {
-                    if let Some(p) = outpath.parent()
-                        && !p.exists()
-                    {
-                        std::fs::create_dir_all(p)?;
-                    }
-                    let mut outfile = std::fs::File::create(&outpath)?;
-                    std::io::copy(&mut file, &mut outfile)?;
-
-                    let out_ext = outpath
-                        .extension()
-                        .and_then(|s| s.to_str())
-                        .unwrap_or("")
-                        .to_lowercase();
-                    if matches!(out_ext.as_str(), "jpg" | "jpeg" | "png" | "webp" | "gif") {
-                        files_to_process.push(outpath);
+            // Drain progress messages until the blocking task finishes.
+            files_to_process = loop {
+                tokio::select! {
+                    msg = progress_rx.recv() => {
+                        match msg {
+                            Some(ExtractProgress::Total(total)) => {
+                                sqlx::query(
+                                    "UPDATE import_jobs SET total_items = $1, updated_at = now() WHERE id = $2",
+                                )
+                                .bind(total)
+                                .bind(job_id)
+                                .execute(pool)
+                                .await?;
+                                let _ = tx.send(ServerEvent {
+                                    event: "import_job_updated".to_string(),
+                                    data: serde_json::json!({ "id": job_id }),
+                                });
+                            }
+                            Some(ExtractProgress::Processed(processed)) => {
+                                sqlx::query(
+                                    "UPDATE import_jobs SET processed_items = $1, updated_at = now() WHERE id = $2",
+                                )
+                                .bind(processed)
+                                .bind(job_id)
+                                .execute(pool)
+                                .await?;
+                                let _ = tx.send(ServerEvent {
+                                    event: "import_job_updated".to_string(),
+                                    data: serde_json::json!({ "id": job_id }),
+                                });
+                            }
+                            None => {
+                                // Sender dropped: extraction finished, collect the result.
+                                break (&mut handle)
+                                    .await
+                                    .context("zip extraction task panicked")??;
+                            }
+                        }
                     }
                 }
-
-                // Report extraction progress at configured batch intervals
-                if i % progress_batch_size == 0 && i > 0 {
-                    sqlx::query(
-                        "UPDATE import_jobs SET processed_items = $1, updated_at = now() WHERE id = $2"
-                    )
-                    .bind(i as i32)
-                    .bind(job_id)
-                    .execute(pool)
-                    .await?;
-                    let _ = tx.send(ServerEvent {
-                        event: "import_job_updated".to_string(),
-                        data: serde_json::json!({ "id": job_id }),
-                    });
-                }
-            }
+            };
         } else if matches!(ext.as_str(), "7z") {
             tracing::info!("Extracting 7Z archive: {:?}", source_path);
 
@@ -349,30 +423,18 @@ async fn run_import_job(
                 .temp_root
                 .join("temp_extract")
                 .join(job_id.to_string());
-            std::fs::create_dir_all(&temp_extract_dir)?;
 
-            sevenz_rust::decompress_file(&source_path, &temp_extract_dir)
-                .map_err(|e| anyhow::anyhow!("7z extraction failed: {:?}", e))?;
-
-            // Collect extracted files
-            for entry in WalkDir::new(&temp_extract_dir)
-                .into_iter()
-                .filter_map(|e| e.ok())
-            {
-                if entry.file_type().is_file() {
-                    let ext = entry
-                        .path()
-                        .extension()
-                        .and_then(|s| s.to_str())
-                        .unwrap_or("")
-                        .to_lowercase();
-                    if matches!(ext.as_str(), "jpg" | "jpeg" | "png" | "webp" | "gif") {
-                        files_to_process.push(entry.path().to_path_buf());
-                    }
-                }
-            }
+            let archive_path = source_path.clone();
+            let extract_dir = temp_extract_dir.clone();
+            files_to_process = tokio::task::spawn_blocking(move || {
+                extract_7z_blocking(&archive_path, &extract_dir)
+            })
+            .await
+            .context("7z extraction task panicked")??;
         } else if matches!(ext.as_str(), "jpg" | "jpeg" | "png" | "webp" | "gif") {
-            files_to_process.push(source_path.clone());
+            files_to_process = vec![source_path.clone()];
+        } else {
+            files_to_process = Vec::new();
         }
     } else {
         anyhow::bail!("Source path does not exist or is not a valid file/directory");
@@ -462,38 +524,33 @@ fn classify_import_error(error: &anyhow::Error) -> (&'static str, &'static str) 
     }
 }
 
-async fn process_single_file(
+/// Result of the CPU/IO-heavy image processing stage, computed inside
+/// `spawn_blocking` so the async runtime threads are never blocked.
+struct ProcessedFile {
+    metadata: crate::image_processor::ImageMetadata,
+    tags_to_insert: Vec<ParsedTag>,
+    rating_to_insert: String,
+    original_filename_str: String,
+    original_relative_path: String,
+    mime_type: &'static str,
+    file_size: i64,
+}
+
+/// Runs all blocking work for a single file (decode, resize, webp encode,
+/// sidecar read, original copy) on a blocking thread and returns the data
+/// needed to insert the row.
+fn process_single_file_blocking(
     file_path: &Path,
     originals_dir: &Path,
-    pool: &PgPool,
-    config: &Config,
+    media_root: &Path,
+    sha256: &str,
     dyn_config: &crate::config::DynamicConfig,
-    uploader_id: Option<i64>,
-) -> Result<bool> {
-    // 1. Compute SHA256
-    let sha256 = compute_sha256(file_path).context("failed to compute sha256")?;
-
-    #[derive(sqlx::FromRow)]
-    struct ImageId {
-        #[allow(dead_code)]
-        id: i64,
-    }
-
-    let existing: Option<ImageId> = sqlx::query_as("SELECT id FROM images WHERE sha256 = $1")
-        .bind(&sha256)
-        .fetch_optional(pool)
-        .await?;
-
-    if existing.is_some() {
-        tracing::debug!("Skipping {}, already exists", sha256);
-        return Ok(false); // Returning false means skipped
-    }
-
-    // 3. Process image (generate thumbnail and sample)
+) -> Result<ProcessedFile> {
+    // Process image (generate thumbnail and sample)
     let metadata =
-        crate::image_processor::process_image(file_path, &config.media_root, &sha256, dyn_config)?;
+        crate::image_processor::process_image(file_path, media_root, sha256, dyn_config)?;
 
-    // 3.5 Read metadata JSON if exists
+    // Read sidecar metadata JSON if it exists
     let mut tags_to_insert: Vec<ParsedTag> = Vec::new();
     let mut rating_to_insert = "safe".to_string();
     if let Some(sidecar) = read_sidecar_metadata(file_path) {
@@ -501,7 +558,7 @@ async fn process_single_file(
         rating_to_insert = sidecar.rating;
     }
 
-    // 4. Move original file to media_root/originals/
+    // Move original file to media_root/originals/
     let ext = file_path
         .extension()
         .and_then(|e| e.to_str())
@@ -526,9 +583,75 @@ async fn process_single_file(
         _ => "image/jpeg",
     };
 
-    // 5. Insert into DB
     let original_relative_path = format!("originals/{}", original_filename);
 
+    Ok(ProcessedFile {
+        metadata,
+        tags_to_insert,
+        rating_to_insert,
+        original_filename_str,
+        original_relative_path,
+        mime_type,
+        file_size,
+    })
+}
+
+async fn process_single_file(
+    file_path: &Path,
+    originals_dir: &Path,
+    pool: &PgPool,
+    config: &Config,
+    dyn_config: &crate::config::DynamicConfig,
+    uploader_id: Option<i64>,
+) -> Result<bool> {
+    // 1. Compute SHA256 (blocking file read) off the async runtime threads.
+    let sha256 = {
+        let file_path = file_path.to_path_buf();
+        tokio::task::spawn_blocking(move || compute_sha256(&file_path))
+            .await
+            .context("sha256 task panicked")?
+            .context("failed to compute sha256")?
+    };
+
+    #[derive(sqlx::FromRow)]
+    struct ImageId {
+        #[allow(dead_code)]
+        id: i64,
+    }
+
+    // 2. Dedup check before doing any expensive processing.
+    let existing: Option<ImageId> = sqlx::query_as("SELECT id FROM images WHERE sha256 = $1")
+        .bind(&sha256)
+        .fetch_optional(pool)
+        .await?;
+
+    if existing.is_some() {
+        tracing::debug!("Skipping {}, already exists", sha256);
+        return Ok(false); // Returning false means skipped
+    }
+
+    // 3. Run all CPU/IO-heavy work (decode, resize, encode, copy) on a
+    //    blocking thread so the Tokio worker threads stay responsive.
+    let processed = {
+        let file_path = file_path.to_path_buf();
+        let originals_dir = originals_dir.to_path_buf();
+        let media_root = config.media_root.clone();
+        let sha256 = sha256.clone();
+        let dyn_config = dyn_config.clone();
+        tokio::task::spawn_blocking(move || {
+            process_single_file_blocking(
+                &file_path,
+                &originals_dir,
+                &media_root,
+                &sha256,
+                &dyn_config,
+            )
+        })
+        .await
+        .context("image processing task panicked")??
+    };
+
+    // 4. Insert the image row and its tags (async DB work).
     let image_id: Option<i64> = sqlx::query_scalar(
         r#"
         INSERT INTO images (
@@ -541,50 +664,22 @@ async fn process_single_file(
         "#,
     )
     .bind(&sha256)
-    .bind(&original_relative_path)
-    .bind(&metadata.sample_path)
-    .bind(&metadata.thumbnail_path)
-    .bind(&original_filename_str)
-    .bind(mime_type)
-    .bind(metadata.width as i32)
-    .bind(metadata.height as i32)
-    .bind(file_size)
-    .bind(&rating_to_insert)
+    .bind(&processed.original_relative_path)
+    .bind(&processed.metadata.sample_path)
+    .bind(&processed.metadata.thumbnail_path)
+    .bind(&processed.original_filename_str)
+    .bind(processed.mime_type)
+    .bind(processed.metadata.width as i32)
+    .bind(processed.metadata.height as i32)
+    .bind(processed.file_size)
+    .bind(&processed.rating_to_insert)
     .bind(uploader_id)
     .fetch_one(pool)
     .await?;
 
     if let Some(id) = image_id {
-        for tag in tags_to_insert {
-            // Find or create tag
-            let tag_id: i64 = sqlx::query_scalar(
-                r#"
-                WITH new_tag AS (
-                    INSERT INTO tags (namespace, name, normalized_namespace, normalized_name)
-                    VALUES ($1, $2, $3, $4)
-                    ON CONFLICT (normalized_namespace, normalized_name) DO NOTHING
-                    RETURNING id
-                )
-                SELECT id FROM new_tag
-                UNION ALL
-                SELECT id FROM tags WHERE normalized_namespace = $3 AND normalized_name = $4
-                LIMIT 1
-                "#,
-            )
-            .bind(&tag.namespace)
-            .bind(&tag.name)
-            .bind(&tag.normalized_namespace)
-            .bind(&tag.normalized_name)
-            .fetch_one(pool)
-            .await?;
-
-            sqlx::query(
-                "INSERT INTO image_tags (image_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING",
-            )
-            .bind(id)
-            .bind(tag_id)
-            .execute(pool)
-            .await?;
+        for tag in processed.tags_to_insert {
+            crate::tags::attach_tag_to_image(pool, id, &tag).await?;
         }
     }
 
