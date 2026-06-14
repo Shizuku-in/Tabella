@@ -3,9 +3,9 @@ use axum::{
     response::sse::{Event, Sse},
 };
 use axum_extra::extract::CookieJar;
+use futures_util::StreamExt;
 use futures_util::stream::Stream;
 use std::convert::Infallible;
-use tokio_stream::StreamExt;
 use tokio_stream::wrappers::BroadcastStream;
 
 use super::{error::ApiError, guards::require_user};
@@ -20,7 +20,7 @@ pub(crate) async fn sse_handler(
 
     let rx = state.tx.subscribe();
     let stream = BroadcastStream::new(rx).filter_map(|res| {
-        match res {
+        let mapped = match res {
             Ok(server_event) => {
                 let event = Event::default()
                     .event(server_event.event)
@@ -31,8 +31,15 @@ pub(crate) async fn sse_handler(
                 // The receiver lagged too far behind, but we can just ignore or skip.
                 None
             }
-        }
+        };
+        std::future::ready(mapped)
     });
+
+    // End this long-lived stream when the server starts shutting down. Without
+    // this, the open SSE connection would keep `axum::serve`'s graceful
+    // shutdown waiting forever (an SSE stream never completes on its own).
+    let shutdown = state.shutdown.clone();
+    let stream = stream.take_until(async move { shutdown.cancelled().await });
 
     Ok(Sse::new(stream).keep_alive(axum::response::sse::KeepAlive::default()))
 }

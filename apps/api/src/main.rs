@@ -151,15 +151,16 @@ async fn main() -> anyhow::Result<()> {
     );
 
     axum::serve(listener, app)
-        .with_graceful_shutdown(shutdown_signal())
+        .with_graceful_shutdown(shutdown_signal(shutdown.clone()))
         .await
         .context("axum server exited unexpectedly")?;
 
-    // The HTTP server has stopped accepting connections. Tell the background
-    // workers to stop picking up new work and let the import worker finish its
-    // current job, bounded by a timeout so a large archive can't hang shutdown.
-    tracing::info!("shutdown signal received, draining background workers");
-    shutdown.cancel();
+    // `shutdown_signal` already cancelled the token the moment the signal
+    // arrived, so the import worker stopped claiming new jobs and open SSE
+    // streams ended (letting graceful shutdown drain and return). Now wait for
+    // the worker to finish its in-flight job, bounded by a timeout so a large
+    // archive can't hang shutdown.
+    tracing::info!("HTTP server stopped, draining background workers");
 
     const WORKER_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(30);
     match tokio::time::timeout(WORKER_SHUTDOWN_TIMEOUT, import_worker_handle).await {
@@ -177,7 +178,11 @@ async fn main() -> anyhow::Result<()> {
 
 /// Resolves when the process receives a shutdown signal (Ctrl-C on all
 /// platforms, plus SIGTERM on Unix for `systemctl stop` / container stop).
-async fn shutdown_signal() {
+///
+/// Cancels `shutdown` the instant a signal arrives so background workers stop
+/// claiming new work and long-lived connections (e.g. SSE) can end, allowing
+/// `axum::serve`'s graceful shutdown to actually complete.
+async fn shutdown_signal(shutdown: tokio_util::sync::CancellationToken) {
     let ctrl_c = async {
         if let Err(e) = tokio::signal::ctrl_c().await {
             tracing::error!("failed to install Ctrl-C handler: {:?}", e);
@@ -201,6 +206,9 @@ async fn shutdown_signal() {
         _ = ctrl_c => {}
         _ = terminate => {}
     }
+
+    tracing::info!("shutdown signal received, cancelling background workers");
+    shutdown.cancel();
 }
 
 fn init_tracing() {
