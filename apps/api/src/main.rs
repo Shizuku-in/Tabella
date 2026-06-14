@@ -8,6 +8,8 @@ mod import_worker;
 mod tags;
 mod tasks;
 
+use std::time::Duration;
+
 use anyhow::Context;
 use axum::{Router, http::StatusCode, middleware, routing::any};
 use config::Config;
@@ -27,6 +29,9 @@ pub(crate) struct AppState {
     pub(crate) config: Config,
     pub(crate) pool: sqlx::PgPool,
     pub(crate) tx: tokio::sync::broadcast::Sender<ServerEvent>,
+    /// Signalled on shutdown so background workers can stop accepting new work
+    /// and exit cleanly once their current job finishes.
+    pub(crate) shutdown: tokio_util::sync::CancellationToken,
 }
 
 #[tokio::main]
@@ -63,14 +68,20 @@ async fn main() -> anyhow::Result<()> {
 
     let (tx, _rx) = tokio::sync::broadcast::channel(100);
 
+    let shutdown = tokio_util::sync::CancellationToken::new();
+
     let app_state = AppState {
         config: config.clone(),
         pool: pool.clone(),
         tx,
+        shutdown: shutdown.clone(),
     };
 
-    // Spawn workers in the background
-    tokio::spawn(import_worker::start_worker(app_state.clone()));
+    // Spawn the import worker; keep its handle so we can wait for the in-flight
+    // job to finish during graceful shutdown.
+    let import_worker_handle = tokio::spawn(import_worker::start_worker(app_state.clone()));
+    // The cleanup worker is a periodic, idempotent task with no in-flight state
+    // worth protecting, so it can be dropped on shutdown.
     tokio::spawn(tasks::cleanup::run_cleanup_worker(
         pool.clone(),
         config.temp_root.clone(),
@@ -140,10 +151,56 @@ async fn main() -> anyhow::Result<()> {
     );
 
     axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
         .await
         .context("axum server exited unexpectedly")?;
 
+    // The HTTP server has stopped accepting connections. Tell the background
+    // workers to stop picking up new work and let the import worker finish its
+    // current job, bounded by a timeout so a large archive can't hang shutdown.
+    tracing::info!("shutdown signal received, draining background workers");
+    shutdown.cancel();
+
+    const WORKER_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(30);
+    match tokio::time::timeout(WORKER_SHUTDOWN_TIMEOUT, import_worker_handle).await {
+        Ok(Ok(())) => tracing::info!("import worker drained cleanly"),
+        Ok(Err(e)) => tracing::error!("import worker task panicked during shutdown: {:?}", e),
+        Err(_) => tracing::warn!(
+            "import worker did not finish within {}s; exiting anyway (the in-flight job will be \
+             reset to failed on next startup)",
+            WORKER_SHUTDOWN_TIMEOUT.as_secs()
+        ),
+    }
+
     Ok(())
+}
+
+/// Resolves when the process receives a shutdown signal (Ctrl-C on all
+/// platforms, plus SIGTERM on Unix for `systemctl stop` / container stop).
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        if let Err(e) = tokio::signal::ctrl_c().await {
+            tracing::error!("failed to install Ctrl-C handler: {:?}", e);
+        }
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        match tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate()) {
+            Ok(mut sig) => {
+                sig.recv().await;
+            }
+            Err(e) => tracing::error!("failed to install SIGTERM handler: {:?}", e),
+        }
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {}
+        _ = terminate => {}
+    }
 }
 
 fn init_tracing() {

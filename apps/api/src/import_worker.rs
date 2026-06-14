@@ -147,13 +147,30 @@ pub(crate) async fn start_worker(state: AppState) {
         tracing::error!("Failed to clean up stuck jobs: {:?}", e);
     }
 
+    let shutdown = state.shutdown.clone();
+
     loop {
+        // Stop claiming new jobs once shutdown has been requested. Any job
+        // already in flight has run to completion before this check.
+        if shutdown.is_cancelled() {
+            tracing::info!("Import worker stopping: shutdown requested");
+            return;
+        }
+
         match process_next_job(&state).await {
             Ok(true) => continue, // Processed a job, check for next one immediately
             Ok(false) => {}       // No jobs found, sleep
             Err(e) => tracing::error!("Import worker error: {:?}", e),
         }
-        sleep(Duration::from_secs(5)).await;
+
+        // Idle wait, but wake up immediately if shutdown is requested.
+        tokio::select! {
+            _ = sleep(Duration::from_secs(5)) => {}
+            _ = shutdown.cancelled() => {
+                tracing::info!("Import worker stopping: shutdown requested");
+                return;
+            }
+        }
     }
 }
 
