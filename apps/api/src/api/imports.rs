@@ -181,6 +181,10 @@ async fn upload_import_files(
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let user = require_editor(&state, &jar).await?;
 
+    let max_upload_bytes = crate::config::DynamicConfig::load(&state.pool, &state.config)
+        .await
+        .max_upload_bytes;
+
     // Create a temp directory for this upload batch
     let batch_id = uuid::Uuid::new_v4();
     let temp_dir = state
@@ -193,6 +197,7 @@ async fn upload_import_files(
         .map_err(|e| ApiError::internal(e.into()))?;
 
     let mut has_files = false;
+    let mut total_bytes: u64 = 0;
     while let Some(mut field) = multipart
         .next_field()
         .await
@@ -220,6 +225,14 @@ async fn upload_import_files(
                 .map_err(|e| ApiError::internal(e.into()))?;
 
             while let Some(chunk) = field.chunk().await.map_err(api_error_from_multipart)? {
+                total_bytes = total_bytes.saturating_add(chunk.len() as u64);
+                if total_bytes > max_upload_bytes {
+                    // Abort mid-stream; partial files go with the batch dir.
+                    let _ = tokio::fs::remove_dir_all(&temp_dir).await;
+                    return Err(ApiError::payload_too_large(
+                        "Upload exceeds the configured maximum size.",
+                    ));
+                }
                 output
                     .write_all(&chunk)
                     .await

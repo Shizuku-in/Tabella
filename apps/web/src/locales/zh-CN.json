@@ -288,6 +288,8 @@
       "imports": "导入",
       "batchSize": "导入进度批处理大小",
       "batchSizeHelp": "更新数据库进度之前要处理的文件数。较低的值提供更频繁的UI更新，但数据库负载更高。",
+      "maxUploadSize": "最大上传大小（字节）",
+      "maxUploadSizeHelp": "单次上传请求的总大小上限。超过此值的上传会被拒绝，以保护服务器磁盘空间。",
       "imageProcessing": "图像处理",
       "thumbSize": "缩略图最大尺寸 (px)",
       "thumbSizeHelp": "生成的缩略图的最大尺寸（宽或高）。默认值为 500。",

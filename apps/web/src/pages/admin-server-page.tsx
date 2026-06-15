@@ -24,6 +24,7 @@ interface ServerSettings {
   session_ttl_hours: number
   secure_cookies: boolean
   import_progress_batch_size: number
+  max_upload_bytes: number
   thumbnail_size: number
   thumbnail_quality: number
   sample_size: number
@@ -37,6 +38,7 @@ interface ServerSettingsForm {
   session_ttl_hours: string
   secure_cookies: boolean
   import_progress_batch_size: string
+  max_upload_bytes: string
   thumbnail_size: string
   thumbnail_quality: string
   sample_size: string
@@ -49,6 +51,7 @@ interface ServerSettingsFieldErrors {
   download_retention_hours?: string
   session_ttl_hours?: string
   import_progress_batch_size?: string
+  max_upload_bytes?: string
   thumbnail_size?: string
   thumbnail_quality?: string
   sample_size?: string
@@ -242,6 +245,16 @@ export function AdminServerPage() {
                   helperText={errors.import_progress_batch_size ?? t('admin.server.batchSizeHelp')}
                   fullWidth
                 />
+                <TextField
+                  label={t('admin.server.maxUploadSize')}
+                  type="number"
+                  required
+                  value={settings.max_upload_bytes}
+                  onChange={(e) => handleNumberChange('max_upload_bytes', e.target.value)}
+                  error={Boolean(errors.max_upload_bytes)}
+                  helperText={errors.max_upload_bytes ?? t('admin.server.maxUploadSizeHelp')}
+                  fullWidth
+                />
               </Stack>
 
               <Stack spacing={3}>
@@ -358,6 +371,7 @@ function toFormState(settings: ServerSettings): ServerSettingsForm {
     session_ttl_hours: settings.session_ttl_hours.toString(),
     secure_cookies: settings.secure_cookies,
     import_progress_batch_size: settings.import_progress_batch_size.toString(),
+    max_upload_bytes: (settings.max_upload_bytes ?? 20 * 1024 * 1024 * 1024).toString(),
     thumbnail_size: (settings.thumbnail_size ?? 500).toString(),
     thumbnail_quality: (settings.thumbnail_quality ?? 75).toString(),
     sample_size: (settings.sample_size ?? 0).toString(),
@@ -373,6 +387,7 @@ function parseFormState(settings: ServerSettingsForm): ServerSettings {
     session_ttl_hours: Number.parseInt(settings.session_ttl_hours.trim(), 10),
     secure_cookies: settings.secure_cookies,
     import_progress_batch_size: Number.parseInt(settings.import_progress_batch_size.trim(), 10),
+    max_upload_bytes: Number.parseInt(settings.max_upload_bytes.trim(), 10),
     thumbnail_size: Number.parseInt(settings.thumbnail_size.trim(), 10),
     thumbnail_quality: Number.parseFloat(settings.thumbnail_quality.trim()),
     sample_size: Number.parseInt(settings.sample_size.trim(), 10),
@@ -460,6 +475,12 @@ function validateServerSettingsFields(
     t('admin.server.batchSize'),
   )
   if (batchSize) errors.import_progress_batch_size = batchSize
+
+  const maxUpload = validatePositiveInteger(
+    settings.max_upload_bytes,
+    t('admin.server.maxUploadSize'),
+  )
+  if (maxUpload) errors.max_upload_bytes = maxUpload
 
   const thumbSize = validateIntegerRange(
     settings.thumbnail_size,

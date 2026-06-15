@@ -25,6 +25,8 @@ pub(crate) struct DynamicConfig {
     pub(crate) sample_size: u32,
     #[serde(default = "DynamicConfig::default_sample_quality")]
     pub(crate) sample_quality: f32,
+    #[serde(default = "DynamicConfig::default_max_upload_bytes")]
+    pub(crate) max_upload_bytes: u64,
 }
 
 impl DynamicConfig {
@@ -42,6 +44,9 @@ impl DynamicConfig {
     }
     fn default_sample_quality() -> f32 {
         80.0
+    }
+    fn default_max_upload_bytes() -> u64 {
+        20 * 1024 * 1024 * 1024 // 20 GiB
     }
 
     pub async fn load(pool: &PgPool, fallback: &Config) -> Self {
@@ -69,6 +74,7 @@ impl DynamicConfig {
             thumbnail_quality: Self::default_thumbnail_quality(),
             sample_size: Self::default_sample_size(),
             sample_quality: Self::default_sample_quality(),
+            max_upload_bytes: Self::default_max_upload_bytes(),
         }
     }
 
@@ -99,6 +105,9 @@ impl DynamicConfig {
         }
         if self.sample_quality < 1.0 || self.sample_quality > 100.0 {
             bail!("sample_quality must be between 1.0 and 100.0");
+        }
+        if self.max_upload_bytes == 0 {
+            bail!("max_upload_bytes must be greater than 0");
         }
 
         Ok(())
@@ -210,6 +219,7 @@ mod tests {
             thumbnail_quality: DynamicConfig::default_thumbnail_quality(),
             sample_size: DynamicConfig::default_sample_size(),
             sample_quality: DynamicConfig::default_sample_quality(),
+            max_upload_bytes: DynamicConfig::default_max_upload_bytes(),
         };
 
         config.session_ttl_hours = 0;
@@ -217,6 +227,10 @@ mod tests {
 
         config.session_ttl_hours = 1;
         config.max_download_images = 0;
+        assert!(config.validate().is_err());
+
+        config.max_download_images = defaults.max_download_images;
+        config.max_upload_bytes = 0;
         assert!(config.validate().is_err());
     }
 }

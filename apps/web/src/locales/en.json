@@ -288,6 +288,8 @@
       "imports": "Imports",
       "batchSize": "Import Progress Batch Size",
       "batchSizeHelp": "How many files to process before updating progress in the database. Lower values give more frequent UI updates but higher DB load.",
+      "maxUploadSize": "Max Upload Size (Bytes)",
+      "maxUploadSizeHelp": "Maximum total size of a single upload request. Uploads larger than this are rejected to protect server disk space.",
       "imageProcessing": "Image Processing",
       "thumbSize": "Thumbnail Max Size (px)",
       "thumbSizeHelp": "Maximum dimension (width or height) for generated thumbnails. Default is 500.",
