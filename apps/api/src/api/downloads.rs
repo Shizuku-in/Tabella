@@ -39,6 +39,25 @@ struct DownloadImageRow {
     original_filename: String,
 }
 
+#[derive(sqlx::FromRow)]
+struct DownloadJobRow {
+    id: Uuid,
+    user_id: i64,
+    status: Option<String>,
+    total_images: i32,
+    total_bytes: i64,
+    error_message: Option<String>,
+    error_code: Option<String>,
+    error_params: Option<Value>,
+}
+
+#[derive(sqlx::FromRow)]
+struct DownloadJobFileRow {
+    user_id: i64,
+    status: Option<String>,
+    file_path: Option<String>,
+}
+
 #[derive(Serialize)]
 pub(crate) struct DownloadJobResponse {
     pub id: Uuid,
@@ -209,7 +228,7 @@ async fn get_download_job(
 ) -> Result<Json<DownloadJobResponse>, ApiError> {
     let user = require_user(&state, &jar).await?;
 
-    let record = sqlx::query(
+    let record: Option<DownloadJobRow> = sqlx::query_as(
         r#"
         SELECT id, user_id, status::TEXT as status, total_images, total_bytes, error_message, error_code, error_params
         FROM download_jobs
@@ -227,9 +246,8 @@ async fn get_download_job(
             "Download job not found",
         )
     })?;
-    let record_user_id: i64 = sqlx::Row::try_get(&record, "user_id").unwrap();
 
-    if record_user_id != user.id {
+    if record.user_id != user.id {
         return Err(ApiError::forbidden(
             crate::api::error_codes::DOWNLOAD_JOB_ACCESS_DENIED,
             "You can only view your own download jobs",
@@ -237,15 +255,13 @@ async fn get_download_job(
     }
 
     Ok(Json(DownloadJobResponse {
-        id: sqlx::Row::try_get(&record, "id").unwrap(),
-        status: sqlx::Row::try_get::<Option<String>, _>(&record, "status")
-            .unwrap()
-            .unwrap_or_else(|| "unknown".to_string()),
-        total_images: sqlx::Row::try_get(&record, "total_images").unwrap(),
-        total_bytes: sqlx::Row::try_get(&record, "total_bytes").unwrap(),
-        error_message: sqlx::Row::try_get(&record, "error_message").unwrap(),
-        error_code: sqlx::Row::try_get(&record, "error_code").unwrap(),
-        error_params: sqlx::Row::try_get(&record, "error_params").unwrap(),
+        id: record.id,
+        status: record.status.unwrap_or_else(|| "unknown".to_string()),
+        total_images: record.total_images,
+        total_bytes: record.total_bytes,
+        error_message: record.error_message,
+        error_code: record.error_code,
+        error_params: record.error_params,
     }))
 }
 
@@ -256,7 +272,7 @@ async fn download_job_file(
 ) -> Result<Response, ApiError> {
     let user = require_user(&state, &jar).await?;
 
-    let record = sqlx::query(
+    let record: Option<DownloadJobFileRow> = sqlx::query_as(
         r#"
         SELECT user_id, status::TEXT as status, file_path
         FROM download_jobs
@@ -274,26 +290,24 @@ async fn download_job_file(
             "Download job not found",
         )
     })?;
-    let record_user_id: i64 = sqlx::Row::try_get(&record, "user_id").unwrap();
 
-    if record_user_id != user.id {
+    if record.user_id != user.id {
         return Err(ApiError::forbidden(
             crate::api::error_codes::DOWNLOAD_JOB_ACCESS_DENIED,
             "You can only download your own files",
         ));
     }
 
-    let record_status: Option<String> = sqlx::Row::try_get(&record, "status").unwrap();
-    if record_status.as_deref() != Some("completed") {
+    if record.status.as_deref() != Some("completed") {
         return Err(ApiError::bad_request(
             crate::api::error_codes::DOWNLOAD_JOB_NOT_COMPLETED,
             "The download job is not completed yet",
         ));
     }
 
-    let file_path: Option<String> = sqlx::Row::try_get(&record, "file_path").unwrap();
-    let file_path =
-        file_path.ok_or_else(|| ApiError::internal(anyhow::anyhow!("File path is missing")))?;
+    let file_path = record
+        .file_path
+        .ok_or_else(|| ApiError::internal(anyhow::anyhow!("File path is missing")))?;
     let abs_path = state.config.temp_root.join(&file_path);
 
     let file = tokio::fs::File::open(&abs_path).await.map_err(|e| {

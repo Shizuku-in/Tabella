@@ -5,6 +5,12 @@ use tracing::{error, info};
 
 const ORPHAN_TEMP_TTL: Duration = Duration::from_secs(24 * 3600);
 
+#[derive(sqlx::FromRow)]
+struct ExpiredJobRow {
+    id: uuid::Uuid,
+    file_path: Option<String>,
+}
+
 pub(crate) async fn run_cleanup_worker(pool: PgPool, temp_root: PathBuf) {
     let mut interval = tokio::time::interval(Duration::from_secs(3600)); // Every hour
 
@@ -12,7 +18,7 @@ pub(crate) async fn run_cleanup_worker(pool: PgPool, temp_root: PathBuf) {
         interval.tick().await;
         info!("Running download jobs cleanup task");
 
-        let expired_jobs = sqlx::query(
+        let expired_jobs = sqlx::query_as::<_, ExpiredJobRow>(
             r#"
             SELECT id, file_path
             FROM download_jobs
@@ -25,10 +31,9 @@ pub(crate) async fn run_cleanup_worker(pool: PgPool, temp_root: PathBuf) {
         match expired_jobs {
             Ok(jobs) => {
                 for job in jobs {
-                    let job_id: uuid::Uuid = sqlx::Row::try_get(&job, "id").unwrap();
-                    let file_path: Option<String> = sqlx::Row::try_get(&job, "file_path").unwrap();
+                    let job_id = job.id;
 
-                    if let Some(file_path) = file_path {
+                    if let Some(file_path) = job.file_path {
                         let abs_path = temp_root.join(&file_path);
                         if abs_path.exists() {
                             if let Err(e) = tokio::fs::remove_file(&abs_path).await {
