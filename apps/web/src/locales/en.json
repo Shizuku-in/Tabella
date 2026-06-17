@@ -62,6 +62,7 @@
     },
     "masonryColumns": "Masonry Columns",
     "gridColumns": "Grid Columns",
+    "justifiedRowHeight": "Justified Row Height",
     "display": "Display",
     "displayOptions": {
       "showResultsCount": "Show results count and sort",

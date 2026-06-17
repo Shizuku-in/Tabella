@@ -77,6 +77,8 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     setMasonryColumns,
     gridColumns,
     setGridColumns,
+    justifiedRowHeight,
+    setJustifiedRowHeight,
     showMobileDetails,
     setShowMobileDetails,
     hoverInfo,
@@ -99,6 +101,8 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       setMasonryColumns: state.setMasonryColumns,
       gridColumns: state.gridColumns,
       setGridColumns: state.setGridColumns,
+      justifiedRowHeight: state.justifiedRowHeight,
+      setJustifiedRowHeight: state.setJustifiedRowHeight,
       showMobileDetails: state.showMobileDetails,
       setShowMobileDetails: state.setShowMobileDetails,
       hoverInfo: state.hoverInfo,
@@ -265,6 +269,37 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                       min={1}
                       max={10}
                       valueLabelDisplay="auto"
+                      size="small"
+                    />
+                  </Stack>
+                ))}
+              </Stack>
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                {t('settings.justifiedRowHeight')}
+              </Typography>
+              <Stack spacing={2} sx={{ mt: 1 }}>
+                {(['xs', 'sm', 'lg', 'xl'] as const).map((breakpoint) => (
+                  <Stack key={breakpoint} direction="row" spacing={3} sx={{ alignItems: 'center' }}>
+                    <Typography variant="body2" sx={{ width: 24, fontWeight: 700 }}>
+                      {breakpoint.toUpperCase()}
+                    </Typography>
+                    <Slider
+                      value={justifiedRowHeight[breakpoint]}
+                      onChange={(_, value) =>
+                        setJustifiedRowHeight({
+                          ...justifiedRowHeight,
+                          [breakpoint]: value as number,
+                        })
+                      }
+                      step={30}
+                      marks
+                      min={120}
+                      max={600}
+                      valueLabelDisplay="auto"
+                      valueLabelFormat={(value) => `${value} px`}
                       size="small"
                     />
                   </Stack>

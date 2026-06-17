@@ -60,8 +60,9 @@
       "advancedSearch": "高级搜索",
       "themeToggle": "主题切换"
     },
-    "masonryColumns": "瀑布流列数",
-    "gridColumns": "网格列数",
+    "masonryColumns": "Masonry 列数",
+    "gridColumns": "Grid 列数",
+    "justifiedRowHeight": "Justified 行高",
     "display": "显示设置",
     "displayOptions": {
       "showResultsCount": "显示搜索结果数量",

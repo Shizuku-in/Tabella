@@ -16,6 +16,7 @@ export function useGalleryVirtualizer({
   items,
   layoutMode,
   columns,
+  justifiedRowHeight = 240,
   gap = 8,
   overscan = 1500, // Pre-render 1.5 viewport heights ahead
 }: {
@@ -23,6 +24,7 @@ export function useGalleryVirtualizer({
   items: GalleryItem[]
   layoutMode: LayoutMode
   columns: number
+  justifiedRowHeight?: number
   gap?: number
   overscan?: number
 }) {
@@ -109,7 +111,7 @@ export function useGalleryVirtualizer({
       })
       totalH = Math.max(...colHeights) - gap
     } else if (layoutMode === 'justified') {
-      const targetHeight = 240
+      const targetHeight = justifiedRowHeight
       let currentRow: { item: GalleryItem; aspect: number; index: number }[] = []
       let currentAspectSum = 0
       let y = 0
@@ -147,7 +149,7 @@ export function useGalleryVirtualizer({
     }
 
     return { positions: posArray, totalHeight: totalH }
-  }, [items, layoutMode, containerWidth, columns, gap])
+  }, [items, layoutMode, containerWidth, columns, justifiedRowHeight, gap])
 
   // Filter visible items
   const visiblePositions = useMemo(() => {
