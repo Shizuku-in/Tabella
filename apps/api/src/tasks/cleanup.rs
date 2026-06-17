@@ -1,9 +1,14 @@
 use sqlx::PgPool;
+use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use tracing::{error, info};
 
 const ORPHAN_TEMP_TTL: Duration = Duration::from_secs(24 * 3600);
+
+// media subdirectories holding image derivatives (DB-referenced). `avatars` is
+// deliberately excluded: it is not tracked in the images table.
+const MANAGED_MEDIA_DIRS: [&str; 3] = ["originals", "samples", "thumbnails"];
 
 #[derive(sqlx::FromRow)]
 struct ExpiredJobRow {
@@ -11,7 +16,7 @@ struct ExpiredJobRow {
     file_path: Option<String>,
 }
 
-pub(crate) async fn run_cleanup_worker(pool: PgPool, temp_root: PathBuf) {
+pub(crate) async fn run_cleanup_worker(pool: PgPool, temp_root: PathBuf, media_root: PathBuf) {
     let mut interval = tokio::time::interval(Duration::from_secs(3600)); // Every hour
 
     loop {
@@ -66,6 +71,8 @@ pub(crate) async fn run_cleanup_worker(pool: PgPool, temp_root: PathBuf) {
         )
         .await;
         cleanup_old_child_dirs(&temp_root.join("uploads"), "uploads", ORPHAN_TEMP_TTL).await;
+
+        cleanup_orphan_media(&pool, &media_root).await;
     }
 }
 
@@ -104,6 +111,79 @@ async fn cleanup_old_child_dirs(root: &Path, label: &str, older_than: Duration) 
             error!(?path, %label, %e, "Failed to delete orphaned temp directory");
         } else {
             info!(?path, %label, "Deleted orphaned temp directory");
+        }
+    }
+}
+
+/// Delete media files on disk that no image row references. Guards against the
+/// import race (file written before its DB row) by only removing files older
+/// than ORPHAN_TEMP_TTL; the avatars dir is never touched.
+async fn cleanup_orphan_media(pool: &PgPool, media_root: &Path) {
+    // Read the referenced set first: a file inserted after this query but before
+    // we scan disk will still be new enough to be skipped by the age guard.
+    let referenced: Result<Vec<String>, _> = sqlx::query_scalar(
+        r#"
+        SELECT original_path FROM images
+        UNION
+        SELECT preview_path FROM images
+        UNION
+        SELECT thumbnail_path FROM images
+        "#,
+    )
+    .fetch_all(pool)
+    .await;
+
+    let referenced: HashSet<String> = match referenced {
+        Ok(paths) => paths.into_iter().collect(),
+        Err(e) => {
+            error!(%e, "Failed to fetch referenced media paths; skipping orphan media sweep");
+            return;
+        }
+    };
+
+    for subdir in MANAGED_MEDIA_DIRS {
+        let dir = media_root.join(subdir);
+        let Ok(mut entries) = tokio::fs::read_dir(&dir).await else {
+            continue;
+        };
+
+        while let Ok(Some(entry)) = entries.next_entry().await {
+            let Ok(metadata) = entry.metadata().await else {
+                continue;
+            };
+            if !metadata.is_file() {
+                continue;
+            }
+
+            // DB stores forward-slash relative paths (e.g. "originals/<sha>.jpg");
+            // rebuild the same shape regardless of platform separators.
+            let Some(filename) = entry.file_name().to_str().map(str::to_owned) else {
+                continue;
+            };
+            let relative = format!("{subdir}/{filename}");
+            if referenced.contains(&relative) {
+                continue;
+            }
+
+            // Age guard: only delete when we can confirm the file is older than
+            // the TTL. Any uncertainty (unreadable mtime, clock skew) keeps the
+            // file, so an in-flight import (file on disk, row not yet committed)
+            // is never deleted.
+            let old_enough = metadata
+                .modified()
+                .ok()
+                .and_then(|m| m.elapsed().ok())
+                .is_some_and(|elapsed| elapsed > ORPHAN_TEMP_TTL);
+            if !old_enough {
+                continue;
+            }
+
+            let path = entry.path();
+            if let Err(e) = tokio::fs::remove_file(&path).await {
+                error!(?path, %e, "Failed to delete orphaned media file");
+            } else {
+                info!(?path, "Deleted orphaned media file");
+            }
         }
     }
 }

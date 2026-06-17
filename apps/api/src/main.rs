@@ -85,6 +85,7 @@ async fn main() -> anyhow::Result<()> {
     tokio::spawn(tasks::cleanup::run_cleanup_worker(
         pool.clone(),
         config.temp_root.clone(),
+        config.media_root.clone(),
     ));
 
     let frontend_dir = std::env::var("TABELLA_FRONTEND_DIR").unwrap_or_else(|_| "dist".to_string());
