@@ -403,6 +403,15 @@ async fn update_image(
     }
 
     if let Some(tags) = &body.tags {
+        // Remember which tags this image had so we can prune any that become
+        // orphaned once the old associations are replaced below.
+        let previous_tag_ids: Vec<i64> =
+            sqlx::query_scalar("SELECT tag_id FROM image_tags WHERE image_id = $1")
+                .bind(image_id)
+                .fetch_all(&state.pool)
+                .await
+                .map_err(|e| ApiError::internal(e.into()))?;
+
         sqlx::query("DELETE FROM image_tags WHERE image_id = $1")
             .bind(image_id)
             .execute(&state.pool)
@@ -418,6 +427,10 @@ async fn update_image(
                 .await
                 .map_err(|e| ApiError::internal(e.into()))?;
         }
+
+        crate::tags::cleanup_orphan_tags(&state.pool, &previous_tag_ids)
+            .await
+            .map_err(|e| ApiError::internal(e.into()))?;
     }
 
     Ok(StatusCode::NO_CONTENT.into_response())
@@ -448,9 +461,23 @@ async fn delete_image(
         ApiError::not_found(crate::api::error_codes::IMAGE_NOT_FOUND, "Image not found.")
     })?;
 
+    // Capture the image's tags before deletion so we can prune any that become
+    // orphaned. The image delete cascades away the image_tags rows but leaves
+    // the tags themselves behind.
+    let previous_tag_ids: Vec<i64> =
+        sqlx::query_scalar("SELECT tag_id FROM image_tags WHERE image_id = $1")
+            .bind(image_id)
+            .fetch_all(&state.pool)
+            .await
+            .map_err(|e| ApiError::internal(e.into()))?;
+
     sqlx::query("DELETE FROM images WHERE id = $1")
         .bind(image_id)
         .execute(&state.pool)
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
+
+    crate::tags::cleanup_orphan_tags(&state.pool, &previous_tag_ids)
         .await
         .map_err(|e| ApiError::internal(e.into()))?;
 

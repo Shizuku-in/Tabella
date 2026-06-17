@@ -50,6 +50,31 @@ pub(crate) async fn attach_tag_to_image(
     Ok(())
 }
 
+/// Deletes tags from `candidate_ids` that no longer reference any image, so a
+/// tag stops appearing in suggestions once nothing uses it. Scoped to the given
+/// ids so editing/deleting one image only touches the tags that image had.
+pub(crate) async fn cleanup_orphan_tags(
+    pool: &PgPool,
+    candidate_ids: &[i64],
+) -> Result<(), sqlx::Error> {
+    if candidate_ids.is_empty() {
+        return Ok(());
+    }
+
+    sqlx::query(
+        r#"
+        DELETE FROM tags
+        WHERE id = ANY($1)
+          AND NOT EXISTS (SELECT 1 FROM image_tags WHERE tag_id = tags.id)
+        "#,
+    )
+    .bind(candidate_ids)
+    .execute(pool)
+    .await?;
+
+    Ok(())
+}
+
 pub(crate) fn parse_tag(tag: &str) -> Option<ParsedTag> {
     let trimmed = tag.trim();
     if trimmed.is_empty() {
