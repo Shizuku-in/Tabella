@@ -11,8 +11,8 @@ pub(crate) struct ParsedTag {
 /// Finds an existing tag by its normalized identity, inserting it if absent,
 /// and returns the tag id. Safe to call concurrently thanks to the
 /// `ON CONFLICT` upsert. Takes a `&mut PgConnection` so callers can run it
-/// inside a transaction (a `&PgPool`, pooled connection, or `&mut Transaction`
-/// all coerce in).
+/// inside a transaction — pass `&mut *tx` for a `Transaction` or `&mut conn`
+/// for an acquired `PoolConnection`.
 pub(crate) async fn upsert_tag(
     conn: &mut PgConnection,
     tag: &ParsedTag,
