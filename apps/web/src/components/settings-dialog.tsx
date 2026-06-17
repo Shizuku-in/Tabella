@@ -131,7 +131,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           p: 0,
           display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
-          height: { sm: 500, md: 600 },
+          height: '61.8vh',
         }}
       >
         <Tabs
@@ -211,7 +211,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                         />
                       }
                       label={<Typography variant="body2">{labelMap[key]}</Typography>}
-                      sx={{ width: { xs: '100%', sm: '45%' } }}
+                      sx={{ width: '45%' }}
                     />
                   )
                 })}
@@ -345,7 +345,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                           {t(`settings.hoverInfoOptions.${key}` as any)}
                         </Typography>
                       }
-                      sx={{ width: { xs: '100%', sm: '45%' } }}
+                      sx={{ width: '45%' }}
                     />
                   ),
                 )}

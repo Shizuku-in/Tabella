@@ -46,7 +46,7 @@
     "categories": {
       "layout": "布局与控件",
       "display": "信息展示",
-      "quality": "图像画质",
+      "quality": "图像质量",
       "general": "通用"
     },
     "topBarButtons": "顶部按钮配置",
