@@ -668,8 +668,11 @@ async fn process_single_file(
         .context("image processing task panicked")??
     };
 
-    // 4. Insert the image row and its tags (async DB work).
-    let image_id: Option<i64> = sqlx::query_scalar(
+    // 4. Insert the image row and its tags in one transaction so a failure
+    //    midway can't leave an image with only part of its tags.
+    let mut tx = pool.begin().await?;
+
+    let image_id: i64 = sqlx::query_scalar(
         r#"
         INSERT INTO images (
             sha256, original_path, preview_path, thumbnail_path, original_filename,
@@ -691,15 +694,14 @@ async fn process_single_file(
     .bind(processed.file_size)
     .bind(&processed.rating_to_insert)
     .bind(uploader_id)
-    .fetch_one(pool)
+    .fetch_one(&mut *tx)
     .await?;
 
-    if let Some(id) = image_id {
-        let mut conn = pool.acquire().await?;
-        for tag in processed.tags_to_insert {
-            crate::tags::attach_tag_to_image(&mut conn, id, &tag).await?;
-        }
+    for tag in processed.tags_to_insert {
+        crate::tags::attach_tag_to_image(&mut tx, image_id, &tag).await?;
     }
+
+    tx.commit().await?;
 
     Ok(true)
 }
