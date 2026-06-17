@@ -296,12 +296,28 @@ export function AdminImportsPage() {
                       spacing={2}
                       sx={{ width: '100%', maxWidth: 500, alignItems: 'center' }}
                     >
-                      <CircularProgress
-                        variant="determinate"
-                        value={job.progress}
-                        size={24}
-                        color="info"
-                      />
+                      {job.abortController ? (
+                        <IconButton
+                          onClick={() => job.abortController?.abort()}
+                          sx={{ position: 'relative', p: 0, width: 24, height: 24 }}
+                        >
+                          <CircularProgress
+                            variant="determinate"
+                            value={job.progress}
+                            size={24}
+                            color="info"
+                            sx={{ position: 'absolute', top: 0, left: 0 }}
+                          />
+                          <CloseIcon sx={{ fontSize: 16 }} />
+                        </IconButton>
+                      ) : (
+                        <CircularProgress
+                          variant="determinate"
+                          value={job.progress}
+                          size={24}
+                          color="info"
+                        />
+                      )}
                       <Stack sx={{ flex: 1 }}>
                         <Stack
                           direction="row"
@@ -326,11 +342,6 @@ export function AdminImportsPage() {
                         </Stack>
                         <LinearProgress variant="determinate" value={job.progress} color="info" />
                       </Stack>
-                      {job.abortController && (
-                        <IconButton color="error" onClick={() => job.abortController?.abort()}>
-                          <CloseIcon />
-                        </IconButton>
-                      )}
                     </Stack>
                   </TableCell>
                 </TableRow>
