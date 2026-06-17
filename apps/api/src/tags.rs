@@ -1,4 +1,4 @@
-use sqlx::PgPool;
+use sqlx::PgConnection;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ParsedTag {
@@ -10,8 +10,13 @@ pub(crate) struct ParsedTag {
 
 /// Finds an existing tag by its normalized identity, inserting it if absent,
 /// and returns the tag id. Safe to call concurrently thanks to the
-/// `ON CONFLICT` upsert.
-pub(crate) async fn upsert_tag(pool: &PgPool, tag: &ParsedTag) -> Result<i64, sqlx::Error> {
+/// `ON CONFLICT` upsert. Takes a `&mut PgConnection` so callers can run it
+/// inside a transaction (a `&PgPool`, pooled connection, or `&mut Transaction`
+/// all coerce in).
+pub(crate) async fn upsert_tag(
+    conn: &mut PgConnection,
+    tag: &ParsedTag,
+) -> Result<i64, sqlx::Error> {
     sqlx::query_scalar(
         r#"
         WITH new_tag AS (
@@ -30,38 +35,50 @@ pub(crate) async fn upsert_tag(pool: &PgPool, tag: &ParsedTag) -> Result<i64, sq
     .bind(&tag.name)
     .bind(&tag.normalized_namespace)
     .bind(&tag.normalized_name)
-    .fetch_one(pool)
+    .fetch_one(conn)
     .await
 }
 
 /// Upserts a tag and links it to the given image. Idempotent: re-linking an
 /// already-attached tag is a no-op.
 pub(crate) async fn attach_tag_to_image(
-    pool: &PgPool,
+    conn: &mut PgConnection,
     image_id: i64,
     tag: &ParsedTag,
 ) -> Result<(), sqlx::Error> {
-    let tag_id = upsert_tag(pool, tag).await?;
+    let tag_id = upsert_tag(conn, tag).await?;
     sqlx::query("INSERT INTO image_tags (image_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING")
         .bind(image_id)
         .bind(tag_id)
-        .execute(pool)
+        .execute(conn)
         .await?;
     Ok(())
+}
+
+/// Returns the tag ids currently linked to an image. Useful for capturing the
+/// set before a rewrite/delete so newly-orphaned tags can be pruned afterwards.
+pub(crate) async fn image_tag_ids(
+    conn: &mut PgConnection,
+    image_id: i64,
+) -> Result<Vec<i64>, sqlx::Error> {
+    sqlx::query_scalar("SELECT tag_id FROM image_tags WHERE image_id = $1")
+        .bind(image_id)
+        .fetch_all(conn)
+        .await
 }
 
 /// Deletes tags from `candidate_ids` that no longer reference any image, so a
 /// tag stops appearing in suggestions once nothing uses it. Scoped to the given
 /// ids so editing/deleting one image only touches the tags that image had.
 pub(crate) async fn cleanup_orphan_tags(
-    pool: &PgPool,
+    conn: &mut PgConnection,
     candidate_ids: &[i64],
 ) -> Result<(), sqlx::Error> {
     if candidate_ids.is_empty() {
         return Ok(());
     }
 
-    sqlx::query(
+    let result = sqlx::query(
         r#"
         DELETE FROM tags
         WHERE id = ANY($1)
@@ -69,8 +86,13 @@ pub(crate) async fn cleanup_orphan_tags(
         "#,
     )
     .bind(candidate_ids)
-    .execute(pool)
+    .execute(conn)
     .await?;
+
+    let removed = result.rows_affected();
+    if removed > 0 {
+        tracing::debug!(removed, "pruned orphan tags");
+    }
 
     Ok(())
 }

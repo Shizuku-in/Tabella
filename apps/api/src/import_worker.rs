@@ -695,8 +695,9 @@ async fn process_single_file(
     .await?;
 
     if let Some(id) = image_id {
+        let mut conn = pool.acquire().await?;
         for tag in processed.tags_to_insert {
-            crate::tags::attach_tag_to_image(pool, id, &tag).await?;
+            crate::tags::attach_tag_to_image(&mut conn, id, &tag).await?;
         }
     }
 
