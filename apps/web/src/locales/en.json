@@ -100,8 +100,9 @@
     },
     "sort": {
       "oldest": "Oldest",
-      "filenameAsc": "Filename A-Z",
-      "filenameDesc": "Filename Z-A",
+      "filenameAsc": "Filename (A-Z)",
+      "filenameDesc": "Filename (Z-A)",
+      "random": "Random",
       "newest": "Newest"
     },
     "layout": {

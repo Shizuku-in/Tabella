@@ -1,5 +1,5 @@
 export type LayoutMode = 'grid' | 'masonry' | 'justified'
-export type GallerySort = 'newest' | 'oldest' | 'filename_asc' | 'filename_desc'
+export type GallerySort = 'newest' | 'oldest' | 'filename_asc' | 'filename_desc' | 'random'
 export type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
 
 export type Rating = 'safe' | 'suggestive' | 'explicit'

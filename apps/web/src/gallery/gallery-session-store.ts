@@ -7,6 +7,8 @@ interface GallerySessionState {
   setSearchTags: (value: string[]) => void
   sort: GallerySort
   setSort: (value: GallerySort) => void
+  randomSeed: number
+  setRandomSeed: (value: number) => void
   ratingFilter: RatingFilter
   setRatingFilter: (value: RatingFilter) => void
   favoritesOnly: boolean
@@ -70,7 +72,15 @@ export const useGallerySessionStore = create<GallerySessionState>((set) => ({
     }),
 
   sort: 'newest',
-  setSort: (value) => set({ sort: value }),
+  setSort: (value) => {
+    if (value === 'random') {
+      set({ sort: value, randomSeed: Math.floor(Math.random() * 1000000) })
+    } else {
+      set({ sort: value })
+    }
+  },
+  randomSeed: Math.floor(Math.random() * 1000000),
+  setRandomSeed: (value) => set({ randomSeed: value }),
 
   ratingFilter: 'all',
   setRatingFilter: (value) => set({ ratingFilter: value }),

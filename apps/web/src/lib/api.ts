@@ -312,6 +312,7 @@ export async function listImages(query: {
   cursor?: string | null
   limit?: number
   sort?: GallerySort
+  seed?: number
   rating?: Rating[]
   include_tags?: string[]
   exclude_tags?: string[]
@@ -327,6 +328,7 @@ export async function listImages(query: {
   if (query.cursor) params.set('cursor', query.cursor)
   if (query.limit) params.set('limit', query.limit.toString())
   if (query.sort) params.set('sort', query.sort)
+  if (query.seed !== undefined) params.set('seed', query.seed.toString())
   if (query.favorites_only) params.set('favorites_only', 'true')
   if (query.rating && query.rating.length > 0) {
     params.set('rating', query.rating.join(','))

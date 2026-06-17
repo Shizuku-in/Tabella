@@ -58,6 +58,8 @@ struct ImageListRow {
     uploader_id: Option<i64>,
     uploader_username: Option<String>,
     uploader_avatar_url: Option<String>,
+    #[sqlx(default)]
+    sort_hash: Option<String>,
 }
 
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
@@ -65,6 +67,7 @@ struct ImageListCursor {
     id: i64,
     imported_at: Option<time::OffsetDateTime>,
     filename: Option<String>,
+    hash: Option<String>,
 }
 
 async fn list_images(
@@ -93,6 +96,11 @@ async fn list_images(
     let mut builder = sqlx::QueryBuilder::new(
         "SELECT i.id, i.original_filename, i.thumbnail_path, i.preview_path, i.original_path, \
          i.width, i.height, i.sha256, i.source_url, i.note, i.rating, i.file_size, i.imported_at, lower(i.original_filename) AS sort_filename, \
+         md5(i.id::text || ",
+    );
+    builder.push_bind(query.seed.unwrap_or(0).to_string());
+    builder.push(
+        ") AS sort_hash, \
          EXISTS (SELECT 1 FROM favorites f WHERE f.image_id = i.id AND f.user_id = ",
     );
     builder.push_bind(user.id);
@@ -199,7 +207,7 @@ async fn list_images(
     }
 
     if let Some(cursor) = &cursor {
-        push_image_cursor_filter(&mut builder, query.sort, cursor)?;
+        push_image_cursor_filter(&mut builder, query.sort, cursor, query.seed)?;
     }
 
     push_image_sort_order(&mut builder, query.sort);
@@ -284,6 +292,7 @@ fn push_image_cursor_filter(
     builder: &mut sqlx::QueryBuilder<'_, sqlx::Postgres>,
     sort: ImageSort,
     cursor: &ImageListCursor,
+    seed: Option<i32>,
 ) -> Result<(), ApiError> {
     match sort {
         ImageSort::Newest => {
@@ -346,6 +355,18 @@ fn push_image_cursor_filter(
             builder.push_bind(cursor.id);
             builder.push(") ");
         }
+        ImageSort::Random => {
+            let hash = cursor.hash.as_ref().ok_or_else(|| {
+                ApiError::bad_request("Invalid cursor", "Missing hash in image cursor.")
+            })?;
+            builder.push(" AND (md5(i.id::text || ");
+            builder.push_bind(seed.unwrap_or(0).to_string());
+            builder.push("), i.id) < (");
+            builder.push_bind(hash.clone());
+            builder.push(", ");
+            builder.push_bind(cursor.id);
+            builder.push(") ");
+        }
     }
 
     Ok(())
@@ -365,6 +386,9 @@ fn push_image_sort_order(builder: &mut sqlx::QueryBuilder<'_, sqlx::Postgres>, s
         ImageSort::FilenameDesc => {
             builder.push(" ORDER BY lower(i.original_filename) DESC, i.id DESC ");
         }
+        ImageSort::Random => {
+            builder.push(" ORDER BY sort_hash DESC, i.id DESC ");
+        }
     }
 }
 
@@ -374,11 +398,19 @@ fn encode_image_cursor(sort: ImageSort, row: &ImageListRow) -> Result<String, Ap
             id: row.id,
             imported_at: Some(row.imported_at),
             filename: None,
+            hash: None,
         },
         ImageSort::FilenameAsc | ImageSort::FilenameDesc => ImageListCursor {
             id: row.id,
             imported_at: None,
             filename: Some(row.sort_filename.clone()),
+            hash: None,
+        },
+        ImageSort::Random => ImageListCursor {
+            id: row.id,
+            imported_at: None,
+            filename: None,
+            hash: row.sort_hash.clone(),
         },
     };
 
@@ -606,6 +638,7 @@ mod tests {
             uploader_id: None,
             uploader_username: None,
             uploader_avatar_url: None,
+            sort_hash: None,
         };
 
         let encoded = encode_image_cursor(ImageSort::FilenameAsc, &row).unwrap();
@@ -614,5 +647,37 @@ mod tests {
         assert_eq!(decoded.id, row.id);
         assert_eq!(decoded.filename.as_deref(), Some("cover.jpg"));
         assert!(decoded.imported_at.is_none());
+    }
+
+    #[test]
+    fn image_cursor_round_trips_for_random_sort() {
+        let row = ImageListRow {
+            id: 123,
+            original_filename: String::from("cover.jpg"),
+            thumbnail_path: String::from("thumbnail/path"),
+            preview_path: String::from("preview/path"),
+            original_path: String::from("original/path"),
+            width: 800,
+            height: 600,
+            sha256: String::from("hash123"),
+            source_url: None,
+            note: None,
+            rating: String::from("safe"),
+            file_size: 1024,
+            is_favorite: false,
+            tags: vec![],
+            imported_at: time::OffsetDateTime::now_utc(),
+            sort_filename: String::from("cover.jpg"),
+            uploader_id: None,
+            uploader_username: None,
+            uploader_avatar_url: None,
+            sort_hash: Some(String::from("randomhash123")),
+        };
+
+        let encoded = encode_image_cursor(ImageSort::Random, &row).unwrap();
+        let decoded = decode_image_cursor(&encoded).unwrap();
+
+        assert_eq!(decoded.id, row.id);
+        assert_eq!(decoded.hash.as_deref(), Some("randomhash123"));
     }
 }

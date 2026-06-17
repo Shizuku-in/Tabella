@@ -38,6 +38,7 @@ export function SortControl() {
     { value: 'oldest', label: t('gallery.sort.oldest') },
     { value: 'filename_asc', label: t('gallery.sort.filenameAsc') },
     { value: 'filename_desc', label: t('gallery.sort.filenameDesc') },
+    { value: 'random', label: t('gallery.sort.random') },
   ]
 
   return (
