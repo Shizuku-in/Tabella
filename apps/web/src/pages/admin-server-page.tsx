@@ -2,14 +2,19 @@
 import { Save } from '@mui/icons-material'
 import {
   Alert,
+  Box,
   Button,
   FormControlLabel,
   Paper,
   Snackbar,
   Stack,
   Switch,
+  Tab,
+  Tabs,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Fragment, useEffect, useState } from 'react'
@@ -58,8 +63,44 @@ interface ServerSettingsFieldErrors {
   sample_quality?: string
 }
 
+interface TabPanelProps {
+  children?: React.ReactNode
+  index: number
+  value: number
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props
+
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`server-tabpanel-${index}`}
+      aria-labelledby={`server-tab-${index}`}
+      style={{
+        flexGrow: 1,
+        overflowY: 'auto',
+      }}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: { xs: 2, sm: 3 } }}>{children}</Box>}
+    </div>
+  )
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `server-tab-${index}`,
+    'aria-controls': `server-tabpanel-${index}`,
+  }
+}
+
 export function AdminServerPage() {
   const { t } = useTranslation()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const [activeTab, setActiveTab] = useState(0)
   const queryClient = useQueryClient()
   const [settings, setSettings] = useState<ServerSettingsForm | null>(null)
   const [errors, setErrors] = useState<ServerSettingsFieldErrors>({})
@@ -152,6 +193,10 @@ export function AdminServerPage() {
     )
   }
 
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue)
+  }
+
   return (
     <Fragment>
       <form onSubmit={handleSave} noValidate>
@@ -172,8 +217,11 @@ export function AdminServerPage() {
 
           <Paper
             sx={{
-              p: 3,
-              borderRadius: 2,
+              display: 'flex',
+              flexDirection: isMobile ? 'column' : 'row',
+              height: '61.8vh',
+              borderRadius: 1,
+              overflow: 'hidden',
               '& input[type=number]': {
                 MozAppearance: 'textfield',
               },
@@ -184,14 +232,43 @@ export function AdminServerPage() {
                 },
             }}
           >
-            <Stack spacing={4}>
+            <Tabs
+              orientation={isMobile ? 'horizontal' : 'vertical'}
+              variant="scrollable"
+              value={activeTab}
+              onChange={handleTabChange}
+              sx={{
+                borderRight: isMobile ? 0 : 1,
+                borderBottom: isMobile ? 1 : 0,
+                borderColor: 'divider',
+                minWidth: 200,
+                flexShrink: 0,
+              }}
+            >
+              <Tab
+                label={t('admin.server.downloads')}
+                {...a11yProps(0)}
+                sx={{ alignItems: isMobile ? 'center' : 'flex-start', textAlign: 'left' }}
+              />
+              <Tab
+                label={t('admin.server.imports')}
+                {...a11yProps(1)}
+                sx={{ alignItems: isMobile ? 'center' : 'flex-start', textAlign: 'left' }}
+              />
+              <Tab
+                label={t('admin.server.imageProcessing')}
+                {...a11yProps(2)}
+                sx={{ alignItems: isMobile ? 'center' : 'flex-start', textAlign: 'left' }}
+              />
+              <Tab
+                label={t('admin.server.security')}
+                {...a11yProps(3)}
+                sx={{ alignItems: isMobile ? 'center' : 'flex-start', textAlign: 'left' }}
+              />
+            </Tabs>
+
+            <TabPanel value={activeTab} index={0}>
               <Stack spacing={3}>
-                <Typography
-                  variant="h6"
-                  sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}
-                >
-                  {t('admin.server.downloads')}
-                </Typography>
                 <TextField
                   label={t('admin.server.maxDownloadImages')}
                   type="number"
@@ -227,14 +304,10 @@ export function AdminServerPage() {
                   fullWidth
                 />
               </Stack>
+            </TabPanel>
 
+            <TabPanel value={activeTab} index={1}>
               <Stack spacing={3}>
-                <Typography
-                  variant="h6"
-                  sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}
-                >
-                  {t('admin.server.imports')}
-                </Typography>
                 <TextField
                   label={t('admin.server.batchSize')}
                   type="number"
@@ -256,14 +329,10 @@ export function AdminServerPage() {
                   fullWidth
                 />
               </Stack>
+            </TabPanel>
 
+            <TabPanel value={activeTab} index={2}>
               <Stack spacing={3}>
-                <Typography
-                  variant="h6"
-                  sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}
-                >
-                  {t('admin.server.imageProcessing')}
-                </Typography>
                 <TextField
                   label={t('admin.server.thumbSize')}
                   type="number"
@@ -305,14 +374,10 @@ export function AdminServerPage() {
                   fullWidth
                 />
               </Stack>
+            </TabPanel>
 
+            <TabPanel value={activeTab} index={3}>
               <Stack spacing={3}>
-                <Typography
-                  variant="h6"
-                  sx={{ fontSize: '1rem', fontWeight: 600, color: 'text.secondary' }}
-                >
-                  {t('admin.server.security')}
-                </Typography>
                 <TextField
                   label={t('admin.server.sessionTtl')}
                   type="number"
@@ -340,7 +405,7 @@ export function AdminServerPage() {
                   }
                 />
               </Stack>
-            </Stack>
+            </TabPanel>
           </Paper>
         </Stack>
       </form>

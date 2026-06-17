@@ -213,9 +213,11 @@
       "signInFailed": "登录失败，请重试。",
       "signingIn": "登录中...",
       "description": "访问 Tabella 画廊。",
-      "returnTo": "登录后将返回 {{target}}。",
+      "returnTo": "登录后将返回到 {{target}}",
       "username": "用户名",
-      "password": "密码"
+      "password": "密码",
+      "usernameRequired": "请输入用户名",
+      "passwordRequired": "请输入密码"
     },
     "profile": {
       "title": "个人资料设置",

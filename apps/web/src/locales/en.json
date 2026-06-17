@@ -215,7 +215,9 @@
       "description": "Private access for your Tabella gallery.",
       "returnTo": "After login you will return to {{target}}.",
       "username": "Username",
-      "password": "Password"
+      "password": "Password",
+      "usernameRequired": "Username is required",
+      "passwordRequired": "Password is required"
     },
     "profile": {
       "title": "Profile Settings",
