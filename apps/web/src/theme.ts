@@ -190,6 +190,17 @@ export function buildTheme(mode: PaletteMode) {
           },
         },
       },
+      MuiAutocomplete: {
+        defaultProps: {
+          slotProps: {
+            popper: {
+              popperOptions: {
+                strategy: 'fixed',
+              },
+            },
+          },
+        },
+      },
     },
   })
 }
