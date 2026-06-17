@@ -27,3 +27,20 @@ cargo run -p api
 ```
 
 _(Database migrations run automatically on startup)_
+
+## 🧑‍💻 Development
+
+This project uses [Lefthook](https://github.com/evilmartians/lefthook) for automated code quality checks:
+
+- **Pre-commit**: Format checks (prettier, cargo fmt) + linting (eslint, clippy) + error-code contract validation
+- **Pre-push**: Test suite (cargo test)
+
+Lefthook installs automatically after `pnpm install` (via the `prepare` script). If checks fail, fix the issues manually and re-commit.
+
+**Escape hatches** (use sparingly):
+
+```bash
+git commit --no-verify          # skip all hooks
+LEFTHOOK=0 git commit           # disable lefthook entirely
+LEFTHOOK_EXCLUDE=cargo-clippy git commit  # skip specific check
+```

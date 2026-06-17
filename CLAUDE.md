@@ -38,6 +38,35 @@ cargo run -- tag ./images --model camie                       # Camie Tagger v2
 
 It downloads models from Hugging Face on first run and writes `<image>.json` sidecars next to each image.
 
+## Git Hooks
+
+This project uses [Lefthook](https://github.com/evilmartians/lefthook) to enforce code quality before commit/push. Configuration lives in `lefthook.yml`.
+
+**Pre-commit** (runs in parallel, ~10-15s on clean code):
+
+- `prettier --check` on staged `.ts/.tsx/.json/.md/.yml` files
+- `eslint` on staged web files
+- Error-code contract check (`apps/web/scripts/check-error-codes.mjs`)
+- `cargo fmt --all -- --check`
+- `cargo clippy --workspace --all-targets -- -D warnings`
+
+**Pre-push**:
+
+- `cargo test --workspace`
+
+Hooks install automatically after `pnpm install` (via `prepare` script in root `package.json`). Failures block the commit/push; fix manually and retry.
+
+**Escape hatches**:
+
+```bash
+git commit --no-verify                        # skip all hooks
+LEFTHOOK=0 git commit                         # disable lefthook
+LEFTHOOK_EXCLUDE=cargo-clippy git commit      # skip specific check
+lefthook run pre-commit --tags frontend       # test only frontend checks
+```
+
+**Troubleshooting**: If hooks aren't firing after a fresh clone, run `npx lefthook install` manually.
+
 ## SQLx offline mode (important)
 
 The API uses **compile-time-checked SQL** via SQLx with offline metadata cached in `.sqlx/`. CI and the Docker build set `SQLX_OFFLINE=true`, so they compile against the cached query data, not a live database. If you add or change any `sqlx::query!`-style checked query, you must regenerate the cache or the build breaks:
