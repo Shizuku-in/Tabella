@@ -3,10 +3,32 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
+import type { BackendImageListItem } from '../lib/api.ts'
 import { listImages } from '../lib/api.ts'
 import type { GalleryItem } from '../types.ts'
 
 const PAGE_SIZE = 50
+
+function toGalleryItem(item: BackendImageListItem): GalleryItem {
+  return {
+    id: item.id,
+    filename: item.original_filename,
+    thumbnailSrc: item.thumbnail_url,
+    sampleSrc: item.preview_url,
+    originalSrc: item.original_url ?? undefined,
+    width: item.width,
+    height: item.height,
+    rating: item.rating,
+    tags: item.tags,
+    favorite: item.is_favorite,
+    importedAt: item.imported_at,
+    fileSize: item.file_size,
+    sha256: item.sha256,
+    sourceUrl: item.source_url ?? undefined,
+    note: item.note ?? undefined,
+    uploader: item.uploader ?? undefined,
+  }
+}
 
 export function useGalleryQuery() {
   const {
@@ -77,27 +99,7 @@ export function useGalleryQuery() {
       })
 
       return {
-        items: response.items.map(
-          (item) =>
-            ({
-              id: item.id,
-              filename: item.original_filename,
-              thumbnailSrc: item.thumbnail_url,
-              sampleSrc: item.preview_url,
-              originalSrc: item.original_url || undefined,
-              width: item.width,
-              height: item.height,
-              rating: item.rating,
-              tags: item.tags,
-              favorite: item.is_favorite,
-              importedAt: item.imported_at,
-              fileSize: item.file_size,
-              sha256: item.sha256,
-              sourceUrl: item.source_url || undefined,
-              note: item.note || undefined,
-              uploader: item.uploader || undefined,
-            }) as GalleryItem,
-        ),
+        items: response.items.map(toGalleryItem),
         nextCursor: response.next_cursor,
       }
     },
