@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Tabella is a private image gallery for small trusted groups. A Rust/Axum backend (`apps/api`) serves a JSON API, the media files, *and* the built React SPA from a single binary. The frontend (`apps/web`) is React 19 + MUI + TanStack Query. A standalone Rust CLI (`crates/tagger-cli`) runs ONNX tagger models to produce sidecar JSON that the import pipeline consumes.
+Tabella is a private image gallery for small trusted groups. A Rust/Axum backend (`apps/api`) serves a JSON API, the media files, _and_ the built React SPA from a single binary. The frontend (`apps/web`) is React 19 + MUI + TanStack Query. A standalone Rust CLI (`crates/tagger-cli`) runs ONNX tagger models to produce sidecar JSON that the import pipeline consumes.
 
 ## Commands
 
@@ -29,7 +29,7 @@ cargo clippy --workspace --all-targets -- -D warnings   # CI gate; warnings are 
 
 A single backend test: `cargo test -p api <test_name>` (e.g. `cargo test -p api sanitize_upload_path_rejects_parent_traversal`).
 
-Tagger CLI is a **separate Cargo workspace** (`crates/tagger-cli` has its own `[workspace]`, so it is *not* built by root `cargo` commands). Build/run it from inside that directory:
+Tagger CLI is a **separate Cargo workspace** (`crates/tagger-cli` has its own `[workspace]`, so it is _not_ built by root `cargo` commands). Build/run it from inside that directory:
 
 ```bash
 cd crates/tagger-cli && cargo run -- tag ./images            # WD model (default)
@@ -46,7 +46,7 @@ The API uses **compile-time-checked SQL** via SQLx with offline metadata cached 
 cargo sqlx prepare --workspace   # requires a reachable DATABASE_URL; commit the .sqlx/ changes
 ```
 
-Note most queries here use the *unchecked* string-builder forms (`sqlx::query`, `query_as`, `QueryBuilder`), which don't need offline data — but the checked ones in `.sqlx/` do.
+Note most queries here use the _unchecked_ string-builder forms (`sqlx::query`, `query_as`, `QueryBuilder`), which don't need offline data — but the checked ones in `.sqlx/` do.
 
 ## Error-code contract (keep in sync across 3 layers)
 
@@ -69,10 +69,12 @@ The wire shape is always `{ "error": <code>, "message": <fallback>, "params": <o
 **Auth** (`auth.rs`, `api/guards.rs`): cookie-session based. Argon2 password hashing; sessions stored in Postgres with TTL. Guards are plain async fns called at the top of handlers — `require_user`, `require_editor`, `require_admin` (roles: `admin` > `editor` > `viewer`). A default admin is bootstrapped on startup from `TABELLA_BOOTSTRAP_ADMIN_*` if no admin exists.
 
 **Two-tier config** (`config.rs`):
+
 - `Config` — static, loaded once from env (`DATABASE_URL` required; `TABELLA_*` optional). Holds paths, listen addr, cookie settings, fallback limits.
 - `DynamicConfig` — runtime-editable, persisted as a single JSON row in the `settings` table (key `'global'`), edited via `/api/settings` (admin only). Controls download limits, thumbnail/sample size & quality, import batch size. Always loaded fresh per operation via `DynamicConfig::load(pool, &config)`, falling back to `Config` values.
 
-**Background work** (no external queue — Postgres *is* the queue):
+**Background work** (no external queue — Postgres _is_ the queue):
+
 - `import_worker` (spawned once): polls `import_jobs` with `SELECT … FOR UPDATE SKIP LOCKED`, processes one job at a time, sleeps 5s when idle. On startup it marks any `running`/`extracting`/`processing` jobs as `failed` (crash recovery). Handles folder uploads, zip, and 7z; extracts to `temp_root/temp_extract/<job_id>` (outside the auth-served media tree), then dedups by SHA256, generates derivatives, and inserts rows.
 - `cleanup` worker (spawned once): hourly; deletes expired `download_jobs` + their zips and prunes orphaned temp dirs older than 24h.
 - Archive (download) jobs: spawned per-request via `tokio::spawn(process_archive_job)`, zips selected images into `temp_root/downloads/<job_id>.zip` (stored/uncompressed). Streamed back through `/api/download-jobs/{id}/file`, owner-checked.

@@ -1,0 +1,35 @@
+# Lefthook configuration for Tabella monorepo
+# Runs format + lint checks pre-commit, tests pre-push.
+
+pre-commit:
+  parallel: true
+  commands:
+    prettier-check:
+      tags: frontend
+      glob: '*.{ts,tsx,json,md,yml,yaml}'
+      run: npx prettier --check {staged_files}
+
+    eslint:
+      tags: frontend lint
+      root: apps/web
+      glob: '*.{ts,tsx}'
+      run: pnpm exec eslint {staged_files}
+
+    error-codes:
+      tags: frontend
+      root: apps/web
+      run: node scripts/check-error-codes.mjs
+
+    cargo-fmt:
+      tags: backend format
+      run: cargo fmt --all -- --check
+
+    cargo-clippy:
+      tags: backend lint
+      run: cargo clippy --workspace --all-targets -- -D warnings
+
+pre-push:
+  commands:
+    cargo-test:
+      tags: backend test
+      run: cargo test --workspace
