@@ -66,7 +66,7 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("failed to bootstrap default admin")?;
 
-    let (tx, _rx) = tokio::sync::broadcast::channel(100);
+    let (tx, _rx) = tokio::sync::broadcast::channel(512);
 
     let shutdown = tokio_util::sync::CancellationToken::new();
 
