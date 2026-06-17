@@ -43,6 +43,12 @@
   },
   "settings": {
     "title": "Gallery Settings",
+    "categories": {
+      "layout": "Layout & Controls",
+      "display": "Display Information",
+      "quality": "Image Quality",
+      "general": "General"
+    },
     "topBarButtons": "TopBar Buttons",
     "topBar": {
       "sort": "Sort",
