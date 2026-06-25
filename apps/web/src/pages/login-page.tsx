@@ -56,6 +56,7 @@ export function LoginPage() {
     }
 
     setFieldErrors(nextErrors)
+    setErrorMessage(null)
 
     if (Object.keys(nextErrors).length > 0) {
       return

@@ -21,6 +21,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { getApiErrorMessage, request } from '../lib/api.ts'
+import { SETTINGS_PANEL_HEIGHT } from '../lib/constants.ts'
 
 interface ServerSettings {
   max_download_images: number
@@ -73,19 +74,19 @@ function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props
 
   return (
-    <div
+    <Box
       role="tabpanel"
       hidden={value !== index}
       id={`server-tabpanel-${index}`}
       aria-labelledby={`server-tab-${index}`}
-      style={{
+      sx={{
         flexGrow: 1,
         overflowY: 'auto',
       }}
       {...other}
     >
       {value === index && <Box sx={{ p: { xs: 2, sm: 3 } }}>{children}</Box>}
-    </div>
+    </Box>
   )
 }
 
@@ -219,7 +220,7 @@ export function AdminServerPage() {
             sx={{
               display: 'flex',
               flexDirection: isMobile ? 'column' : 'row',
-              height: '61.8vh',
+              height: SETTINGS_PANEL_HEIGHT,
               borderRadius: 1,
               overflow: 'hidden',
               '& input[type=number]': {

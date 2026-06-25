@@ -27,6 +27,7 @@ import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
+import { SETTINGS_PANEL_HEIGHT } from '../lib/constants.ts'
 
 export interface SettingsDialogProps {
   open: boolean
@@ -43,19 +44,19 @@ function TabPanel(props: TabPanelProps) {
   const { children, value, index, ...other } = props
 
   return (
-    <div
+    <Box
       role="tabpanel"
       hidden={value !== index}
       id={`settings-tabpanel-${index}`}
       aria-labelledby={`settings-tab-${index}`}
-      style={{
+      sx={{
         flexGrow: 1,
         overflowY: 'auto',
       }}
       {...other}
     >
       {value === index && <Box sx={{ p: { xs: 2, sm: 3 } }}>{children}</Box>}
-    </div>
+    </Box>
   )
 }
 
@@ -64,6 +65,49 @@ function a11yProps(index: number) {
     id: `settings-tab-${index}`,
     'aria-controls': `settings-tabpanel-${index}`,
   }
+}
+
+interface BreakpointSliderProps {
+  value: Record<string, number>
+  onChange: (config: Record<string, number>) => void
+  step?: number
+  min?: number
+  max?: number
+  valueLabelFormat?: (value: number) => string
+}
+
+const BREAKPOINTS = ['xs', 'sm', 'lg', 'xl'] as const
+
+function BreakpointSlider({
+  value,
+  onChange,
+  step = 1,
+  min = 1,
+  max = 10,
+  valueLabelFormat,
+}: BreakpointSliderProps) {
+  return (
+    <Stack spacing={2} sx={{ mt: 1 }}>
+      {BREAKPOINTS.map((breakpoint) => (
+        <Stack key={breakpoint} direction="row" spacing={3} sx={{ alignItems: 'center' }}>
+          <Typography variant="body2" sx={{ width: 24, fontWeight: 700 }}>
+            {breakpoint.toUpperCase()}
+          </Typography>
+          <Slider
+            value={value[breakpoint]}
+            onChange={(_, val) => onChange({ ...value, [breakpoint]: val as number })}
+            step={step}
+            marks
+            min={min}
+            max={max}
+            valueLabelDisplay="auto"
+            valueLabelFormat={valueLabelFormat}
+            size="small"
+          />
+        </Stack>
+      ))}
+    </Stack>
+  )
 }
 
 export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
@@ -135,7 +179,7 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
           p: 0,
           display: 'flex',
           flexDirection: isMobile ? 'column' : 'row',
-          height: '61.8vh',
+          height: SETTINGS_PANEL_HEIGHT,
         }}
       >
         <Tabs
@@ -226,85 +270,40 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               <Typography variant="subtitle2" gutterBottom>
                 {t('settings.masonryColumns')}
               </Typography>
-              <Stack spacing={2} sx={{ mt: 1 }}>
-                {(['xs', 'sm', 'lg', 'xl'] as const).map((breakpoint) => (
-                  <Stack key={breakpoint} direction="row" spacing={3} sx={{ alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ width: 24, fontWeight: 700 }}>
-                      {breakpoint.toUpperCase()}
-                    </Typography>
-                    <Slider
-                      value={masonryColumns[breakpoint]}
-                      onChange={(_, value) =>
-                        setMasonryColumns({ ...masonryColumns, [breakpoint]: value as number })
-                      }
-                      step={1}
-                      marks
-                      min={1}
-                      max={10}
-                      valueLabelDisplay="auto"
-                      size="small"
-                    />
-                  </Stack>
-                ))}
-              </Stack>
+              <BreakpointSlider
+                value={masonryColumns}
+                onChange={setMasonryColumns}
+                step={1}
+                min={1}
+                max={10}
+              />
             </Box>
 
             <Box>
               <Typography variant="subtitle2" gutterBottom>
                 {t('settings.gridColumns')}
               </Typography>
-              <Stack spacing={2} sx={{ mt: 1 }}>
-                {(['xs', 'sm', 'lg', 'xl'] as const).map((breakpoint) => (
-                  <Stack key={breakpoint} direction="row" spacing={3} sx={{ alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ width: 24, fontWeight: 700 }}>
-                      {breakpoint.toUpperCase()}
-                    </Typography>
-                    <Slider
-                      value={gridColumns[breakpoint]}
-                      onChange={(_, value) =>
-                        setGridColumns({ ...gridColumns, [breakpoint]: value as number })
-                      }
-                      step={1}
-                      marks
-                      min={1}
-                      max={10}
-                      valueLabelDisplay="auto"
-                      size="small"
-                    />
-                  </Stack>
-                ))}
-              </Stack>
+              <BreakpointSlider
+                value={gridColumns}
+                onChange={setGridColumns}
+                step={1}
+                min={1}
+                max={10}
+              />
             </Box>
 
             <Box>
               <Typography variant="subtitle2" gutterBottom>
                 {t('settings.justifiedRowHeight')}
               </Typography>
-              <Stack spacing={2} sx={{ mt: 1 }}>
-                {(['xs', 'sm', 'lg', 'xl'] as const).map((breakpoint) => (
-                  <Stack key={breakpoint} direction="row" spacing={3} sx={{ alignItems: 'center' }}>
-                    <Typography variant="body2" sx={{ width: 24, fontWeight: 700 }}>
-                      {breakpoint.toUpperCase()}
-                    </Typography>
-                    <Slider
-                      value={justifiedRowHeight[breakpoint]}
-                      onChange={(_, value) =>
-                        setJustifiedRowHeight({
-                          ...justifiedRowHeight,
-                          [breakpoint]: value as number,
-                        })
-                      }
-                      step={30}
-                      marks
-                      min={120}
-                      max={600}
-                      valueLabelDisplay="auto"
-                      valueLabelFormat={(value) => `${value} px`}
-                      size="small"
-                    />
-                  </Stack>
-                ))}
-              </Stack>
+              <BreakpointSlider
+                value={justifiedRowHeight}
+                onChange={setJustifiedRowHeight}
+                step={30}
+                min={120}
+                max={600}
+                valueLabelFormat={(value) => `${value} px`}
+              />
             </Box>
           </Stack>
         </TabPanel>

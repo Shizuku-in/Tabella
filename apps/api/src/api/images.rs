@@ -68,6 +68,7 @@ struct ImageListCursor {
     imported_at: Option<time::OffsetDateTime>,
     filename: Option<String>,
     hash: Option<String>,
+    seed: Option<i32>,
 }
 
 async fn list_images(
@@ -93,12 +94,17 @@ async fn list_images(
         .transpose()?;
 
     let limit = query.limit.unwrap_or(50).clamp(1, 100) as i64;
+    let effective_seed = cursor
+        .as_ref()
+        .and_then(|c| c.seed)
+        .or(query.seed)
+        .unwrap_or(0);
     let mut builder = sqlx::QueryBuilder::new(
         "SELECT i.id, i.original_filename, i.thumbnail_path, i.preview_path, i.original_path, \
          i.width, i.height, i.sha256, i.source_url, i.note, i.rating, i.file_size, i.imported_at, lower(i.original_filename) AS sort_filename, \
          md5(i.id::text || ",
     );
-    builder.push_bind(query.seed.unwrap_or(0).to_string());
+    builder.push_bind(effective_seed.to_string());
     builder.push(
         ") AS sort_hash, \
          EXISTS (SELECT 1 FROM favorites f WHERE f.image_id = i.id AND f.user_id = ",
@@ -207,7 +213,7 @@ async fn list_images(
     }
 
     if let Some(cursor) = &cursor {
-        push_image_cursor_filter(&mut builder, query.sort, cursor, query.seed)?;
+        push_image_cursor_filter(&mut builder, query.sort, cursor)?;
     }
 
     push_image_sort_order(&mut builder, query.sort);
@@ -223,7 +229,7 @@ async fn list_images(
     let next_cursor = if rows.len() > limit as usize {
         rows.pop();
         rows.last()
-            .map(|row| encode_image_cursor(query.sort, row))
+            .map(|row| encode_image_cursor(query.sort, row, query.seed))
             .transpose()?
     } else {
         None
@@ -292,7 +298,6 @@ fn push_image_cursor_filter(
     builder: &mut sqlx::QueryBuilder<'_, sqlx::Postgres>,
     sort: ImageSort,
     cursor: &ImageListCursor,
-    seed: Option<i32>,
 ) -> Result<(), ApiError> {
     match sort {
         ImageSort::Newest => {
@@ -359,8 +364,9 @@ fn push_image_cursor_filter(
             let hash = cursor.hash.as_ref().ok_or_else(|| {
                 ApiError::bad_request("Invalid cursor", "Missing hash in image cursor.")
             })?;
+            let cursor_seed = cursor.seed.unwrap_or(0);
             builder.push(" AND (md5(i.id::text || ");
-            builder.push_bind(seed.unwrap_or(0).to_string());
+            builder.push_bind(cursor_seed.to_string());
             builder.push("), i.id) < (");
             builder.push_bind(hash.clone());
             builder.push(", ");
@@ -392,25 +398,32 @@ fn push_image_sort_order(builder: &mut sqlx::QueryBuilder<'_, sqlx::Postgres>, s
     }
 }
 
-fn encode_image_cursor(sort: ImageSort, row: &ImageListRow) -> Result<String, ApiError> {
+fn encode_image_cursor(
+    sort: ImageSort,
+    row: &ImageListRow,
+    seed: Option<i32>,
+) -> Result<String, ApiError> {
     let cursor = match sort {
         ImageSort::Newest | ImageSort::Oldest => ImageListCursor {
             id: row.id,
             imported_at: Some(row.imported_at),
             filename: None,
             hash: None,
+            seed: None,
         },
         ImageSort::FilenameAsc | ImageSort::FilenameDesc => ImageListCursor {
             id: row.id,
             imported_at: None,
             filename: Some(row.sort_filename.clone()),
             hash: None,
+            seed: None,
         },
         ImageSort::Random => ImageListCursor {
             id: row.id,
             imported_at: None,
             filename: None,
             hash: row.sort_hash.clone(),
+            seed,
         },
     };
 
@@ -641,12 +654,13 @@ mod tests {
             sort_hash: None,
         };
 
-        let encoded = encode_image_cursor(ImageSort::FilenameAsc, &row).unwrap();
+        let encoded = encode_image_cursor(ImageSort::FilenameAsc, &row, None).unwrap();
         let decoded = decode_image_cursor(&encoded).unwrap();
 
         assert_eq!(decoded.id, row.id);
         assert_eq!(decoded.filename.as_deref(), Some("cover.jpg"));
         assert!(decoded.imported_at.is_none());
+        assert!(decoded.seed.is_none());
     }
 
     #[test]
@@ -674,10 +688,11 @@ mod tests {
             sort_hash: Some(String::from("randomhash123")),
         };
 
-        let encoded = encode_image_cursor(ImageSort::Random, &row).unwrap();
+        let encoded = encode_image_cursor(ImageSort::Random, &row, Some(42)).unwrap();
         let decoded = decode_image_cursor(&encoded).unwrap();
 
         assert_eq!(decoded.id, row.id);
         assert_eq!(decoded.hash.as_deref(), Some("randomhash123"));
+        assert_eq!(decoded.seed, Some(42));
     }
 }
