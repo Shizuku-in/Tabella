@@ -1,8 +1,4 @@
-import { ExpandMore } from '@mui/icons-material'
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
   Button,
   Checkbox,
@@ -19,25 +15,114 @@ import {
   Slider,
   Stack,
   Switch,
+  Tab,
+  Tabs,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material'
+import type React from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
+import { SETTINGS_PANEL_HEIGHT } from '../lib/constants.ts'
 
 export interface SettingsDialogProps {
   open: boolean
   onClose: () => void
 }
 
+interface TabPanelProps {
+  children?: React.ReactNode
+  index: number
+  value: number
+}
+
+function TabPanel(props: TabPanelProps) {
+  const { children, value, index, ...other } = props
+
+  return (
+    <Box
+      role="tabpanel"
+      hidden={value !== index}
+      id={`settings-tabpanel-${index}`}
+      aria-labelledby={`settings-tab-${index}`}
+      sx={{
+        flexGrow: 1,
+        overflowY: 'auto',
+      }}
+      {...other}
+    >
+      {value === index && <Box sx={{ p: { xs: 2, sm: 3 } }}>{children}</Box>}
+    </Box>
+  )
+}
+
+function a11yProps(index: number) {
+  return {
+    id: `settings-tab-${index}`,
+    'aria-controls': `settings-tabpanel-${index}`,
+  }
+}
+
+interface BreakpointSliderProps {
+  value: Record<string, number>
+  onChange: (config: Record<string, number>) => void
+  step?: number
+  min?: number
+  max?: number
+  valueLabelFormat?: (value: number) => string
+}
+
+const BREAKPOINTS = ['xs', 'sm', 'lg', 'xl'] as const
+
+function BreakpointSlider({
+  value,
+  onChange,
+  step = 1,
+  min = 1,
+  max = 10,
+  valueLabelFormat,
+}: BreakpointSliderProps) {
+  return (
+    <Stack spacing={2} sx={{ mt: 1 }}>
+      {BREAKPOINTS.map((breakpoint) => (
+        <Stack key={breakpoint} direction="row" spacing={3} sx={{ alignItems: 'center' }}>
+          <Typography variant="body2" sx={{ width: 24, fontWeight: 700 }}>
+            {breakpoint.toUpperCase()}
+          </Typography>
+          <Slider
+            value={value[breakpoint]}
+            onChange={(_, val) => onChange({ ...value, [breakpoint]: val as number })}
+            step={step}
+            marks
+            min={min}
+            max={max}
+            valueLabelDisplay="auto"
+            valueLabelFormat={valueLabelFormat}
+            size="small"
+          />
+        </Stack>
+      ))}
+    </Stack>
+  )
+}
+
 export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const { t, i18n } = useTranslation()
+  const theme = useTheme()
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
+  const [activeTab, setActiveTab] = useState(0)
+
   const {
     masonryColumns,
     setMasonryColumns,
     gridColumns,
     setGridColumns,
+    justifiedRowHeight,
+    setJustifiedRowHeight,
     showMobileDetails,
     setShowMobileDetails,
     hoverInfo,
@@ -60,6 +145,8 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
       setMasonryColumns: state.setMasonryColumns,
       gridColumns: state.gridColumns,
       setGridColumns: state.setGridColumns,
+      justifiedRowHeight: state.justifiedRowHeight,
+      setJustifiedRowHeight: state.setJustifiedRowHeight,
       showMobileDetails: state.showMobileDetails,
       setShowMobileDetails: state.setShowMobileDetails,
       hoverInfo: state.hoverInfo,
@@ -79,124 +166,150 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
     })),
   )
 
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setActiveTab(newValue)
+  }
+
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>{t('settings.title')}</DialogTitle>
-      <DialogContent dividers sx={{ p: 0 }}>
-        <Accordion square disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">{t('settings.topBarButtons')}</Typography>
-          </AccordionSummary>
-          <AccordionDetails sx={{ pt: 0, pb: 2 }}>
-            <FormGroup row sx={{ px: 1 }}>
-              {(
-                [
-                  'sort',
-                  'layout',
-                  'rating',
-                  'favorites',
-                  'selectMultiple',
-                  'search',
-                  'advancedSearch',
-                  'themeToggle',
-                ] as const
-              ).map((key) => {
-                const labelMap: Record<typeof key, string> = {
-                  sort: t('settings.topBar.sort'),
-                  layout: t('settings.topBar.layout'),
-                  rating: t('settings.topBar.rating'),
-                  favorites: t('settings.topBar.favorites'),
-                  selectMultiple: t('settings.topBar.selectMultiple'),
-                  search: t('settings.topBar.search'),
-                  advancedSearch: t('settings.topBar.advancedSearch'),
-                  themeToggle: t('settings.topBar.themeToggle'),
-                }
-                return (
-                  <FormControlLabel
-                    key={key}
-                    control={
-                      <Checkbox
-                        checked={topBarConfig[key]}
-                        onChange={(e) =>
-                          setTopBarConfig({ ...topBarConfig, [key]: e.target.checked })
-                        }
-                        size="small"
-                      />
-                    }
-                    label={<Typography variant="body2">{labelMap[key]}</Typography>}
-                    sx={{ width: '45%' }}
-                  />
-                )
-              })}
-            </FormGroup>
-          </AccordionDetails>
-        </Accordion>
-
-        <Accordion
-          square
-          disableGutters
-          elevation={0}
-          sx={{ borderTop: 1, borderColor: 'divider', '&:before': { display: 'none' } }}
+      <DialogContent
+        dividers
+        sx={{
+          p: 0,
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          height: SETTINGS_PANEL_HEIGHT,
+        }}
+      >
+        <Tabs
+          orientation={isMobile ? 'horizontal' : 'vertical'}
+          variant="scrollable"
+          value={activeTab}
+          onChange={handleTabChange}
+          sx={{
+            borderRight: isMobile ? 0 : 1,
+            borderBottom: isMobile ? 1 : 0,
+            borderColor: 'divider',
+            minWidth: 200,
+            flexShrink: 0,
+          }}
         >
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">{t('settings.masonryColumns')}</Typography>
-          </AccordionSummary>
-          <AccordionDetails sx={{ pt: 0, pb: 2 }}>
-            <Stack spacing={2} sx={{ px: 1 }}>
-              {(['xs', 'sm', 'lg', 'xl'] as const).map((breakpoint) => (
-                <Stack key={breakpoint} direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-                  <Typography variant="body2" sx={{ width: 24, fontWeight: 700 }}>
-                    {breakpoint.toUpperCase()}
-                  </Typography>
-                  <Slider
-                    value={masonryColumns[breakpoint]}
-                    onChange={(_, value) =>
-                      setMasonryColumns({ ...masonryColumns, [breakpoint]: value as number })
-                    }
-                    step={1}
-                    marks
-                    min={1}
-                    max={10}
-                    valueLabelDisplay="auto"
-                    size="small"
-                  />
-                </Stack>
-              ))}
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
+          <Tab
+            label={t('settings.categories.layout')}
+            {...a11yProps(0)}
+            sx={{ alignItems: isMobile ? 'center' : 'flex-start', textAlign: 'left' }}
+          />
+          <Tab
+            label={t('settings.categories.display')}
+            {...a11yProps(1)}
+            sx={{ alignItems: isMobile ? 'center' : 'flex-start', textAlign: 'left' }}
+          />
+          <Tab
+            label={t('settings.categories.quality')}
+            {...a11yProps(2)}
+            sx={{ alignItems: isMobile ? 'center' : 'flex-start', textAlign: 'left' }}
+          />
+          <Tab
+            label={t('settings.categories.general')}
+            {...a11yProps(3)}
+            sx={{ alignItems: isMobile ? 'center' : 'flex-start', textAlign: 'left' }}
+          />
+        </Tabs>
 
-        <Accordion square disableGutters elevation={0} sx={{ '&:before': { display: 'none' } }}>
-          <AccordionSummary expandIcon={<ExpandMore />}>
-            <Typography variant="subtitle2">{t('settings.gridColumns')}</Typography>
-          </AccordionSummary>
-          <AccordionDetails sx={{ pt: 0, pb: 2 }}>
-            <Stack spacing={2} sx={{ px: 1 }}>
-              {(['xs', 'sm', 'lg', 'xl'] as const).map((breakpoint) => (
-                <Stack key={breakpoint} direction="row" spacing={2} sx={{ alignItems: 'center' }}>
-                  <Typography variant="body2" sx={{ width: 24, fontWeight: 700 }}>
-                    {breakpoint.toUpperCase()}
-                  </Typography>
-                  <Slider
-                    value={gridColumns[breakpoint]}
-                    onChange={(_, value) =>
-                      setGridColumns({ ...gridColumns, [breakpoint]: value as number })
-                    }
-                    step={1}
-                    marks
-                    min={1}
-                    max={10}
-                    valueLabelDisplay="auto"
-                    size="small"
-                  />
-                </Stack>
-              ))}
-            </Stack>
-          </AccordionDetails>
-        </Accordion>
+        <TabPanel value={activeTab} index={0}>
+          <Stack spacing={4}>
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                {t('settings.topBarButtons')}
+              </Typography>
+              <FormGroup row>
+                {(
+                  [
+                    'sort',
+                    'layout',
+                    'rating',
+                    'favorites',
+                    'selectMultiple',
+                    'search',
+                    'advancedSearch',
+                    'themeToggle',
+                  ] as const
+                ).map((key) => {
+                  const labelMap: Record<typeof key, string> = {
+                    sort: t('settings.topBar.sort'),
+                    layout: t('settings.topBar.layout'),
+                    rating: t('settings.topBar.rating'),
+                    favorites: t('settings.topBar.favorites'),
+                    selectMultiple: t('settings.topBar.selectMultiple'),
+                    search: t('settings.topBar.search'),
+                    advancedSearch: t('settings.topBar.advancedSearch'),
+                    themeToggle: t('settings.topBar.themeToggle'),
+                  }
+                  return (
+                    <FormControlLabel
+                      key={key}
+                      control={
+                        <Checkbox
+                          checked={topBarConfig[key]}
+                          onChange={(e) =>
+                            setTopBarConfig({ ...topBarConfig, [key]: e.target.checked })
+                          }
+                          size="small"
+                        />
+                      }
+                      label={<Typography variant="body2">{labelMap[key]}</Typography>}
+                      sx={{ width: '45%' }}
+                    />
+                  )
+                })}
+              </FormGroup>
+            </Box>
 
-        <Box sx={{ px: 3, py: 2, borderTop: 1, borderColor: 'divider' }}>
-          <Stack spacing={3}>
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                {t('settings.masonryColumns')}
+              </Typography>
+              <BreakpointSlider
+                value={masonryColumns}
+                onChange={setMasonryColumns}
+                step={1}
+                min={1}
+                max={10}
+              />
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                {t('settings.gridColumns')}
+              </Typography>
+              <BreakpointSlider
+                value={gridColumns}
+                onChange={setGridColumns}
+                step={1}
+                min={1}
+                max={10}
+              />
+            </Box>
+
+            <Box>
+              <Typography variant="subtitle2" gutterBottom>
+                {t('settings.justifiedRowHeight')}
+              </Typography>
+              <BreakpointSlider
+                value={justifiedRowHeight}
+                onChange={setJustifiedRowHeight}
+                step={30}
+                min={120}
+                max={600}
+                valueLabelFormat={(value) => `${value} px`}
+              />
+            </Box>
+          </Stack>
+        </TabPanel>
+
+        <TabPanel value={activeTab} index={1}>
+          <Stack spacing={4}>
             <Box>
               <Typography variant="subtitle2" gutterBottom>
                 {t('settings.display')}
@@ -266,12 +379,17 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                           {t(`settings.hoverInfoOptions.${key}` as any)}
                         </Typography>
                       }
+                      sx={{ width: '45%' }}
                     />
                   ),
                 )}
               </FormGroup>
             </Box>
+          </Stack>
+        </TabPanel>
 
+        <TabPanel value={activeTab} index={2}>
+          <Stack spacing={4}>
             <Box>
               <Typography variant="subtitle2" gutterBottom>
                 {t('settings.galleryQuality')}
@@ -358,23 +476,25 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
                 />
               </RadioGroup>
             </Box>
-
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                {t('settings.language')}
-              </Typography>
-              <Select
-                size="small"
-                value={i18n.resolvedLanguage || 'en'}
-                onChange={(e) => i18n.changeLanguage(e.target.value)}
-                sx={{ width: 150 }}
-              >
-                <MenuItem value="en">English</MenuItem>
-                <MenuItem value="zh-CN">简体中文</MenuItem>
-              </Select>
-            </Box>
           </Stack>
-        </Box>
+        </TabPanel>
+
+        <TabPanel value={activeTab} index={3}>
+          <Box>
+            <Typography variant="subtitle2" gutterBottom>
+              {t('settings.language')}
+            </Typography>
+            <Select
+              size="small"
+              value={i18n.resolvedLanguage || 'en'}
+              onChange={(e) => i18n.changeLanguage(e.target.value)}
+              sx={{ width: 150, mt: 1 }}
+            >
+              <MenuItem value="en">English</MenuItem>
+              <MenuItem value="zh-CN">简体中文</MenuItem>
+            </Select>
+          </Box>
+        </TabPanel>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>{t('common.close')}</Button>

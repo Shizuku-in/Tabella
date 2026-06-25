@@ -27,6 +27,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({})
   const next = searchParams.get('next') || '/'
   const targetLabel = useMemo(() => (next === '/' ? 'gallery' : next), [next])
 
@@ -45,6 +46,22 @@ export function LoginPage() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    const nextErrors: { username?: string; password?: string } = {}
+    if (!username.trim()) {
+      nextErrors.username = t('auth.login.usernameRequired')
+    }
+    if (!password) {
+      nextErrors.password = t('auth.login.passwordRequired')
+    }
+
+    setFieldErrors(nextErrors)
+    setErrorMessage(null)
+
+    if (Object.keys(nextErrors).length > 0) {
+      return
+    }
+
     setSubmitting(true)
     setErrorMessage(null)
 
@@ -70,6 +87,7 @@ export function LoginPage() {
       <Paper
         component="form"
         onSubmit={handleSubmit}
+        noValidate
         sx={{
           width: '100%',
           maxWidth: 360,
@@ -124,7 +142,12 @@ export function LoginPage() {
             label={t('auth.login.username')}
             autoComplete="username"
             value={username}
-            onChange={(event) => setUsername(event.target.value)}
+            onChange={(event) => {
+              setUsername(event.target.value)
+              if (fieldErrors.username) setFieldErrors((prev) => ({ ...prev, username: undefined }))
+            }}
+            error={Boolean(fieldErrors.username)}
+            helperText={fieldErrors.username}
             fullWidth
             required
           />
@@ -133,7 +156,12 @@ export function LoginPage() {
             type="password"
             autoComplete="current-password"
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={(event) => {
+              setPassword(event.target.value)
+              if (fieldErrors.password) setFieldErrors((prev) => ({ ...prev, password: undefined }))
+            }}
+            error={Boolean(fieldErrors.password)}
+            helperText={fieldErrors.password}
             fullWidth
             required
           />

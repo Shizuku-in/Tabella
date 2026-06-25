@@ -10,6 +10,10 @@ function useSortLabel() {
   const { t } = useTranslation()
   return (sort: string) => {
     switch (sort) {
+      case 'newest':
+        return t('gallery.sort.newest')
+      case 'random':
+        return t('gallery.sort.random')
       case 'oldest':
         return t('gallery.sort.oldest')
       case 'filename_asc':

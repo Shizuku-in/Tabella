@@ -32,6 +32,8 @@ interface GalleryPreferencesState {
   setMasonryColumns: (value: ColumnConfig) => void
   gridColumns: ColumnConfig
   setGridColumns: (value: ColumnConfig) => void
+  justifiedRowHeight: ColumnConfig
+  setJustifiedRowHeight: (value: ColumnConfig) => void
   showMobileDetails: boolean
   setShowMobileDetails: (value: boolean) => void
   hoverInfo: HoverInfoConfig
@@ -61,6 +63,9 @@ export const useGalleryPreferencesStore = create<GalleryPreferencesState>()(
 
       gridColumns: { xs: 2, sm: 3, lg: 4, xl: 5 },
       setGridColumns: (value) => set({ gridColumns: value }),
+
+      justifiedRowHeight: { xs: 150, sm: 210, lg: 240, xl: 300 },
+      setJustifiedRowHeight: (value) => set({ justifiedRowHeight: value }),
 
       showMobileDetails: true,
       setShowMobileDetails: (value) => set({ showMobileDetails: value }),

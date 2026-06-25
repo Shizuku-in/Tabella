@@ -11,3 +11,6 @@ export const ratingLabel: Record<Rating, string> = {
   suggestive: 'Suggestive',
   explicit: 'Explicit',
 }
+
+/** Shared height for settings-style tabbed dialogs (golden-ratio proportion). */
+export const SETTINGS_PANEL_HEIGHT = '61.8vh'

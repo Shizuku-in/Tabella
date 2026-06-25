@@ -93,6 +93,7 @@ pub(crate) enum ImageSort {
     Oldest,
     FilenameAsc,
     FilenameDesc,
+    Random,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -105,6 +106,7 @@ pub(crate) struct ListImagesQuery {
     pub(crate) rating: Vec<Rating>,
     #[serde(default)]
     pub(crate) sort: ImageSort,
+    pub(crate) seed: Option<i32>,
     pub(crate) cursor: Option<String>,
     pub(crate) limit: Option<u32>,
     #[serde(default)]

@@ -11,6 +11,7 @@ export interface GalleryGridLayoutProps {
   layoutMode: LayoutMode
   masonryColumns: ColumnConfig
   gridColumns: ColumnConfig
+  justifiedRowHeight: ColumnConfig
   showMobileDetails: boolean
   hoverInfo: {
     name: boolean
@@ -33,6 +34,7 @@ export function GalleryGridLayout({
   layoutMode,
   masonryColumns,
   gridColumns,
+  justifiedRowHeight,
   showMobileDetails,
   hoverInfo,
   favoriteOverrides,
@@ -48,7 +50,7 @@ export function GalleryGridLayout({
   const isMd = useMediaQuery(theme.breakpoints.up('md'))
   const isSm = useMediaQuery(theme.breakpoints.up('sm'))
 
-  const getColumns = (config: ColumnConfig) => {
+  const getResponsiveValue = (config: ColumnConfig) => {
     if (isXl) return config.xl || config.lg || config.md || config.sm || config.xs || 1
     if (isLg) return config.lg || config.md || config.sm || config.xs || 1
     if (isMd) return config.md || config.sm || config.xs || 1
@@ -56,7 +58,9 @@ export function GalleryGridLayout({
     return config.xs || 1
   }
 
-  const columns = layoutMode === 'grid' ? getColumns(gridColumns) : getColumns(masonryColumns)
+  const columns =
+    layoutMode === 'grid' ? getResponsiveValue(gridColumns) : getResponsiveValue(masonryColumns)
+  const currentJustifiedRowHeight = getResponsiveValue(justifiedRowHeight)
 
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -65,6 +69,7 @@ export function GalleryGridLayout({
     items,
     layoutMode,
     columns,
+    justifiedRowHeight: currentJustifiedRowHeight,
     gap: 8,
     overscan: 2000,
   })

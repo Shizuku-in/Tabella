@@ -19,6 +19,7 @@ export function GalleryPage() {
     layoutMode,
     masonryColumns,
     gridColumns,
+    justifiedRowHeight,
     showMobileDetails,
     hoverInfo,
     showResultsCount,
@@ -29,6 +30,7 @@ export function GalleryPage() {
       layoutMode: state.layoutMode,
       masonryColumns: state.masonryColumns,
       gridColumns: state.gridColumns,
+      justifiedRowHeight: state.justifiedRowHeight,
       showMobileDetails: state.showMobileDetails,
       hoverInfo: state.hoverInfo,
       showResultsCount: state.showResultsCount,
@@ -204,6 +206,7 @@ export function GalleryPage() {
             layoutMode={layoutMode}
             masonryColumns={masonryColumns}
             gridColumns={gridColumns}
+            justifiedRowHeight={justifiedRowHeight}
             showMobileDetails={showMobileDetails}
             hoverInfo={activeHoverInfo}
             favoriteOverrides={favoriteOverrides}

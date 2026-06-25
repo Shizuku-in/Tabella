@@ -43,6 +43,12 @@
   },
   "settings": {
     "title": "Gallery Settings",
+    "categories": {
+      "layout": "Layout & Controls",
+      "display": "Display Information",
+      "quality": "Image Quality",
+      "general": "General"
+    },
     "topBarButtons": "TopBar Buttons",
     "topBar": {
       "sort": "Sort",
@@ -56,6 +62,7 @@
     },
     "masonryColumns": "Masonry Columns",
     "gridColumns": "Grid Columns",
+    "justifiedRowHeight": "Justified Row Height",
     "display": "Display",
     "displayOptions": {
       "showResultsCount": "Show results count and sort",
@@ -93,8 +100,9 @@
     },
     "sort": {
       "oldest": "Oldest",
-      "filenameAsc": "Filename A-Z",
-      "filenameDesc": "Filename Z-A",
+      "filenameAsc": "Filename (A-Z)",
+      "filenameDesc": "Filename (Z-A)",
+      "random": "Random",
       "newest": "Newest"
     },
     "layout": {
@@ -207,7 +215,9 @@
       "description": "Private access for your Tabella gallery.",
       "returnTo": "After login you will return to {{target}}.",
       "username": "Username",
-      "password": "Password"
+      "password": "Password",
+      "usernameRequired": "Username is required",
+      "passwordRequired": "Password is required"
     },
     "profile": {
       "title": "Profile Settings",
