@@ -3,6 +3,7 @@
 //! # Route tree
 //!
 //! ```text
+//! /healthz              service status (no auth)
 //! /api/events           SSE stream
 //! /api/auth/*           login / logout
 //! /api/me               current user

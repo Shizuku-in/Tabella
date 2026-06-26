@@ -63,6 +63,7 @@ struct DownloadJobFileRow {
     file_path: Option<String>,
 }
 
+/// API response for download job creation and status polling.
 #[derive(Serialize)]
 pub(crate) struct DownloadJobResponse {
     pub id: Uuid,

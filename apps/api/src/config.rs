@@ -66,9 +66,10 @@ impl DynamicConfig {
         8
     }
 
-    /// Reads the `settings` row. Falls back to the static [`Config`] when the
-    /// row is missing or malformed. Called per-operation so UI edits take
-    /// effect immediately.
+    /// Reads the `settings` row. When the row exists and contains valid JSON,
+    /// that is the config — [`Config`] is **not** consulted. Otherwise falls
+    /// back to [`Config`] values (for shared fields) and hardcoded defaults
+    /// (for `DynamicConfig`-only fields like thumbnail size).
     pub async fn load(pool: &PgPool, fallback: &Config) -> Self {
         let row = sqlx::query("SELECT value FROM settings WHERE key = 'global'")
             .fetch_optional(pool)
