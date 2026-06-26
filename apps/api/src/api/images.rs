@@ -3,7 +3,7 @@ use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
     response::{IntoResponse, Response},
-    routing::{get, patch, post},
+    routing::{get, post},
 };
 use axum_extra::extract::CookieJar;
 use serde_json::json;
@@ -28,7 +28,7 @@ pub(crate) fn routes(state: AppState) -> Router {
         .route("/api/images/random", get(random_image))
         .route(
             "/api/images/{image_id}",
-            patch(update_image).delete(delete_image),
+            get(get_image).patch(update_image).delete(delete_image),
         )
         .route("/api/tags/suggest", get(suggest_tags))
         .route(
@@ -284,6 +284,86 @@ async fn list_images(
 fn normalize_tag_filter(tag: &str) -> Option<String> {
     let normalized = tag.trim().to_lowercase();
     (!normalized.is_empty()).then_some(normalized)
+}
+
+async fn get_image(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    Path(image_id): Path<i64>,
+) -> Result<Json<ImageListItem>, ApiError> {
+    let user = require_user(&state, &jar).await?;
+
+    let mut builder = sqlx::QueryBuilder::new(
+        "SELECT i.id, i.original_filename, i.thumbnail_path, i.preview_path, i.original_path, \
+         i.width, i.height, i.sha256, i.source_url, i.note, i.rating, i.file_size, i.imported_at, \
+         lower(i.original_filename) AS sort_filename, \
+         NULL::text AS sort_hash, \
+         EXISTS (SELECT 1 FROM favorites f WHERE f.image_id = i.id AND f.user_id = ",
+    );
+    builder.push_bind(user.id);
+    builder.push(
+        ") AS is_favorite, \
+         COALESCE(ARRAY( \
+             SELECT CASE WHEN t.namespace = '' THEN t.name ELSE t.namespace || ':' || t.name END \
+             FROM image_tags it \
+             JOIN tags t ON t.id = it.tag_id \
+             WHERE it.image_id = i.id \
+             ORDER BY t.namespace, t.name \
+         ), '{}') AS tags, \
+         u.id AS uploader_id, u.username AS uploader_username, u.avatar_url AS uploader_avatar_url \
+         FROM images i \
+         LEFT JOIN users u ON u.id = i.uploader_id \
+         WHERE i.id = ",
+    );
+    builder.push_bind(image_id);
+
+    let row: Option<ImageListRow> = builder
+        .build_query_as()
+        .fetch_optional(&state.pool)
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
+
+    let row = row.ok_or_else(|| {
+        ApiError::not_found(crate::api::error_codes::IMAGE_NOT_FOUND, "Image not found.")
+    })?;
+
+    let rating = match row.rating.as_str() {
+        "suggestive" => Rating::Suggestive,
+        "explicit" => Rating::Explicit,
+        _ => Rating::Safe,
+    };
+    let uploader = match (
+        row.uploader_id,
+        row.uploader_username,
+        row.uploader_avatar_url,
+    ) {
+        (Some(id), Some(username), avatar_url) => Some(crate::dto::ImageUploader {
+            id,
+            username,
+            avatar_url,
+        }),
+        _ => None,
+    };
+
+    Ok(Json(ImageListItem {
+        id: row.id,
+        original_filename: row.original_filename,
+        thumbnail_url: format!("/media/{}", row.thumbnail_path),
+        preview_url: format!("/media/{}", row.preview_path),
+        original_url: (!row.original_path.is_empty())
+            .then(|| format!("/media/{}", row.original_path)),
+        width: row.width as u32,
+        height: row.height as u32,
+        sha256: row.sha256,
+        source_url: row.source_url,
+        note: row.note,
+        imported_at: row.imported_at,
+        rating,
+        is_favorite: row.is_favorite,
+        tags: row.tags,
+        file_size: row.file_size,
+        uploader,
+    }))
 }
 
 #[derive(Debug, Clone, sqlx::FromRow)]
