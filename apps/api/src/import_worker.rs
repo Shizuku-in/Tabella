@@ -1,3 +1,19 @@
+//! Background import worker using Postgres as a job queue.
+//!
+//! # Pipeline
+//!
+//! ```text
+//! queued → running → extracting → processing → completed / failed
+//! ```
+//!
+//! - **Crash recovery:** on startup, any `running`/`extracting`/`processing` jobs
+//!   are marked `failed`.
+//! - **Dedup:** SHA256 of the original file; duplicates are skipped.
+//! - **Sidecar JSON:** `<image>.json` files produced by `tagger-cli` carry tags
+//!   and rating for automatic annotation (see [`read_sidecar_metadata`]).
+//! - **Concurrency:** jobs are claimed with `SELECT … FOR UPDATE SKIP LOCKED`,
+//!   so multiple workers can safely share the queue.
+
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 use std::{error::Error as StdError, fmt};
@@ -14,6 +30,8 @@ use crate::config::{Config, DynamicConfig};
 use crate::image_processor::compute_sha256;
 use crate::tags::{ParsedTag, parse_tag};
 
+/// Specific import-failure reasons that map to user-facing error codes
+/// via [`classify_import_error`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ImportJobError {
     NoImportableFiles,
@@ -135,6 +153,10 @@ fn extract_7z_blocking(archive_path: &Path, temp_extract_dir: &Path) -> Result<V
     Ok(scan_image_files(temp_extract_dir))
 }
 
+/// Starts the import worker loop. Recovers stuck jobs (crash recovery), then
+/// polls the queue every 5s. Respects `state.shutdown` for graceful exit:
+/// stops claiming new jobs once the token is cancelled, letting the in-flight
+/// job finish.
 pub(crate) async fn start_worker(state: AppState) {
     tracing::info!("Starting background import worker");
 
@@ -174,6 +196,9 @@ pub(crate) async fn start_worker(state: AppState) {
     }
 }
 
+/// Claims one `queued` job with `FOR UPDATE SKIP LOCKED`, runs it, then
+/// finalises the status and cleans up temp dirs. Returns `Ok(true)` when a job
+/// was processed, `Ok(false)` when the queue was empty.
 async fn process_next_job(state: &AppState) -> Result<bool> {
     #[derive(sqlx::FromRow)]
     struct JobRow {
@@ -302,6 +327,12 @@ fn cleanup_job_temp_dir(path: &Path, label: &str, job_id: Uuid) {
     }
 }
 
+/// Full import pipeline for a single job: resolve source → extract/scan →
+/// process each file (SHA256 dedup, derivative generation, tag attachment)
+/// → report progress via SSE.
+///
+/// Returns `Ok(has_errors)` on completion; `has_errors = true` means at least
+/// one file failed (job status is `completed_with_errors`).
 #[allow(clippy::too_many_arguments)]
 async fn run_import_job(
     job_id: Uuid,
@@ -525,6 +556,9 @@ async fn run_import_job(
     Ok(has_errors)
 }
 
+/// Maps an import error to a user-facing `(error_code, message)` pair.
+/// Known `ImportJobError` variants get specific codes; everything else is
+/// `import_processing_failed`.
 fn classify_import_error(error: &anyhow::Error) -> (&'static str, &'static str) {
     if let Some(import_error) = error.downcast_ref::<ImportJobError>() {
         match import_error {
@@ -613,6 +647,11 @@ fn process_single_file_blocking(
     })
 }
 
+/// Processes one file through the import pipeline: SHA256 → dedup check →
+/// blocking image processing (resize/encode/copy) → DB insert with tags in
+/// a single transaction.
+///
+/// Returns `Ok(true)` for a new insert, `Ok(false)` for a skipped duplicate.
 async fn process_single_file(
     file_path: &Path,
     originals_dir: &Path,
@@ -706,12 +745,16 @@ async fn process_single_file(
     Ok(true)
 }
 
+/// Tags and rating parsed from a `<image>.json` sidecar file.
 #[derive(Debug, Clone)]
 struct SidecarImportMetadata {
     tags: Vec<ParsedTag>,
     rating: String,
 }
 
+/// Reads a `<image>.json` sidecar produced by `tagger-cli`. Expects
+/// `{ "tags": ["artist:name", …], "rating": "safe|suggestive|explicit" }`.
+/// Returns `None` if the file is missing or malformed.
 fn read_sidecar_metadata(file_path: &Path) -> Option<SidecarImportMetadata> {
     let json_path = file_path.with_extension("json");
     if !json_path.exists() {
