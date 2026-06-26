@@ -1,3 +1,5 @@
+//! Cookie-session authentication with Argon2 password hashing.
+
 use anyhow::{Context, Result, anyhow};
 use argon2::{
     Argon2,
@@ -15,6 +17,10 @@ use crate::{
     dto::{SessionUser, UserRole},
 };
 
+/// Bootstraps a default admin if no admin user exists yet.
+///
+/// Uses `TABELLA_BOOTSTRAP_ADMIN_USERNAME` / `TABELLA_BOOTSTRAP_ADMIN_PASSWORD`
+/// env vars. Idempotent — does nothing when an admin already exists.
 pub(crate) async fn bootstrap_default_admin(pool: &PgPool, config: &Config) -> Result<()> {
     let admin_count: i64 = sqlx::query_scalar("select count(*) from users where role = 'admin'")
         .fetch_one(pool)
@@ -54,6 +60,10 @@ pub(crate) async fn bootstrap_default_admin(pool: &PgPool, config: &Config) -> R
     Ok(())
 }
 
+/// Validates credentials and returns the user on success.
+///
+/// Returns `Ok(None)` for unknown username or wrong password — deliberately
+/// indistinguishable to prevent user enumeration.
 pub(crate) async fn authenticate(
     pool: &PgPool,
     username: &str,
@@ -88,6 +98,10 @@ pub(crate) async fn authenticate(
     }))
 }
 
+/// Creates a new session row with a UUID v4 id and returns the id + expiry.
+///
+/// `session_ttl_hours` comes from [`DynamicConfig::session_ttl_hours`].
+/// Caller is responsible for issuing the corresponding cookie via [`build_session_cookie`].
 pub(crate) async fn create_session(
     pool: &PgPool,
     session_ttl_hours: u64,
@@ -114,6 +128,9 @@ pub(crate) async fn create_session(
     Ok((session_id, expires_at))
 }
 
+/// Extracts the session cookie, validates it against the DB, and updates `last_seen_at`.
+///
+/// Returns `Ok(None)` when unauthenticated (no cookie, expired, or invalid session).
 pub(crate) async fn current_user_from_jar(
     state: &AppState,
     jar: &CookieJar,
@@ -154,6 +171,9 @@ pub(crate) async fn current_user_from_jar(
     }))
 }
 
+/// Lightweight session check without fetching user data or updating `last_seen_at`.
+///
+/// Used by the SSE endpoint and media middleware where a full user load is unnecessary.
 pub(crate) async fn check_session_from_jar(state: &AppState, jar: &CookieJar) -> Result<bool> {
     let Some(session_id) = session_id_from_jar(jar, &state.config.session_cookie_name) else {
         return Ok(false);
@@ -175,6 +195,8 @@ pub(crate) async fn check_session_from_jar(state: &AppState, jar: &CookieJar) ->
     .context("failed to check current session")
 }
 
+/// Deletes a single session row. Used for logout and session invalidation on
+/// password change.
 pub(crate) async fn destroy_session(pool: &PgPool, session_id: Uuid) -> Result<()> {
     sqlx::query("delete from sessions where id = $1")
         .bind(session_id)
@@ -185,6 +207,10 @@ pub(crate) async fn destroy_session(pool: &PgPool, session_id: Uuid) -> Result<(
     Ok(())
 }
 
+/// Builds a Set-Cookie header value for a new session.
+///
+/// HttpOnly + SameSite=Lax always; Secure is toggled via `secure_cookies`
+/// (should be `true` in production behind HTTPS).
 pub(crate) fn build_session_cookie(
     session_cookie_name: &str,
     secure_cookies: bool,
@@ -200,6 +226,7 @@ pub(crate) fn build_session_cookie(
         .build()
 }
 
+/// Builds an empty Set-Cookie with `max_age=0` to clear the session cookie.
 pub(crate) fn build_logout_cookie(
     session_cookie_name: &str,
     secure_cookies: bool,
@@ -213,11 +240,14 @@ pub(crate) fn build_logout_cookie(
         .build()
 }
 
+/// Parses the session UUID from a cookie. Returns `None` if the cookie is
+/// absent or its value is not a valid UUID.
 pub(crate) fn session_id_from_jar(jar: &CookieJar, cookie_name: &str) -> Option<Uuid> {
     jar.get(cookie_name)
         .and_then(|cookie| Uuid::parse_str(cookie.value()).ok())
 }
 
+/// Hashes a password with Argon2 (default params, random salt per call).
 pub(crate) fn hash_password(password: &str) -> Result<String> {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
@@ -228,6 +258,8 @@ pub(crate) fn hash_password(password: &str) -> Result<String> {
         .map_err(|error| anyhow!("failed to hash password: {error}"))
 }
 
+/// Verifies a password against a stored Argon2 hash. Returns `Ok(true)` on match,
+/// `Ok(false)` on mismatch, and `Err` only when the stored hash is malformed.
 pub(crate) fn verify_password(password: &str, password_hash: &str) -> Result<bool> {
     let parsed_hash = PasswordHash::new(password_hash)
         .map_err(|error| anyhow!("stored password hash could not be parsed: {error}"))?;
@@ -237,6 +269,7 @@ pub(crate) fn verify_password(password: &str, password_hash: &str) -> Result<boo
         .is_ok())
 }
 
+/// Normalizes a username to trimmed lowercase for uniqueness comparison.
 pub(crate) fn normalize_username(username: &str) -> String {
     username.trim().to_ascii_lowercase()
 }
