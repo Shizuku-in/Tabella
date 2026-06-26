@@ -100,7 +100,7 @@ pub(crate) async fn authenticate(
 
 /// Creates a new session row with a UUID v4 id and returns the id + expiry.
 ///
-/// `session_ttl_hours` comes from [`DynamicConfig::session_ttl_hours`].
+/// `session_ttl_hours` comes from `DynamicConfig::session_ttl_hours`.
 /// Caller is responsible for issuing the corresponding cookie via [`build_session_cookie`].
 pub(crate) async fn create_session(
     pool: &PgPool,
