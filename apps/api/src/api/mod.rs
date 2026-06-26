@@ -1,3 +1,29 @@
+//! Per-feature API route modules merged into a single [`Router`].
+//!
+//! # Route tree
+//!
+//! ```text
+//! /api/events           SSE stream
+//! /api/auth/*           login / logout
+//! /api/me               current user
+//! /api/images/*         gallery CRUD
+//! /api/favorites/*      favorites
+//! /api/tags/*           tag listing / suggestions
+//! /api/stats            gallery statistics
+//! /api/download-jobs/*  archive creation / polling / download
+//! /api/admin/imports/*  import management (editor+)
+//! /api/profile/*        self-service profile
+//! /api/settings         dynamic config (admin)
+//! /api/admin/users/*    user CRUD (admin)
+//! ```
+//!
+//! # Guard hierarchy
+//!
+//! Handlers call guards explicitly: `require_user` → `require_editor` → `require_admin`.
+//! Roles are `admin > editor > viewer`. [`require_media_session`] is a middleware
+//! on the separate media router (not in this tree); see `main.rs` for the full
+//! router composition.
+
 mod auth_handlers;
 mod downloads;
 mod error;
@@ -17,6 +43,7 @@ use crate::AppState;
 
 pub(crate) use guards::require_media_session;
 
+/// Builds the API router tree by merging all feature sub-routers.
 pub(crate) fn router(state: AppState) -> Router {
     Router::new()
         .merge(health::routes(state.clone()))
