@@ -1,3 +1,15 @@
+//! Request/response DTOs shared across all API modules.
+//!
+//! # Conventions
+//!
+//! - JSON uses `snake_case` by default. [`StatsResponse`] is the exception — it
+//!   is annotated with `#[serde(rename_all = "camelCase")]` so the backend
+//!   emits camelCase directly.
+//! - Query parameters that accept `rating=safe&rating=explicit` (repeated) or
+//!   `rating=safe,explicit` (CSV) are deserialized by [`deserialize_csv_or_repeated`].
+//! - `Option` fields with `#[serde(default)]` are omitted-from-JSON ↔ absent ↔ "no change"
+//!   (see [`UpdateImageRequest`] for the `Some("")`-clears convention).
+
 use std::{fmt, marker::PhantomData, str::FromStr};
 
 use serde::{
@@ -5,6 +17,7 @@ use serde::{
     de::{self, SeqAccess, Visitor},
 };
 
+/// Response for `GET /healthz`.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct HealthResponse {
     pub(crate) status: &'static str,
@@ -14,6 +27,7 @@ pub(crate) struct HealthResponse {
     pub(crate) download_retention_hours: u64,
 }
 
+/// Role-based access control: `admin > editor > viewer`.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum UserRole {
@@ -35,6 +49,7 @@ impl TryFrom<&str> for UserRole {
     }
 }
 
+/// User identity stored in the session, serialized into auth responses.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct SessionUser {
     pub(crate) id: i64,
@@ -43,17 +58,20 @@ pub(crate) struct SessionUser {
     pub(crate) avatar_url: Option<String>,
 }
 
+/// `POST /api/auth/login` body.
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct LoginRequest {
     pub(crate) username: String,
     pub(crate) password: String,
 }
 
+/// Login/me response wrapper.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct AuthUserResponse {
     pub(crate) user: SessionUser,
 }
 
+/// Content rating with a total order: `safe < suggestive < explicit`.
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum Rating {
@@ -94,6 +112,7 @@ impl FromStr for Rating {
     }
 }
 
+/// Sort order for the image list.
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum ImageSort {
@@ -105,6 +124,9 @@ pub(crate) enum ImageSort {
     Random,
 }
 
+/// Query parameters for `GET /api/images`. Tags are AND filters; `Rating`
+/// accepts repeated params or CSV; `cursor` is an opaque JSON token from
+/// the previous page.
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub(crate) struct ListImagesQuery {
     #[serde(default, deserialize_with = "deserialize_csv_or_repeated")]
@@ -130,6 +152,7 @@ pub(crate) struct ListImagesQuery {
     pub(crate) aspect_ratio_max: Option<f32>,
 }
 
+/// Query parameters for `GET /api/tags/suggest`.
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub(crate) struct TagSuggestQuery {
     #[serde(default)]
@@ -156,6 +179,7 @@ pub(crate) struct UpdateImageRequest {
     pub(crate) source_url: Option<String>,
 }
 
+/// Minimal uploader info embedded in [`ImageListItem`].
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ImageUploader {
     pub(crate) id: i64,
@@ -163,6 +187,8 @@ pub(crate) struct ImageUploader {
     pub(crate) avatar_url: Option<String>,
 }
 
+/// A single image in the gallery list. `original_url` is `None` when the
+/// original file wasn't retained; `uploader` is `None` for legacy imports.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ImageListItem {
     pub(crate) id: i64,
@@ -184,12 +210,15 @@ pub(crate) struct ImageListItem {
     pub(crate) uploader: Option<ImageUploader>,
 }
 
+/// Paginated image list. `next_cursor` is absent/`null` on the last page.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct ListImagesResponse {
     pub(crate) items: Vec<ImageListItem>,
     pub(crate) next_cursor: Option<String>,
 }
 
+/// Gallery summary. `total_tags` counts only tags attached to ≥1 image;
+/// `total_size_bytes` is the sum of original file sizes.
 #[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub(crate) struct StatsResponse {
@@ -199,6 +228,7 @@ pub(crate) struct StatsResponse {
     pub(crate) rating_counts: RatingCounts,
 }
 
+/// Per-rating image counts for the gallery stats response.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct RatingCounts {
     pub(crate) safe: i64,
@@ -220,6 +250,8 @@ pub(crate) struct RandomImageQuery {
     pub(crate) quality: DownloadQuality,
 }
 
+/// Response for `GET /api/images/random`. `url` reflects the requested quality
+/// (falls back to sample when original is missing).
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct RandomImageResponse {
     pub(crate) id: i64,
@@ -232,6 +264,7 @@ pub(crate) struct RandomImageResponse {
     pub(crate) tags: Vec<String>,
 }
 
+/// Which derivative to include in a download archive or random-image response.
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum DownloadQuality {
@@ -241,6 +274,7 @@ pub(crate) enum DownloadQuality {
     Original,
 }
 
+/// `POST /api/download-jobs` body.
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub(crate) struct DownloadJobRequest {
     pub(crate) image_ids: Vec<i64>,
@@ -248,6 +282,9 @@ pub(crate) struct DownloadJobRequest {
     pub(crate) quality: DownloadQuality,
 }
 
+/// Custom serde deserializer that accepts either a comma-separated string
+/// (`?rating=safe,explicit`) or repeated keys (`?rating=safe&rating=explicit`),
+/// or a mix of both.
 fn deserialize_csv_or_repeated<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
 where
     D: Deserializer<'de>,
@@ -312,6 +349,7 @@ where
     deserializer.deserialize_any(CsvOrRepeatedVisitor(PhantomData))
 }
 
+/// Splits a CSV string on commas, trimming whitespace and skipping empty parts.
 fn parse_csv_values<T, E>(value: &str) -> Result<Vec<T>, E>
 where
     T: FromStr,
@@ -326,6 +364,7 @@ where
         .collect()
 }
 
+/// Public user profile. `avatar_url` is `null` when no avatar has been set.
 #[derive(Debug, Clone, Serialize)]
 pub(crate) struct UserResponse {
     pub(crate) id: i64,
@@ -336,6 +375,7 @@ pub(crate) struct UserResponse {
     pub(crate) avatar_url: Option<String>,
 }
 
+/// `POST /api/admin/users` body.
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct CreateUserRequest {
     pub(crate) username: String,
@@ -343,12 +383,16 @@ pub(crate) struct CreateUserRequest {
     pub(crate) role: UserRole,
 }
 
+/// `PUT /api/admin/users/{id}` body. Both fields optional; omitted fields
+/// are left unchanged.
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct UpdateUserRequest {
     pub(crate) password: Option<String>,
     pub(crate) role: Option<UserRole>,
 }
 
+/// `PUT /api/profile` body. Password change requires both `current_password`
+/// and `new_password`; the user's other sessions are invalidated on change.
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct UpdateProfileRequest {
     pub(crate) username: Option<String>,
