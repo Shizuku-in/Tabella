@@ -314,6 +314,9 @@
       "sessionTtlHelp": "How long a user session remains valid before requiring re-login.",
       "secureCookies": "Secure Cookies",
       "secureCookiesHelp": "Only send cookies over HTTPS. Recommended for production.",
+      "database": "Database",
+      "databasePoolSize": "Connection Pool Size",
+      "databasePoolSizeHelp": "Maximum number of concurrent database connections. Requires a server restart to take effect. Default is 8, valid range 1–100.",
       "errors": {
         "positiveInteger": "{{label}} must be a positive integer.",
         "greaterThanZero": "{{label}} must be greater than 0.",

@@ -27,6 +27,10 @@ pub(crate) struct DynamicConfig {
     pub(crate) sample_quality: f32,
     #[serde(default = "DynamicConfig::default_max_upload_bytes")]
     pub(crate) max_upload_bytes: u64,
+    /// Connection pool size. Requires a server restart to take effect;
+    /// the value is persisted here so it can be edited via the UI.
+    #[serde(default = "DynamicConfig::default_database_pool_size")]
+    pub(crate) database_pool_size: u32,
 }
 
 impl DynamicConfig {
@@ -47,6 +51,9 @@ impl DynamicConfig {
     }
     fn default_max_upload_bytes() -> u64 {
         20 * 1024 * 1024 * 1024 // 20 GiB
+    }
+    fn default_database_pool_size() -> u32 {
+        8
     }
 
     pub async fn load(pool: &PgPool, fallback: &Config) -> Self {
@@ -75,6 +82,7 @@ impl DynamicConfig {
             sample_size: Self::default_sample_size(),
             sample_quality: Self::default_sample_quality(),
             max_upload_bytes: Self::default_max_upload_bytes(),
+            database_pool_size: fallback.database_pool_size,
         }
     }
 
@@ -109,6 +117,9 @@ impl DynamicConfig {
         if self.max_upload_bytes == 0 {
             bail!("max_upload_bytes must be greater than 0");
         }
+        if self.database_pool_size < 1 || self.database_pool_size > 100 {
+            bail!("database_pool_size must be between 1 and 100");
+        }
 
         Ok(())
     }
@@ -142,6 +153,7 @@ pub(crate) struct Config {
     pub(crate) max_download_total_bytes: u64,
     pub(crate) download_retention_hours: u64,
     pub(crate) import_progress_batch_size: usize,
+    pub(crate) database_pool_size: u32,
 }
 
 impl Default for Config {
@@ -160,6 +172,7 @@ impl Default for Config {
             max_download_total_bytes: 2 * 1024 * 1024 * 1024,
             download_retention_hours: 24,
             import_progress_batch_size: 10,
+            database_pool_size: 8,
         }
     }
 }
@@ -190,6 +203,8 @@ impl Config {
                 .unwrap_or(defaults.download_retention_hours),
             import_progress_batch_size: read_env("TABELLA_IMPORT_PROGRESS_BATCH_SIZE")
                 .unwrap_or(defaults.import_progress_batch_size),
+            database_pool_size: read_env("TABELLA_DATABASE_POOL_SIZE")
+                .unwrap_or(defaults.database_pool_size),
         })
     }
 }
@@ -220,6 +235,7 @@ mod tests {
             sample_size: DynamicConfig::default_sample_size(),
             sample_quality: DynamicConfig::default_sample_quality(),
             max_upload_bytes: DynamicConfig::default_max_upload_bytes(),
+            database_pool_size: defaults.database_pool_size,
         };
 
         config.session_ttl_hours = 0;

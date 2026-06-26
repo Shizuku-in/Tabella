@@ -35,6 +35,7 @@ interface ServerSettings {
   thumbnail_quality: number
   sample_size: number
   sample_quality: number
+  database_pool_size: number
 }
 
 interface ServerSettingsForm {
@@ -49,6 +50,7 @@ interface ServerSettingsForm {
   thumbnail_quality: string
   sample_size: string
   sample_quality: string
+  database_pool_size: string
 }
 
 interface ServerSettingsFieldErrors {
@@ -62,6 +64,7 @@ interface ServerSettingsFieldErrors {
   thumbnail_quality?: string
   sample_size?: string
   sample_quality?: string
+  database_pool_size?: string
 }
 
 interface TabPanelProps {
@@ -266,6 +269,11 @@ export function AdminServerPage() {
                 {...a11yProps(3)}
                 sx={{ alignItems: isMobile ? 'center' : 'flex-start', textAlign: 'left' }}
               />
+              <Tab
+                label={t('admin.server.database')}
+                {...a11yProps(4)}
+                sx={{ alignItems: isMobile ? 'center' : 'flex-start', textAlign: 'left' }}
+              />
             </Tabs>
 
             <TabPanel value={activeTab} index={0}>
@@ -407,6 +415,21 @@ export function AdminServerPage() {
                 />
               </Stack>
             </TabPanel>
+
+            <TabPanel value={activeTab} index={4}>
+              <Stack spacing={3}>
+                <TextField
+                  label={t('admin.server.databasePoolSize')}
+                  type="number"
+                  required
+                  value={settings.database_pool_size}
+                  onChange={(e) => handleNumberChange('database_pool_size', e.target.value)}
+                  error={Boolean(errors.database_pool_size)}
+                  helperText={errors.database_pool_size ?? t('admin.server.databasePoolSizeHelp')}
+                  fullWidth
+                />
+              </Stack>
+            </TabPanel>
           </Paper>
         </Stack>
       </form>
@@ -442,6 +465,7 @@ function toFormState(settings: ServerSettings): ServerSettingsForm {
     thumbnail_quality: (settings.thumbnail_quality ?? 75).toString(),
     sample_size: (settings.sample_size ?? 0).toString(),
     sample_quality: (settings.sample_quality ?? 80).toString(),
+    database_pool_size: (settings.database_pool_size ?? 8).toString(),
   }
 }
 
@@ -458,6 +482,7 @@ function parseFormState(settings: ServerSettingsForm): ServerSettings {
     thumbnail_quality: Number.parseFloat(settings.thumbnail_quality.trim()),
     sample_size: Number.parseInt(settings.sample_size.trim(), 10),
     sample_quality: Number.parseFloat(settings.sample_quality.trim()),
+    database_pool_size: Number.parseInt(settings.database_pool_size.trim(), 10),
   }
 }
 
@@ -580,6 +605,14 @@ function validateServerSettingsFields(
     100.0,
   )
   if (sampleQuality) errors.sample_quality = sampleQuality
+
+  const poolSize = validateIntegerRange(
+    settings.database_pool_size,
+    t('admin.server.databasePoolSize'),
+    1,
+    100,
+  )
+  if (poolSize) errors.database_pool_size = poolSize
 
   return errors
 }

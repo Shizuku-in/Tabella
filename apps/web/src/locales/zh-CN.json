@@ -314,6 +314,9 @@
       "sessionTtlHelp": "用户会话在需要重新登录之前保持有效的时间。",
       "secureCookies": "安全 Cookie",
       "secureCookiesHelp": "仅通过 HTTPS 发送 Cookie。建议在生产环境中使用。",
+      "database": "数据库",
+      "databasePoolSize": "连接池大小",
+      "databasePoolSizeHelp": "数据库并发连接的最大数量。需要重启服务器才能生效。默认值为 8，有效范围 1–100。",
       "errors": {
         "positiveInteger": "{{label}} 必须为正整数。",
         "greaterThanZero": "{{label}} 必须大于 0。",
