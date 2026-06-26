@@ -1,3 +1,7 @@
+//! Download archive lifecycle: create → background zip → poll → stream.
+//! Archives use uncompressed (stored) zip entries; files are streamed with
+//! `Content-Disposition: attachment`.
+
 use axum::{
     Json, Router,
     body::Body,
@@ -23,6 +27,7 @@ use crate::{
 
 use super::{error::ApiError, guards::require_user};
 
+/// Registers `/api/download-jobs` routes.
 pub(crate) fn routes(state: AppState) -> Router {
     Router::new()
         .route("/api/download-jobs", post(create_download_job))
@@ -69,6 +74,8 @@ pub(crate) struct DownloadJobResponse {
     pub error_params: Option<Value>,
 }
 
+/// Validates image IDs, checks limits (count + total bytes), inserts a
+/// `pending` job, and spawns a background archiving task.
 async fn create_download_job(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -179,6 +186,8 @@ async fn create_download_job(
     }))
 }
 
+/// Resolves the on-disk path for a derivative, joining the media root with
+/// the stored relative path for the requested quality.
 fn download_source_path(
     media_root: &std::path::Path,
     record: &DownloadImageRow,
@@ -221,6 +230,8 @@ fn derived_archive_filename(original_filename: &str, suffix: &str, stored_path: 
     format!("{stem}{suffix}.{extension}")
 }
 
+/// Polls job status. Owner-only: returns `download_job_access_denied` for
+/// other users.
 async fn get_download_job(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -265,6 +276,7 @@ async fn get_download_job(
     }))
 }
 
+/// Streams the completed zip archive. Owner-only, requires `status = completed`.
 async fn download_job_file(
     State(state): State<AppState>,
     jar: CookieJar,

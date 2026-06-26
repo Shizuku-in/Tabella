@@ -1,3 +1,6 @@
+//! Self-service profile: view, update username/password, upload avatar.
+//! Password change invalidates all other sessions.
+
 use axum::{
     Json, Router,
     extract::{DefaultBodyLimit, Multipart, State},
@@ -17,6 +20,7 @@ use crate::{
 
 const MAX_AVATAR_UPLOAD_BYTES: usize = 5 * 1024 * 1024; // 5 MB
 
+/// Registers `GET/PUT /api/profile` and `POST /api/profile/avatar`.
 pub(crate) fn routes(state: AppState) -> Router {
     Router::new()
         .route("/api/profile", get(get_profile).put(update_profile))
@@ -27,6 +31,7 @@ pub(crate) fn routes(state: AppState) -> Router {
         .with_state(state)
 }
 
+/// Returns the caller's full user profile.
 async fn get_profile(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -61,6 +66,8 @@ async fn get_profile(
     }))
 }
 
+/// Updates username and/or password. Password change requires both fields
+/// and invalidates all other sessions.
 async fn update_profile(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -192,6 +199,7 @@ async fn update_profile(
     }))
 }
 
+/// Uploads a new avatar (PNG, JPEG, GIF, or WebP; max 5 MB).
 async fn upload_avatar(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -226,9 +234,15 @@ async fn upload_avatar(
 
             let ext = match format {
                 image::ImageFormat::Png => "png",
+                image::ImageFormat::Jpeg => "jpg",
                 image::ImageFormat::Gif => "gif",
                 image::ImageFormat::WebP => "webp",
-                _ => "jpg",
+                _ => {
+                    return Err(ApiError::bad_request(
+                        crate::api::error_codes::INVALID_MULTIPART,
+                        "Avatar must be a PNG, JPEG, GIF, or WebP image.",
+                    ));
+                }
             };
 
             let file_name = format!("{}.{}", user.id, ext);

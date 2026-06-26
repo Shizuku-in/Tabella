@@ -1,3 +1,5 @@
+//! User management CRUD (admin only).
+
 use axum::{
     Json,
     extract::{Path, State},
@@ -14,6 +16,7 @@ use crate::{
 
 use super::error::ApiError;
 
+/// Lists all users ordered by creation date (newest first).
 pub(crate) async fn list_users(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -52,6 +55,7 @@ pub(crate) async fn list_users(
     Ok(Json(users))
 }
 
+/// Creates a new user. Validates username uniqueness and password strength.
 pub(crate) async fn create_user(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -114,6 +118,9 @@ pub(crate) async fn create_user(
     ))
 }
 
+/// Updates a user's role and/or password. Admins cannot change their own role.
+/// Session invalidation: all sessions for the user are destroyed except the
+/// caller's own when editing self.
 pub(crate) async fn update_user(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -214,6 +221,7 @@ pub(crate) async fn update_user(
     Ok(StatusCode::OK)
 }
 
+/// Deletes a user. Self-deletion is rejected.
 pub(crate) async fn delete_user(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -243,6 +251,7 @@ pub(crate) async fn delete_user(
     Ok(StatusCode::NO_CONTENT)
 }
 
+/// Registers `GET/POST /api/admin/users` and `PUT/DELETE /api/admin/users/{id}`.
 pub(crate) fn routes(state: AppState) -> axum::Router {
     axum::Router::new()
         .route(
@@ -256,6 +265,7 @@ pub(crate) fn routes(state: AppState) -> axum::Router {
         .with_state(state)
 }
 
+/// Validates password strength: ≥8 chars, ≥1 lowercase letter, ≥1 digit.
 pub(crate) fn validate_password(password: &str) -> Result<(), ApiError> {
     if password.chars().count() < 8 {
         return Err(ApiError::bad_request(

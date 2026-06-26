@@ -1,3 +1,6 @@
+//! Server-Sent Events endpoint. Connect once per session; the frontend uses
+//! exponential-backoff reconnect with a `HEAD` probe to detect 401.
+
 use axum::{
     extract::State,
     response::sse::{Event, Sse},
@@ -11,6 +14,8 @@ use tokio_stream::wrappers::BroadcastStream;
 use super::{error::ApiError, guards::require_user};
 use crate::AppState;
 
+/// Opens an SSE stream for real-time import/download job updates. Stream
+/// terminates on server shutdown via `take_until(shutdown.cancelled())`.
 pub(crate) async fn sse_handler(
     State(state): State<AppState>,
     jar: CookieJar,

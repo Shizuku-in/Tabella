@@ -1,3 +1,6 @@
+//! Import management: create jobs from server paths, upload files from the browser,
+//! list recent jobs, and poll individual job status.
+
 use std::path::{Component, Path as StdPath, PathBuf};
 
 use axum::{
@@ -18,6 +21,8 @@ use super::{
     guards::{require_admin, require_editor},
 };
 
+/// Registers `GET/POST /api/admin/imports`, `POST /api/admin/imports/upload`,
+/// and `GET /api/admin/imports/{job_id}`.
 pub(crate) fn routes(state: AppState) -> Router {
     Router::new()
         .route(
@@ -32,6 +37,7 @@ pub(crate) fn routes(state: AppState) -> Router {
         .with_state(state)
 }
 
+/// `POST /api/admin/imports` body — server-side file path.
 #[derive(serde::Deserialize)]
 pub(crate) struct CreateImportRequest {
     pub(crate) source_path: String,
@@ -52,12 +58,14 @@ struct JobStatusRow {
     error_params: Option<serde_json::Value>,
 }
 
+/// Query params for `POST /api/admin/imports/upload`: `?type=folder|zip|7z`.
 #[derive(serde::Deserialize)]
 pub(crate) struct UploadQuery {
     #[serde(rename = "type")]
     source_type: Option<String>,
 }
 
+/// Creates a `queued` import job from a server-side path (admin only).
 async fn create_import_job(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -92,6 +100,7 @@ async fn create_import_job(
     })))
 }
 
+/// Polls a single import job's status and progress.
 async fn get_import_job(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -150,6 +159,7 @@ struct ListImportJobRow {
     error_params: Option<serde_json::Value>,
 }
 
+/// Lists the 50 most recent import jobs (newest first).
 async fn list_import_jobs(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -173,6 +183,9 @@ async fn list_import_jobs(
     Ok(Json(json!({ "items": items })))
 }
 
+/// Multipart upload from the browser. Streams to a temp dir, enforces
+/// `max_upload_bytes` mid-stream, then enqueues an import job. Body size is
+/// unbounded (DefaultBodyLimit disabled) — the dynamic limit is checked per-chunk.
 async fn upload_import_files(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -278,6 +291,7 @@ async fn upload_import_files(
     })))
 }
 
+/// Rejects paths with parent traversal (`..`) or absolute roots; strips `./`.
 fn sanitize_upload_path(file_name: &str) -> Result<PathBuf, ApiError> {
     let mut sanitized = PathBuf::new();
 

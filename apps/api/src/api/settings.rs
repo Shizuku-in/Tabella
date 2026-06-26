@@ -1,3 +1,6 @@
+//! Dynamic config read/write (admin only). `PUT` does a full replace — partial
+//! merge is not supported.
+
 use axum::{
     Json, Router,
     extract::State,
@@ -9,6 +12,7 @@ use crate::{AppState, config::DynamicConfig};
 
 use super::{error::ApiError, guards::require_admin};
 
+/// Registers `GET /api/settings` and `PUT /api/settings` (admin only).
 pub(crate) fn routes(state: AppState) -> Router {
     Router::new()
         .route("/api/settings", get(get_settings))
@@ -16,6 +20,7 @@ pub(crate) fn routes(state: AppState) -> Router {
         .with_state(state)
 }
 
+/// Returns the current [`DynamicConfig`].
 async fn get_settings(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -24,6 +29,8 @@ async fn get_settings(
     Ok(Json(DynamicConfig::load(&state.pool, &state.config).await))
 }
 
+/// Validates and persists the full [`DynamicConfig`]. Partial merge is not
+/// supported — the complete object must be sent.
 async fn update_settings(
     State(state): State<AppState>,
     jar: CookieJar,

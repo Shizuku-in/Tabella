@@ -1,3 +1,5 @@
+//! Authentication endpoints: login, logout, current user.
+
 use anyhow::Context;
 use axum::{
     Json, Router,
@@ -14,6 +16,7 @@ use crate::{
 
 use super::{error::ApiError, guards::require_user};
 
+/// Registers `/api/me`, `/api/auth/login`, `/api/auth/logout`.
 pub(crate) fn routes(state: AppState) -> Router {
     Router::new()
         .route("/api/me", get(get_me))
@@ -22,6 +25,7 @@ pub(crate) fn routes(state: AppState) -> Router {
         .with_state(state)
 }
 
+/// Returns the authenticated user from a valid session cookie.
 async fn get_me(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -30,6 +34,7 @@ async fn get_me(
     Ok(Json(AuthUserResponse { user }))
 }
 
+/// Authenticates credentials, creates a session, and sets the session cookie.
 async fn login(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -81,6 +86,7 @@ async fn login(
     Ok((jar, Json(AuthUserResponse { user })))
 }
 
+/// Destroys the session and clears the cookie.
 async fn logout(
     State(state): State<AppState>,
     jar: CookieJar,
