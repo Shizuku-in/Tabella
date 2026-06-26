@@ -133,4 +133,4 @@ Plain SQLx migrations in `apps/api/migrations/` (`NNNN_name.sql`), embedded via 
 
 ## Deployment
 
-Multi-stage `Dockerfile` (pnpm build → cargo `--release` with `SQLX_OFFLINE=true` → debian-slim runtime serving frontend from `/app/dist`). `docker-compose.yml` adds Postgres 16. Manual/systemd deploy docs and a Caddyfile example live in `deploy/` and `docs/`.
+Multi-stage `Dockerfile` (pnpm build → cargo `--release` with `SQLX_OFFLINE=true` → debian-slim runtime serving frontend from `/app/dist`). `docker-compose.yml` adds Postgres 16. Manual/systemd deploy docs and a Caddyfile example live in `deploy/` and `docs/`. The full HTTP API reference (all routes, parameters, and response shapes) is at `docs/api-reference.md`.
