@@ -168,13 +168,20 @@ When both `rating` and `max_rating` are supplied they are ANDed (intersection). 
 
 ### `PATCH /api/images/{id}`
 
-**editor** — Update an image's rating and/or tags.
+**editor** — Update an image's metadata. All fields are optional; omitted fields are left unchanged.
 
-**Body** (all fields optional)
+**Body**
 
 ```json
-{ "rating": "safe", "tags": ["artist:foo", "1girl"] }
+{
+  "rating": "safe",
+  "tags": ["artist:foo", "1girl"],
+  "note": "optional note",
+  "source_url": "https://example.com/source"
+}
 ```
+
+- `note` / `source_url` — `Some("text")` sets the value, `Some("")` clears it, `None` (or absent) leaves it unchanged.
 
 Response: `204 No Content`.
 

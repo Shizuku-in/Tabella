@@ -150,6 +150,10 @@ pub(crate) struct ListTagsQuery {
 pub(crate) struct UpdateImageRequest {
     pub(crate) rating: Option<Rating>,
     pub(crate) tags: Option<Vec<String>>,
+    /// `Some("text")` sets the note; `Some("")` clears it; `None` leaves it unchanged.
+    pub(crate) note: Option<String>,
+    /// `Some("url")` sets the source; `Some("")` clears it; `None` leaves it unchanged.
+    pub(crate) source_url: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]

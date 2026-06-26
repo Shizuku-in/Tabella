@@ -660,6 +660,26 @@ async fn update_image(
             .map_err(|e| ApiError::internal(e.into()))?;
     }
 
+    // note and source_url are plain scalar updates; empty string clears the field.
+    if body.note.is_some() || body.source_url.is_some() {
+        let mut builder = sqlx::QueryBuilder::new("UPDATE images SET updated_at = now()");
+        if let Some(ref note) = body.note {
+            builder.push(", note = ");
+            builder.push_bind(note.clone());
+        }
+        if let Some(ref source_url) = body.source_url {
+            builder.push(", source_url = ");
+            builder.push_bind(source_url.clone());
+        }
+        builder.push(" WHERE id = ");
+        builder.push_bind(image_id);
+        builder
+            .build()
+            .execute(&state.pool)
+            .await
+            .map_err(|e| ApiError::internal(e.into()))?;
+    }
+
     if let Some(tags) = &body.tags {
         let mut tx = state
             .pool
