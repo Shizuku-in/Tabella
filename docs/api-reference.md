@@ -214,6 +214,30 @@ Response: `204 No Content`.
 
 ---
 
+### `GET /api/stats`
+
+**any** — Summary statistics for the entire gallery.
+
+**Response 200**
+
+```json
+{
+  "totalImages": 5120,
+  "totalTags": 230,
+  "totalSizeBytes": 8589934592,
+  "ratingCounts": {
+    "safe": 3200,
+    "suggestive": 1800,
+    "explicit": 120
+  }
+}
+```
+
+- `totalTags` counts only tags that are attached to at least one image.
+- `totalSizeBytes` is the sum of stored original file sizes across all images.
+
+---
+
 ### `GET /api/tags/suggest`
 
 **any** — Autocomplete tag names.

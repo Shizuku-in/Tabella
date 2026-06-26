@@ -186,6 +186,22 @@ pub(crate) struct ListImagesResponse {
     pub(crate) next_cursor: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct StatsResponse {
+    pub(crate) total_images: i64,
+    pub(crate) total_tags: i64,
+    pub(crate) total_size_bytes: i64,
+    pub(crate) rating_counts: RatingCounts,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct RatingCounts {
+    pub(crate) safe: i64,
+    pub(crate) suggestive: i64,
+    pub(crate) explicit: i64,
+}
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub(crate) struct RandomImageQuery {
     /// Exact rating set; an image matches when its rating is one of these.

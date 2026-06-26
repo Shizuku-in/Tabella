@@ -12,8 +12,8 @@ use crate::{
     AppState,
     dto::{
         DownloadQuality, ImageListItem, ImageSort, ListImagesQuery, ListImagesResponse,
-        ListTagsQuery, RandomImageQuery, RandomImageResponse, Rating, TagSuggestQuery,
-        UpdateImageRequest,
+        ListTagsQuery, RandomImageQuery, RandomImageResponse, Rating, RatingCounts, StatsResponse,
+        TagSuggestQuery, UpdateImageRequest,
     },
     tags::parse_tag,
 };
@@ -33,6 +33,7 @@ pub(crate) fn routes(state: AppState) -> Router {
         )
         .route("/api/tags", get(list_tags))
         .route("/api/tags/suggest", get(suggest_tags))
+        .route("/api/stats", get(stats))
         .route(
             "/api/favorites/{image_id}",
             post(add_favorite).delete(remove_favorite),
@@ -846,6 +847,50 @@ async fn list_tags(
         .collect();
 
     Ok(Json(json!({ "items": items })))
+}
+
+async fn stats(
+    State(state): State<AppState>,
+    jar: CookieJar,
+) -> Result<Json<StatsResponse>, ApiError> {
+    let _user = require_user(&state, &jar).await?;
+
+    #[derive(sqlx::FromRow)]
+    struct StatsRow {
+        total_images: i64,
+        total_tags: i64,
+        total_size_bytes: i64,
+        safe_count: i64,
+        suggestive_count: i64,
+        explicit_count: i64,
+    }
+
+    let row: StatsRow = sqlx::query_as(
+        r#"
+        SELECT
+            COUNT(*)::bigint AS total_images,
+            COALESCE((SELECT COUNT(*) FROM tags t WHERE EXISTS (SELECT 1 FROM image_tags it WHERE it.tag_id = t.id)), 0)::bigint AS total_tags,
+            COALESCE(SUM(file_size), 0)::bigint AS total_size_bytes,
+            COALESCE(SUM(CASE WHEN rating = 'safe' THEN 1 ELSE 0 END), 0)::bigint AS safe_count,
+            COALESCE(SUM(CASE WHEN rating = 'suggestive' THEN 1 ELSE 0 END), 0)::bigint AS suggestive_count,
+            COALESCE(SUM(CASE WHEN rating = 'explicit' THEN 1 ELSE 0 END), 0)::bigint AS explicit_count
+        FROM images
+        "#,
+    )
+    .fetch_one(&state.pool)
+    .await
+    .map_err(|e| ApiError::internal(e.into()))?;
+
+    Ok(Json(StatsResponse {
+        total_images: row.total_images,
+        total_tags: row.total_tags,
+        total_size_bytes: row.total_size_bytes,
+        rating_counts: RatingCounts {
+            safe: row.safe_count,
+            suggestive: row.suggestive_count,
+            explicit: row.explicit_count,
+        },
+    }))
 }
 
 async fn add_favorite(
