@@ -1,3 +1,9 @@
+//! Two-tier configuration: static [`Config`] (env vars, immutable at runtime) +
+//! [`DynamicConfig`] (DB `settings` table, editable via `/api/settings`).
+//!
+//! [`DynamicConfig::load`] is called per-operation so changes take effect
+//! immediately, falling back to [`Config`] values when the DB row is absent.
+
 use std::{
     env,
     net::{IpAddr, Ipv4Addr, SocketAddr},
@@ -8,6 +14,8 @@ use anyhow::{Context, Result, bail};
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Row};
 
+/// Runtime-editable configuration persisted as a JSON row in the `settings`
+/// table (key `'global'`).
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub(crate) struct DynamicConfig {
     pub(crate) max_download_images: usize,
@@ -21,6 +29,8 @@ pub(crate) struct DynamicConfig {
     pub(crate) thumbnail_size: u32,
     #[serde(default = "DynamicConfig::default_thumbnail_quality")]
     pub(crate) thumbnail_quality: f32,
+    /// Sample max dimension in pixels. `0` means no downscaling — use the
+    /// original dimensions.
     #[serde(default = "DynamicConfig::default_sample_size")]
     pub(crate) sample_size: u32,
     #[serde(default = "DynamicConfig::default_sample_quality")]
@@ -56,6 +66,9 @@ impl DynamicConfig {
         8
     }
 
+    /// Reads the `settings` row. Falls back to the static [`Config`] when the
+    /// row is missing or malformed. Called per-operation so UI edits take
+    /// effect immediately.
     pub async fn load(pool: &PgPool, fallback: &Config) -> Self {
         let row = sqlx::query("SELECT value FROM settings WHERE key = 'global'")
             .fetch_optional(pool)
@@ -86,6 +99,8 @@ impl DynamicConfig {
         }
     }
 
+    /// Validates all fields are within allowed ranges. Intended to be called
+    /// before [`save`](DynamicConfig::save).
     pub fn validate(&self) -> Result<()> {
         if self.max_download_images == 0 {
             bail!("max_download_images must be greater than 0");
@@ -124,6 +139,7 @@ impl DynamicConfig {
         Ok(())
     }
 
+    /// Validates then persists to the `settings` table (upserts key `'global'`).
     pub async fn save(&self, pool: &PgPool) -> Result<()> {
         self.validate()?;
         let value = serde_json::to_value(self)?;
@@ -138,6 +154,8 @@ impl DynamicConfig {
     }
 }
 
+/// Static configuration loaded once at startup from env vars (`DATABASE_URL`
+/// required; everything else optional with sensible defaults).
 #[derive(Clone, Debug)]
 pub(crate) struct Config {
     pub(crate) listen_addr: SocketAddr,
@@ -178,6 +196,8 @@ impl Default for Config {
 }
 
 impl Config {
+    /// Builds a [`Config`] from environment variables. Only `DATABASE_URL` is
+    /// required; all `TABELLA_*` vars are optional and fall back to [`Default`].
     pub(crate) fn from_env() -> Result<Self> {
         let defaults = Self::default();
 
@@ -209,6 +229,7 @@ impl Config {
     }
 }
 
+/// Reads and parses an env var, returning `None` when absent or unparseable.
 fn read_env<T>(key: &str) -> Option<T>
 where
     T: std::str::FromStr,
