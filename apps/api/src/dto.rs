@@ -70,6 +70,15 @@ impl Rating {
             Self::Explicit => "explicit",
         }
     }
+
+    /// Ordinal used to compare ratings: `safe < suggestive < explicit`.
+    pub(crate) fn level(self) -> u8 {
+        match self {
+            Self::Safe => 0,
+            Self::Suggestive => 1,
+            Self::Explicit => 2,
+        }
+    }
 }
 
 impl FromStr for Rating {
@@ -167,6 +176,32 @@ pub(crate) struct ImageListItem {
 pub(crate) struct ListImagesResponse {
     pub(crate) items: Vec<ImageListItem>,
     pub(crate) next_cursor: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+pub(crate) struct RandomImageQuery {
+    /// Exact rating set; an image matches when its rating is one of these.
+    #[serde(default, deserialize_with = "deserialize_csv_or_repeated")]
+    pub(crate) rating: Vec<Rating>,
+    /// Upper bound (inclusive) on the rating; e.g. `suggestive` allows safe + suggestive.
+    /// When neither this nor `rating` is provided, the handler defaults to `Safe`.
+    #[serde(default)]
+    pub(crate) max_rating: Option<Rating>,
+    /// Which derivative URL to surface as the primary `url`.
+    #[serde(default)]
+    pub(crate) quality: DownloadQuality,
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub(crate) struct RandomImageResponse {
+    pub(crate) id: i64,
+    pub(crate) url: String,
+    pub(crate) quality: DownloadQuality,
+    pub(crate) width: u32,
+    pub(crate) height: u32,
+    pub(crate) rating: Rating,
+    pub(crate) original_filename: String,
+    pub(crate) tags: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
@@ -298,7 +333,42 @@ mod tests {
     use axum::http::Uri;
     use axum_extra::extract::Query;
 
-    use super::{ListImagesQuery, Rating};
+    use super::{DownloadQuality, ListImagesQuery, RandomImageQuery, Rating};
+
+    #[test]
+    fn random_image_query_parses_rating_set_and_quality() {
+        let uri: Uri = "http://example.com/api/images/random?rating=safe,suggestive&quality=sample"
+            .parse()
+            .unwrap();
+
+        let query: Query<RandomImageQuery> = Query::try_from_uri(&uri).unwrap();
+
+        assert_eq!(query.rating, vec![Rating::Safe, Rating::Suggestive]);
+        assert!(matches!(query.quality, DownloadQuality::Sample));
+        // max_rating absent from query string → None (safe default applied in handler)
+        assert!(query.max_rating.is_none());
+    }
+
+    #[test]
+    fn random_image_query_parses_max_rating() {
+        let uri: Uri = "http://example.com/api/images/random?max_rating=suggestive"
+            .parse()
+            .unwrap();
+
+        let query: Query<RandomImageQuery> = Query::try_from_uri(&uri).unwrap();
+
+        assert_eq!(query.max_rating, Some(Rating::Suggestive));
+        assert!(query.rating.is_empty());
+    }
+
+    #[test]
+    fn random_image_query_defaults_quality_to_original() {
+        let uri: Uri = "http://example.com/api/images/random".parse().unwrap();
+
+        let query: Query<RandomImageQuery> = Query::try_from_uri(&uri).unwrap();
+
+        assert!(matches!(query.quality, DownloadQuality::Original));
+    }
 
     #[test]
     fn list_images_query_accepts_repeated_rating_params() {

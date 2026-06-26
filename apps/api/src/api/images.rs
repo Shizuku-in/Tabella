@@ -11,8 +11,8 @@ use serde_json::json;
 use crate::{
     AppState,
     dto::{
-        ImageListItem, ImageSort, ListImagesQuery, ListImagesResponse, Rating, TagSuggestQuery,
-        UpdateImageRequest,
+        DownloadQuality, ImageListItem, ImageSort, ListImagesQuery, ListImagesResponse,
+        RandomImageQuery, RandomImageResponse, Rating, TagSuggestQuery, UpdateImageRequest,
     },
     tags::parse_tag,
 };
@@ -25,6 +25,7 @@ use super::{
 pub(crate) fn routes(state: AppState) -> Router {
     Router::new()
         .route("/api/images", get(list_images))
+        .route("/api/images/random", get(random_image))
         .route(
             "/api/images/{image_id}",
             patch(update_image).delete(delete_image),
@@ -283,6 +284,135 @@ async fn list_images(
 fn normalize_tag_filter(tag: &str) -> Option<String> {
     let normalized = tag.trim().to_lowercase();
     (!normalized.is_empty()).then_some(normalized)
+}
+
+#[derive(Debug, Clone, sqlx::FromRow)]
+struct RandomImageRow {
+    id: i64,
+    original_filename: String,
+    thumbnail_path: String,
+    preview_path: String,
+    original_path: String,
+    width: i32,
+    height: i32,
+    rating: String,
+    tags: Vec<String>,
+}
+
+/// Resolves the set of ratings an image may have, given an optional exact
+/// `rating` set and an optional inclusive `max_rating` ceiling. Both filters
+/// are ANDed: the base set (the explicit `rating` list, or all ratings when
+/// empty) is then trimmed to those at or below `max_rating`. An empty result
+/// means the filters are mutually exclusive and nothing can match.
+///
+/// When neither filter is supplied the ceiling defaults to `Safe`, so the
+/// endpoint is safe-by-default without silently capping an explicit `rating`.
+fn allowed_ratings(rating: &[Rating], max_rating: Option<Rating>) -> Vec<Rating> {
+    // Apply safe ceiling only when the caller specified nothing at all.
+    let effective_max = if rating.is_empty() && max_rating.is_none() {
+        Some(Rating::Safe)
+    } else {
+        max_rating
+    };
+
+    let base = if rating.is_empty() {
+        vec![Rating::Safe, Rating::Suggestive, Rating::Explicit]
+    } else {
+        rating.to_vec()
+    };
+
+    match effective_max {
+        Some(max) => base
+            .into_iter()
+            .filter(|r| r.level() <= max.level())
+            .collect(),
+        None => base,
+    }
+}
+
+/// Picks the media URL for the requested quality, falling back to the sample
+/// when the original was not retained on disk (`original_path` empty).
+fn random_image_url(row: &RandomImageRow, quality: &DownloadQuality) -> String {
+    let relative = match quality {
+        DownloadQuality::Thumbnail => &row.thumbnail_path,
+        DownloadQuality::Sample => &row.preview_path,
+        DownloadQuality::Original => {
+            if row.original_path.is_empty() {
+                &row.preview_path
+            } else {
+                &row.original_path
+            }
+        }
+    };
+
+    format!("/media/{relative}")
+}
+
+async fn random_image(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    Query(query): Query<RandomImageQuery>,
+) -> Result<Json<RandomImageResponse>, ApiError> {
+    let _user = require_user(&state, &jar).await?;
+
+    let allowed = allowed_ratings(&query.rating, query.max_rating);
+    if allowed.is_empty() {
+        return Err(ApiError::not_found(
+            crate::api::error_codes::IMAGE_NOT_FOUND,
+            "No image matches the requested rating filters.",
+        ));
+    }
+
+    // `ORDER BY random()` scans and sorts the whole filtered set. That is fine
+    // for the small, private libraries Tabella targets and keeps the query
+    // trivial; revisit if galleries ever grow large.
+    let mut builder = sqlx::QueryBuilder::new(
+        "SELECT i.id, i.original_filename, i.thumbnail_path, i.preview_path, i.original_path, \
+         i.width, i.height, i.rating, \
+         COALESCE(ARRAY( \
+             SELECT CASE WHEN t.namespace = '' THEN t.name ELSE t.namespace || ':' || t.name END \
+             FROM image_tags it \
+             JOIN tags t ON t.id = it.tag_id \
+             WHERE it.image_id = i.id \
+             ORDER BY t.namespace, t.name \
+         ), '{}') AS tags \
+         FROM images i \
+         WHERE i.rating = ANY(",
+    );
+    let ratings: Vec<&str> = allowed.iter().map(|rating| rating.as_str()).collect();
+    builder.push_bind(ratings);
+    builder.push(") ORDER BY random() LIMIT 1");
+
+    let row: Option<RandomImageRow> = builder
+        .build_query_as()
+        .fetch_optional(&state.pool)
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
+
+    let row = row.ok_or_else(|| {
+        ApiError::not_found(
+            crate::api::error_codes::IMAGE_NOT_FOUND,
+            "No image matches the requested rating filters.",
+        )
+    })?;
+
+    let rating = match row.rating.as_str() {
+        "suggestive" => Rating::Suggestive,
+        "explicit" => Rating::Explicit,
+        _ => Rating::Safe,
+    };
+    let url = random_image_url(&row, &query.quality);
+
+    Ok(Json(RandomImageResponse {
+        id: row.id,
+        url,
+        quality: query.quality,
+        width: row.width as u32,
+        height: row.height as u32,
+        rating,
+        original_filename: row.original_filename,
+        tags: row.tags,
+    }))
 }
 
 fn decode_image_cursor(raw: &str) -> Result<ImageListCursor, ApiError> {
@@ -626,8 +756,82 @@ async fn remove_favorite(
 
 #[cfg(test)]
 mod tests {
-    use super::{ImageListRow, decode_image_cursor, encode_image_cursor};
-    use crate::dto::ImageSort;
+    use super::{
+        ImageListRow, RandomImageRow, allowed_ratings, decode_image_cursor, encode_image_cursor,
+        random_image_url,
+    };
+    use crate::dto::{DownloadQuality, ImageSort, Rating};
+
+    fn random_row(original_path: &str) -> RandomImageRow {
+        RandomImageRow {
+            id: 7,
+            original_filename: String::from("cover.jpg"),
+            thumbnail_path: String::from("thumbnails/hash.webp"),
+            preview_path: String::from("samples/hash.webp"),
+            original_path: String::from(original_path),
+            width: 800,
+            height: 600,
+            rating: String::from("safe"),
+            tags: vec![],
+        }
+    }
+
+    #[test]
+    fn allowed_ratings_defaults_to_safe_when_unfiltered() {
+        // Neither rating nor max_rating specified → safe-by-default.
+        let allowed = allowed_ratings(&[], None);
+        assert_eq!(allowed, vec![Rating::Safe]);
+    }
+
+    #[test]
+    fn allowed_ratings_honors_exact_set() {
+        let allowed = allowed_ratings(&[Rating::Safe, Rating::Explicit], None);
+        assert_eq!(allowed, vec![Rating::Safe, Rating::Explicit]);
+    }
+
+    #[test]
+    fn allowed_ratings_applies_max_ceiling() {
+        let allowed = allowed_ratings(&[], Some(Rating::Suggestive));
+        assert_eq!(allowed, vec![Rating::Safe, Rating::Suggestive]);
+    }
+
+    #[test]
+    fn allowed_ratings_intersects_exact_set_and_ceiling() {
+        let allowed = allowed_ratings(&[Rating::Safe, Rating::Explicit], Some(Rating::Suggestive));
+        assert_eq!(allowed, vec![Rating::Safe]);
+    }
+
+    #[test]
+    fn allowed_ratings_is_empty_when_filters_conflict() {
+        let allowed = allowed_ratings(&[Rating::Explicit], Some(Rating::Safe));
+        assert!(allowed.is_empty());
+    }
+
+    #[test]
+    fn random_image_url_selects_by_quality() {
+        let row = random_row("originals/cover.jpg");
+        assert_eq!(
+            random_image_url(&row, &DownloadQuality::Thumbnail),
+            "/media/thumbnails/hash.webp"
+        );
+        assert_eq!(
+            random_image_url(&row, &DownloadQuality::Sample),
+            "/media/samples/hash.webp"
+        );
+        assert_eq!(
+            random_image_url(&row, &DownloadQuality::Original),
+            "/media/originals/cover.jpg"
+        );
+    }
+
+    #[test]
+    fn random_image_url_falls_back_to_sample_without_original() {
+        let row = random_row("");
+        assert_eq!(
+            random_image_url(&row, &DownloadQuality::Original),
+            "/media/samples/hash.webp"
+        );
+    }
 
     #[test]
     fn image_cursor_round_trips_for_filename_sort() {
