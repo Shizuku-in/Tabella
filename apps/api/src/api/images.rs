@@ -1,3 +1,21 @@
+//! Gallery endpoints: image CRUD, favorites, tags, stats.
+//!
+//! # Keyset (cursor) pagination
+//!
+//! [`list_images`] uses an opaque JSON cursor instead of offset/limit.
+//! The cursor embeds the row's sort key — changing `push_image_sort_order`
+//! requires matching changes in `push_image_cursor_filter` / `encode_image_cursor`.
+//!
+//! # Tag filtering
+//!
+//! `include_tags` / `exclude_tags` are AND filters: an image must have ALL
+//! included tags and NONE of the excluded tags.
+//!
+//! # Rating default
+//!
+//! When neither `rating` nor `max_rating` is supplied the ceiling is `safe`
+//! (see [`allowed_ratings`]).
+
 use axum::{
     Json, Router,
     extract::{Path, Query, State},
@@ -23,6 +41,7 @@ use super::{
     guards::{require_editor, require_user},
 };
 
+/// Registers image, tag, stats, and favorite routes under `/api/`.
 pub(crate) fn routes(state: AppState) -> Router {
     Router::new()
         .route("/api/images", get(list_images))
@@ -41,6 +60,8 @@ pub(crate) fn routes(state: AppState) -> Router {
         .with_state(state)
 }
 
+/// Raw query row for `list_images` / `get_image`, includes uploaded user join
+/// and a computed `is_favorite` flag scoped to the calling user.
 #[derive(Debug, Clone, sqlx::FromRow)]
 struct ImageListRow {
     id: i64,
@@ -66,6 +87,8 @@ struct ImageListRow {
     sort_hash: Option<String>,
 }
 
+/// Opaque pagination token. Fields vary by sort mode — the encoder only
+/// populates the subset that the decoder expects for the same sort.
 #[derive(Debug, Clone, serde::Deserialize, serde::Serialize)]
 struct ImageListCursor {
     id: i64,
@@ -75,6 +98,11 @@ struct ImageListCursor {
     seed: Option<i32>,
 }
 
+/// Paginated image list with keyset cursors. Supports filtering by rating,
+/// tags (AND semantics), favorites, upload date, dimensions, and aspect ratio.
+///
+/// Returns one more row than `limit`; the extra row's cursor becomes `next_cursor`.
+/// A missing or `null` `next_cursor` signals the last page.
 async fn list_images(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -284,11 +312,16 @@ async fn list_images(
     Ok(Json(ListImagesResponse { items, next_cursor }))
 }
 
+/// Trims and lowercases a tag filter value, returning `None` for empty input.
 fn normalize_tag_filter(tag: &str) -> Option<String> {
     let normalized = tag.trim().to_lowercase();
     (!normalized.is_empty()).then_some(normalized)
 }
 
+/// Single-image detail by ID, including `is_favorite` and `tags` for the
+/// calling user.
+///
+/// Returns `image_not_found` when the ID doesn't exist.
 async fn get_image(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -369,6 +402,7 @@ async fn get_image(
     }))
 }
 
+/// Row for a `random()`-ordered single-image query.
 #[derive(Debug, Clone, sqlx::FromRow)]
 struct RandomImageRow {
     id: i64,
@@ -431,6 +465,11 @@ fn random_image_url(row: &RandomImageRow, quality: &DownloadQuality) -> String {
     format!("/media/{relative}")
 }
 
+/// Returns one randomly-selected image. Safe-by-default when no rating filter
+/// is supplied (see [`allowed_ratings`]).
+///
+/// Uses `ORDER BY random()` — acceptable for small private libraries but a
+/// known limitation at scale.
 async fn random_image(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -498,6 +537,8 @@ async fn random_image(
     }))
 }
 
+/// Decodes a JSON cursor string. Returns an `invalid_cursor` error on
+/// malformed input.
 fn decode_image_cursor(raw: &str) -> Result<ImageListCursor, ApiError> {
     serde_json::from_str(raw).map_err(|_| {
         ApiError::bad_request(
@@ -507,6 +548,8 @@ fn decode_image_cursor(raw: &str) -> Result<ImageListCursor, ApiError> {
     })
 }
 
+/// Pushes a `WHERE` clause that continues a keyset-paginated scan after the
+/// last-seen row. The comparison operator and columns depend on the sort direction.
 fn push_image_cursor_filter(
     builder: &mut sqlx::QueryBuilder<'_, sqlx::Postgres>,
     sort: ImageSort,
@@ -591,6 +634,8 @@ fn push_image_cursor_filter(
     Ok(())
 }
 
+/// Appends an `ORDER BY` clause for the requested sort mode, with `i.id` as
+/// the deterministic tiebreaker.
 fn push_image_sort_order(builder: &mut sqlx::QueryBuilder<'_, sqlx::Postgres>, sort: ImageSort) {
     match sort {
         ImageSort::Newest => {
@@ -611,6 +656,8 @@ fn push_image_sort_order(builder: &mut sqlx::QueryBuilder<'_, sqlx::Postgres>, s
     }
 }
 
+/// Encodes the last-seen row into an opaque JSON cursor. Only the fields
+/// relevant to the current sort mode are serialized.
 fn encode_image_cursor(
     sort: ImageSort,
     row: &ImageListRow,
@@ -643,6 +690,11 @@ fn encode_image_cursor(
     serde_json::to_string(&cursor).map_err(|error| ApiError::internal(error.into()))
 }
 
+/// Updates rating, note, source_url, and/or tags. All fields optional.
+///
+/// Tag updates run in a transaction: old tag associations are dropped, new ones
+/// inserted, and orphaned tags are pruned. `note` / `source_url` use
+/// `Some("")` to clear the field and `None` (or absent) to leave unchanged.
 async fn update_image(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -721,6 +773,8 @@ async fn update_image(
     Ok(StatusCode::NO_CONTENT.into_response())
 }
 
+/// On-disk paths for the three derivatives of a single image. Used during
+/// deletion to locate the files to remove.
 #[derive(Debug, Clone, sqlx::FromRow)]
 struct ImageFileRow {
     original_path: String,
@@ -728,6 +782,9 @@ struct ImageFileRow {
     thumbnail_path: String,
 }
 
+/// Permanently deletes an image: DB row in a transaction with orphan-tag
+/// cleanup, then media files on disk (best-effort — missing files are logged
+/// but not fatal).
 async fn delete_image(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -792,6 +849,7 @@ async fn delete_image(
     Ok(StatusCode::NO_CONTENT.into_response())
 }
 
+/// Autocomplete tag names by case-insensitive prefix search.
 async fn suggest_tags(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -823,6 +881,8 @@ async fn suggest_tags(
     })))
 }
 
+/// Lists tags with per-tag image counts, sorted by frequency descending.
+/// Optionally filtered to a single namespace.
 async fn list_tags(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -869,6 +929,8 @@ async fn list_tags(
     Ok(Json(json!({ "items": items })))
 }
 
+/// Gallery summary: total images, tags (attached to ≥1 image), storage bytes,
+/// and per-rating counts.
 async fn stats(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -913,6 +975,7 @@ async fn stats(
     }))
 }
 
+/// Adds an image to the caller's favorites. Idempotent (`ON CONFLICT DO NOTHING`).
 async fn add_favorite(
     State(state): State<AppState>,
     jar: CookieJar,
@@ -930,6 +993,7 @@ async fn add_favorite(
     Ok(StatusCode::NO_CONTENT.into_response())
 }
 
+/// Removes an image from the caller's favorites. Idempotent.
 async fn remove_favorite(
     State(state): State<AppState>,
     jar: CookieJar,

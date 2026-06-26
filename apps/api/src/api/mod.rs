@@ -6,8 +6,8 @@
 //! /api/events           SSE stream
 //! /api/auth/*           login / logout
 //! /api/me               current user
-//! /api/images/*         gallery CRUD
-//! /api/favorites/*      favorites
+//! /api/images/*         image CRUD
+//! /api/favorites/*      image favorites
 //! /api/tags/*           tag listing / suggestions
 //! /api/stats            gallery statistics
 //! /api/download-jobs/*  archive creation / polling / download
