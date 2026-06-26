@@ -4,7 +4,7 @@
 //! admin → start background workers → build router → bind.
 //!
 //! Router layering (order matters):
-//! 1. Authenticated media router (`/media/*` behind [`require_media_session`])
+//! 1. Authenticated media router (`/media/*` behind `require_media_session`)
 //! 2. Blocklist (404 private directories: `/tmp`, `/media/temp`, `/media/downloads`, …)
 //! 3. API router (`/api/*`)
 //! 4. SPA fallback (`ServeDir` on `TABELLA_FRONTEND_DIR` with `index.html` 404 fallback)
