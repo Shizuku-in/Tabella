@@ -1,5 +1,9 @@
+//! Tag model: `namespace:name` convention, lowercase normalization for lookups.
+//! Display names are preserved separately.
+
 use sqlx::PgConnection;
 
+/// A parsed tag with both display and normalized forms.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct ParsedTag {
     pub(crate) namespace: String,
@@ -97,6 +101,8 @@ pub(crate) async fn cleanup_orphan_tags(
     Ok(())
 }
 
+/// Parses a `namespace:name` or bare `name` string. Returns `None` for empty
+/// or whitespace-only input.
 pub(crate) fn parse_tag(tag: &str) -> Option<ParsedTag> {
     let trimmed = tag.trim();
     if trimmed.is_empty() {

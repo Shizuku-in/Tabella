@@ -1,3 +1,9 @@
+//! Role-based guards called at the top of every handler.
+//!
+//! Hierarchy: [`require_user`] → [`require_editor`] → [`require_admin`]
+//! (admin > editor > viewer). [`require_media_session`] is a standalone
+//! middleware for the media file router.
+
 use anyhow::Context;
 use axum::{
     extract::{Request, State},
@@ -13,6 +19,8 @@ use crate::{
 
 use super::error::ApiError;
 
+/// Resolves the current user from the session cookie. Returns 401 when
+/// unauthenticated.
 pub(crate) async fn require_user(
     state: &AppState,
     jar: &CookieJar,
@@ -29,6 +37,7 @@ pub(crate) async fn require_user(
         })
 }
 
+/// Calls [`require_user`] then checks for `Admin` role. Returns 403 otherwise.
 pub(crate) async fn require_admin(
     state: &AppState,
     jar: &CookieJar,
@@ -45,6 +54,8 @@ pub(crate) async fn require_admin(
     Ok(user)
 }
 
+/// Calls [`require_user`] then checks for `Admin` or `Editor` role. Returns
+/// 403 for viewers.
 pub(crate) async fn require_editor(
     state: &AppState,
     jar: &CookieJar,
@@ -61,6 +72,8 @@ pub(crate) async fn require_editor(
     Ok(user)
 }
 
+/// Axum middleware that checks for a valid session (lightweight — no user data
+/// load, no `last_seen_at` update). Used on the `/media/` router.
 pub(crate) async fn require_media_session(
     State(state): State<AppState>,
     jar: CookieJar,

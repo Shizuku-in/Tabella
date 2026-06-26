@@ -1,3 +1,14 @@
+//! Tabella API server entry point.
+//!
+//! Startup: load config → init tracing → DB pool → run migrations → bootstrap
+//! admin → start background workers → build router → bind.
+//!
+//! Router layering (order matters):
+//! 1. Authenticated media router (`/media/*` behind [`require_media_session`])
+//! 2. Blocklist (404 private directories: `/tmp`, `/media/temp`, `/media/downloads`, …)
+//! 3. API router (`/api/*`)
+//! 4. SPA fallback (`ServeDir` on `TABELLA_FRONTEND_DIR` with `index.html` 404 fallback)
+
 mod api;
 mod auth;
 mod config;
@@ -18,12 +29,14 @@ use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+/// An event broadcast to all connected SSE clients.
 #[derive(Clone, Debug, serde::Serialize)]
 pub(crate) struct ServerEvent {
     pub(crate) event: String,
     pub(crate) data: serde_json::Value,
 }
 
+/// Application state cloned into every handler and background worker.
 #[derive(Clone)]
 pub(crate) struct AppState {
     pub(crate) config: Config,
@@ -34,6 +47,7 @@ pub(crate) struct AppState {
     pub(crate) shutdown: tokio_util::sync::CancellationToken,
 }
 
+/// Full startup sequence: env → config → tracing → DB → workers → router → serve.
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     // Load environment variables from .env file if it exists
@@ -212,6 +226,7 @@ async fn shutdown_signal(shutdown: tokio_util::sync::CancellationToken) {
     shutdown.cancel();
 }
 
+/// Initialises tracing with an env-filter (`RUST_LOG` or `api=debug,tower_http=info`).
 fn init_tracing() {
     tracing_subscriber::registry()
         .with(
@@ -222,6 +237,7 @@ fn init_tracing() {
         .init();
 }
 
+/// SPA fallback handler; returns 404 for unknown `/api/` routes.
 async fn not_found() -> StatusCode {
     StatusCode::NOT_FOUND
 }

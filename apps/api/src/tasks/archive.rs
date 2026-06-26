@@ -1,3 +1,6 @@
+//! Download archive generation: zip images on a blocking thread, update job
+//! status, fire SSE event. Entries are stored uncompressed.
+
 use crate::AppState;
 use crate::ServerEvent;
 use anyhow::{Context, Result};
@@ -6,6 +9,7 @@ use tracing::{error, info};
 use uuid::Uuid;
 use zip::write::{FileOptions, ZipWriter};
 
+/// Input for the archive background task: job id + (absolute_path, filename) pairs.
 #[derive(Debug)]
 pub(crate) struct ArchiveTask {
     pub job_id: Uuid,
@@ -13,6 +17,8 @@ pub(crate) struct ArchiveTask {
     pub download_root: PathBuf,
 }
 
+/// Runs the archive task on a blocking thread, then updates the job row and
+/// emits a `download_job_updated` SSE event on success or failure.
 pub(crate) async fn process_archive_job(state: AppState, task: ArchiveTask) {
     let job_id = task.job_id;
     match spawn_blocking_zip(task).await {
@@ -62,6 +68,7 @@ pub(crate) async fn process_archive_job(state: AppState, task: ArchiveTask) {
     }
 }
 
+/// Zips all files on a blocking thread using `Stored` (no compression).
 async fn spawn_blocking_zip(task: ArchiveTask) -> Result<String> {
     tokio::task::spawn_blocking(move || {
         let downloads_dir = task.download_root.join("downloads");

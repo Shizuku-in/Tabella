@@ -1,3 +1,6 @@
+//! Hourly cleanup: expired download jobs, orphaned temp dirs, orphaned tags,
+//! orphaned media files. All deletions use TTL guards to avoid import/edit races.
+
 use sqlx::PgPool;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
@@ -16,6 +19,8 @@ struct ExpiredJobRow {
     file_path: Option<String>,
 }
 
+/// Runs every hour: deletes expired download jobs + zips, prunes orphaned
+/// temp dirs/older than 24h, and sweeps orphan tags + media files.
 pub(crate) async fn run_cleanup_worker(pool: PgPool, temp_root: PathBuf, media_root: PathBuf) {
     let mut interval = tokio::time::interval(Duration::from_secs(3600)); // Every hour
 
@@ -77,6 +82,8 @@ pub(crate) async fn run_cleanup_worker(pool: PgPool, temp_root: PathBuf, media_r
     }
 }
 
+/// Recursively deletes immediate child directories of `root` whose last
+/// modification time is older than `older_than`.
 async fn cleanup_old_child_dirs(root: &Path, label: &str, older_than: Duration) {
     if !root.exists() {
         return;

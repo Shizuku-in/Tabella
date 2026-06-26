@@ -1,3 +1,6 @@
+//! Image processing pipeline: SHA256 hashing → thumbnail/sample WebP encoding.
+//! Uses Lanczos3 for resizing; output is always WebP.
+
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::Path;
@@ -7,6 +10,7 @@ use image::{DynamicImage, GenericImageView};
 use sha2::{Digest, Sha256};
 use webp::Encoder;
 
+/// Dimensions and relative paths for the generated thumbnail + sample.
 pub(crate) struct ImageMetadata {
     pub(crate) width: u32,
     pub(crate) height: u32,
@@ -14,6 +18,8 @@ pub(crate) struct ImageMetadata {
     pub(crate) sample_path: String,
 }
 
+/// Hashes file contents with SHA-256. Used as both the dedup key and the
+/// on-disk filename stem for derivatives.
 pub(crate) fn compute_sha256(path: &Path) -> Result<String> {
     let file = File::open(path)?;
     let mut reader = BufReader::new(file);
@@ -31,6 +37,8 @@ pub(crate) fn compute_sha256(path: &Path) -> Result<String> {
     Ok(hex::encode(hasher.finalize()))
 }
 
+/// Opens an image, generates thumbnail + sample WebP derivatives, and returns
+/// their metadata. `sample_size = 0` means no downscaling.
 pub(crate) fn process_image(
     source_path: &Path,
     media_root: &Path,
@@ -87,6 +95,7 @@ pub(crate) fn process_image(
     })
 }
 
+/// Encodes an image to WebP. Converts non-RGB/RGBA images to RGBA8 first.
 fn encode_webp(img: &DynamicImage, output_path: &Path, quality: f32) -> Result<()> {
     // webp crate encoder expects rgb or rgba
     let rgba; // declare outside to extend lifetime
