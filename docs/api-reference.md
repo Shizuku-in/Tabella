@@ -156,6 +156,16 @@ When both `rating` and `max_rating` are supplied they are ANDed (intersection). 
 
 ---
 
+### `GET /api/images/{id}`
+
+**any** — Fetch a single image's full metadata by ID. Returns the same [image list item](#image-list-item) shape as `GET /api/images`, including `is_favorite`, `tags`, and `uploader` for the calling user.
+
+**Response 200** — [image list item](#image-list-item).
+
+**Errors** — `image_not_found`
+
+---
+
 ### `PATCH /api/images/{id}`
 
 **editor** — Update an image's rating and/or tags.
@@ -175,6 +185,32 @@ Response: `204 No Content`.
 **editor** — Permanently delete an image and its media files. `204 No Content`.
 
 **Errors** — `image_not_found`
+
+---
+
+### `GET /api/tags`
+
+**any** — Browse all tags with usage counts, sorted by frequency (most-used first, then alphabetically). Useful for tag clouds and filter sidebars.
+
+**Query parameters**
+
+| param       | description                                                |
+| ----------- | ---------------------------------------------------------- |
+| `namespace` | filter to a single namespace (e.g. `artist`); omit for all |
+| `limit`     | 1–500, default 100                                         |
+
+**Response 200**
+
+```json
+{
+  "items": [
+    { "tag": "1girl", "count": 1280 },
+    { "tag": "artist:foo", "count": 42 }
+  ]
+}
+```
+
+`count` is the number of images carrying the tag (0 for unused tags).
 
 ---
 

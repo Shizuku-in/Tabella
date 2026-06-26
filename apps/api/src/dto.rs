@@ -138,6 +138,14 @@ pub(crate) struct TagSuggestQuery {
     pub(crate) limit: Option<u32>,
 }
 
+#[derive(Debug, Clone, Deserialize, Serialize, Default)]
+pub(crate) struct ListTagsQuery {
+    /// Filter to a single namespace (e.g. `artist`). Omit for all namespaces.
+    pub(crate) namespace: Option<String>,
+    /// Max results (1–500, default 100).
+    pub(crate) limit: Option<u32>,
+}
+
 #[derive(Debug, Clone, Deserialize)]
 pub(crate) struct UpdateImageRequest {
     pub(crate) rating: Option<Rating>,

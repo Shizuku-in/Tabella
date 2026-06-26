@@ -12,7 +12,8 @@ use crate::{
     AppState,
     dto::{
         DownloadQuality, ImageListItem, ImageSort, ListImagesQuery, ListImagesResponse,
-        RandomImageQuery, RandomImageResponse, Rating, TagSuggestQuery, UpdateImageRequest,
+        ListTagsQuery, RandomImageQuery, RandomImageResponse, Rating, TagSuggestQuery,
+        UpdateImageRequest,
     },
     tags::parse_tag,
 };
@@ -30,6 +31,7 @@ pub(crate) fn routes(state: AppState) -> Router {
             "/api/images/{image_id}",
             get(get_image).patch(update_image).delete(delete_image),
         )
+        .route("/api/tags", get(list_tags))
         .route("/api/tags/suggest", get(suggest_tags))
         .route(
             "/api/favorites/{image_id}",
@@ -798,6 +800,52 @@ async fn suggest_tags(
     Ok(Json(json!({
         "items": items
     })))
+}
+
+async fn list_tags(
+    State(state): State<AppState>,
+    jar: CookieJar,
+    Query(query): Query<ListTagsQuery>,
+) -> Result<Json<serde_json::Value>, ApiError> {
+    let _user = require_user(&state, &jar).await?;
+
+    let limit = query.limit.unwrap_or(100).clamp(1, 500) as i64;
+
+    let mut builder = sqlx::QueryBuilder::new(
+        "SELECT CASE WHEN t.namespace = '' THEN t.name ELSE t.namespace || ':' || t.name END AS tag, \
+         COUNT(it.image_id)::bigint AS count \
+         FROM tags t \
+         LEFT JOIN image_tags it ON it.tag_id = t.id ",
+    );
+
+    if let Some(ns) = &query.namespace {
+        builder.push("WHERE t.namespace = ");
+        builder.push_bind(ns.to_lowercase());
+    }
+
+    builder.push(
+        " GROUP BY t.id, t.namespace, t.name ORDER BY count DESC, t.namespace, t.name LIMIT ",
+    );
+    builder.push_bind(limit);
+
+    #[derive(sqlx::FromRow)]
+    struct TagRow {
+        tag: String,
+        count: i64,
+    }
+
+    let rows: Vec<TagRow> = builder
+        .build_query_as()
+        .fetch_all(&state.pool)
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
+
+    let items: Vec<serde_json::Value> = rows
+        .into_iter()
+        .map(|r| json!({ "tag": r.tag, "count": r.count }))
+        .collect();
+
+    Ok(Json(json!({ "items": items })))
 }
 
 async fn add_favorite(
