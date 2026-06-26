@@ -73,6 +73,7 @@ pub(crate) async fn run_cleanup_worker(pool: PgPool, temp_root: PathBuf, media_r
         cleanup_old_child_dirs(&temp_root.join("uploads"), "uploads", ORPHAN_TEMP_TTL).await;
 
         cleanup_orphan_media(&pool, &media_root).await;
+        cleanup_orphan_tags(&pool, ORPHAN_TEMP_TTL).await;
     }
 }
 
@@ -111,6 +112,33 @@ async fn cleanup_old_child_dirs(root: &Path, label: &str, older_than: Duration) 
             error!(?path, %label, %e, "Failed to delete orphaned temp directory");
         } else {
             info!(?path, %label, "Deleted orphaned temp directory");
+        }
+    }
+}
+
+/// Delete tags that are not referenced by any image and whose `created_at` is
+/// older than `older_than`. Unlike media files there is no import race (tag
+/// creation and image_tags insertion share a transaction), but a TTL avoids
+/// racing with in-flight edits that temporarily remove the last reference.
+async fn cleanup_orphan_tags(pool: &PgPool, older_than: Duration) {
+    let result = sqlx::query(
+        r#"
+        DELETE FROM tags
+        WHERE NOT EXISTS (SELECT 1 FROM image_tags WHERE tag_id = tags.id)
+          AND created_at < now() - $1::interval
+        "#,
+    )
+    .bind(format!("{} seconds", older_than.as_secs()))
+    .execute(pool)
+    .await;
+
+    match result {
+        Ok(r) if r.rows_affected() > 0 => {
+            info!(removed = r.rows_affected(), "Pruned orphan tags");
+        }
+        Ok(_) => {}
+        Err(e) => {
+            error!(%e, "Failed to prune orphan tags");
         }
     }
 }
