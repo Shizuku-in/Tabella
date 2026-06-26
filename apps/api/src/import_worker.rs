@@ -3,7 +3,8 @@
 //! # Pipeline
 //!
 //! ```text
-//! queued → running → extracting → processing → completed / failed
+//! queued → running → extracting → processing → completed
+//!                         ^-- zip/7z only; directory skip
 //! ```
 //!
 //! - **Crash recovery:** on startup, any `running`/`extracting`/`processing` jobs
