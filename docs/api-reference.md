@@ -41,9 +41,7 @@ No auth. Returns service status.
 {
   "status": "ok",
   "service": "tabella-api",
-  "version": "0.1.4",
-  "max_download_images": 200,
-  "download_retention_hours": 24
+  "version": "0.1.4"
 }
 ```
 

@@ -47,7 +47,7 @@ pub(crate) use guards::require_media_session;
 /// Builds the API router tree by merging all feature sub-routers.
 pub(crate) fn router(state: AppState) -> Router {
     Router::new()
-        .merge(health::routes(state.clone()))
+        .merge(health::routes())
         .merge(auth_handlers::routes(state.clone()))
         .merge(images::routes(state.clone()))
         .merge(imports::routes(state.clone()))

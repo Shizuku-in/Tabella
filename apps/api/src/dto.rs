@@ -23,8 +23,6 @@ pub(crate) struct HealthResponse {
     pub(crate) status: &'static str,
     pub(crate) service: &'static str,
     pub(crate) version: &'static str,
-    pub(crate) max_download_images: usize,
-    pub(crate) download_retention_hours: u64,
 }
 
 /// Role-based access control: `admin > editor > viewer`.
