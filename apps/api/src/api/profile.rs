@@ -38,31 +38,19 @@ async fn get_profile(
 ) -> Result<Json<UserResponse>, ApiError> {
     let user = require_user(&state, &jar).await?;
 
-    let row = sqlx::query!(
-        r#"
-        select id, username, role, created_at, avatar_url
-        from users
-        where id = $1
-        "#,
-        user.id
-    )
-    .fetch_one(&state.pool)
-    .await
-    .map_err(|e| ApiError::internal(e.into()))?;
-
-    use crate::dto::UserRole;
-    let role = match row.role.as_str() {
-        "admin" => UserRole::Admin,
-        "editor" => UserRole::Editor,
-        _ => UserRole::Viewer,
-    };
+    let created_at: time::OffsetDateTime =
+        sqlx::query_scalar("select created_at from users where id = $1")
+            .bind(user.id)
+            .fetch_one(&state.pool)
+            .await
+            .map_err(|e| ApiError::internal(e.into()))?;
 
     Ok(Json(UserResponse {
-        id: row.id,
-        username: row.username,
-        role,
-        created_at: row.created_at,
-        avatar_url: row.avatar_url,
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        created_at,
+        avatar_url: user.avatar_url,
     }))
 }
 
