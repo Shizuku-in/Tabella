@@ -139,7 +139,7 @@ export function AboutDialog({ open, onClose }: AboutDialogProps) {
         </Stack>
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
-        <Button onClick={onClose} variant="outlined">
+        <Button onClick={onClose} variant="text">
           {t('common.close')}
         </Button>
       </DialogActions>
