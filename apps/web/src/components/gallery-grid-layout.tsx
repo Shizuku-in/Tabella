@@ -1,5 +1,5 @@
 /**
- * Virtualized gallery grid: positions items and renders a scroll spacer.
+ * Virtualized gallery grid.
  */
 
 import { Box, useMediaQuery, useTheme } from '@mui/material'

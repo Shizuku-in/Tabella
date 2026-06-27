@@ -1,3 +1,7 @@
+/**
+ * Image component with a slide-up fade-in animation and loading placeholders.
+ */
+
 import { BrokenImage } from '@mui/icons-material'
 import { Box, CircularProgress, keyframes } from '@mui/material'
 import { useState } from 'react'

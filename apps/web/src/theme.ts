@@ -1,3 +1,7 @@
+/**
+ * MUI custom theme configuration, including tag colors and dark/light mode palettes.
+ */
+
 import type { PaletteMode } from '@mui/material'
 import { alpha, createTheme } from '@mui/material/styles'
 

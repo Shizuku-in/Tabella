@@ -1,3 +1,7 @@
+/**
+ * Main gallery page: fetches images, manages layout, pagination, and multi-selection state.
+ */
+
 import { Alert, Box, CircularProgress, Snackbar, Stack, Typography } from '@mui/material'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'

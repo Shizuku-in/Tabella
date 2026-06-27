@@ -1,3 +1,7 @@
+/**
+ * User profile page to view current session details and manage account settings.
+ */
+
 import { Edit, Save } from '@mui/icons-material'
 import {
   Alert,

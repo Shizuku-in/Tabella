@@ -1,4 +1,9 @@
+/**
+ * Page for configuring global server settings (admin only).
+ */
+
 /* eslint-disable react-hooks/set-state-in-effect */
+
 import { Save } from '@mui/icons-material'
 import {
   Alert,

@@ -1,5 +1,5 @@
 /**
- * Lightbox side panel: metadata, file sizes, tag editing, and rating controls.
+ * Lightbox side panel for metadata.
  */
 
 import { Save } from '@mui/icons-material'

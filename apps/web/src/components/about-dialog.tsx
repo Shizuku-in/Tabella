@@ -1,5 +1,5 @@
 /**
- * About dialog: version, licence, and project links.
+ * About tabella dialog.
  */
 
 import { GitHub } from '@mui/icons-material'

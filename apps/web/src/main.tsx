@@ -1,3 +1,7 @@
+/**
+ * Application entry point injecting React root and initializing i18next.
+ */
+
 import './index.css'
 import './i18n.ts'
 

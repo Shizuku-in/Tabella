@@ -1,3 +1,7 @@
+/**
+ * Fallback 404 error page for unmatched routes.
+ */
+
 import { ErrorOutlined, HomeOutlined } from '@mui/icons-material'
 import { Box, Button, Stack, Typography } from '@mui/material'
 import { useTranslation } from 'react-i18next'

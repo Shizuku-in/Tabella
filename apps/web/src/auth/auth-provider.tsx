@@ -1,4 +1,9 @@
+/**
+ * Global authentication context provider for managing session state and login/logout operations.
+ */
+
 /* eslint-disable react-refresh/only-export-components */
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { createContext, useContext } from 'react'

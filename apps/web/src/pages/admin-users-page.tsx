@@ -1,3 +1,7 @@
+/**
+ * Page for managing user accounts, roles, and creation of new users (admin only).
+ */
+
 import { AddOutlined, DeleteOutlined, EditOutlined } from '@mui/icons-material'
 import {
   Alert,

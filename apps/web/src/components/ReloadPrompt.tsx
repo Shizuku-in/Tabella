@@ -1,3 +1,7 @@
+/**
+ * Service worker prompt notifying users when a new app version is available or ready for offline use. (PWA)
+ */
+
 import { Alert, AlertTitle, Button, Snackbar } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import { useRegisterSW } from 'virtual:pwa-register/react'

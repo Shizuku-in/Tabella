@@ -1,5 +1,5 @@
 /**
- * Gallery header: result count and current sort/filter summary.
+ * Gallery header for result count and current sort/filter summary.
  */
 
 import { Stack, Typography } from '@mui/material'

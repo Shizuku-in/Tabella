@@ -1,3 +1,7 @@
+/**
+ * Floating action bar shown during multi-selection mode for batch operations like downloads.
+ */
+
 import { Close, Download, SelectAll } from '@mui/icons-material'
 import { Button, Fade, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material'
 import { useTranslation } from 'react-i18next'

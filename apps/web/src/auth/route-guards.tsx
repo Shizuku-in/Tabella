@@ -1,3 +1,7 @@
+/**
+ * React Router guards to protect routes and redirect unauthenticated users to the login page.
+ */
+
 import { useTranslation } from 'react-i18next'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 

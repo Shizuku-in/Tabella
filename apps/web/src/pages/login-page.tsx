@@ -1,4 +1,8 @@
-﻿import { LockOutlined } from '@mui/icons-material'
+/**
+ * Authentication page for user login and session initialization.
+ */
+
+import { LockOutlined } from '@mui/icons-material'
 import {
   Alert,
   Box,

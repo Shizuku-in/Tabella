@@ -1,3 +1,7 @@
+/**
+ * Utility component to display full-screen loading indicators or centered message states.
+ */
+
 import { CircularProgress, Stack, Typography } from '@mui/material'
 
 interface FullscreenStateProps {

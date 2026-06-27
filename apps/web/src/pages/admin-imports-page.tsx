@@ -1,3 +1,7 @@
+/**
+ * Page for managing image imports (editor+).
+ */
+
 import {
   Close as CloseIcon,
   CloudUploadOutlined,

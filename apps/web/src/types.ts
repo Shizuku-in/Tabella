@@ -1,3 +1,7 @@
+/**
+ * Global TypeScript interfaces and type definitions for the application domain.
+ */
+
 export type LayoutMode = 'grid' | 'masonry' | 'justified'
 export type GallerySort = 'newest' | 'oldest' | 'filename_asc' | 'filename_desc' | 'random'
 export type AuthStatus = 'loading' | 'authenticated' | 'anonymous'
