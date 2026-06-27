@@ -41,6 +41,7 @@ import { forwardRef, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
+import { useAuth } from '../auth/auth-provider.tsx'
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { deleteImage, suggestTags, updateImage } from '../lib/api'
@@ -87,6 +88,8 @@ export function LightboxViewer({
   onToggleFavorite,
 }: LightboxViewerProps) {
   const { t } = useTranslation()
+  const { user } = useAuth()
+  const canEdit = user?.role === 'admin' || user?.role === 'editor'
   const { lightboxImageQuality, showLightboxTags } = useGalleryPreferencesStore(
     useShallow((state) => ({
       lightboxImageQuality: state.lightboxImageQuality,
@@ -468,21 +471,23 @@ export function LightboxViewer({
             </IconButton>
           </Tooltip>
 
-          <Tooltip title={t('gallery.viewer.delete')} placement="bottom">
-            <IconButton
-              sx={{
-                color: 'action.active',
-                bgcolor: 'background.paper',
-                '&:hover': { bgcolor: 'error.main', color: 'error.contrastText' },
-              }}
-              onClick={(e) => {
-                e.stopPropagation()
-                setShowDeleteDialog(true)
-              }}
-            >
-              <DeleteOutlined />
-            </IconButton>
-          </Tooltip>
+          {canEdit && (
+            <Tooltip title={t('gallery.viewer.delete')} placement="bottom">
+              <IconButton
+                sx={{
+                  color: 'action.active',
+                  bgcolor: 'background.paper',
+                  '&:hover': { bgcolor: 'error.main', color: 'error.contrastText' },
+                }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowDeleteDialog(true)
+                }}
+              >
+                <DeleteOutlined />
+              </IconButton>
+            </Tooltip>
+          )}
 
           <Tooltip title={t('gallery.viewer.exit')} placement="bottom">
             <IconButton
@@ -577,6 +582,7 @@ export function LightboxViewer({
         setHasChanges={setHasChanges}
         isSaving={isSaving}
         handleSave={handleSave}
+        canEdit={canEdit}
       />
 
       {/* Delete Confirmation Dialog */}
