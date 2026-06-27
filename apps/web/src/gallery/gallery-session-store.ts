@@ -1,3 +1,7 @@
+/**
+ * Session-scoped gallery state: search, filters, sort, selection.
+ */
+
 import { create } from 'zustand'
 
 import type { GallerySort, RatingFilter } from '../types.ts'

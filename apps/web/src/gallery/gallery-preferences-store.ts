@@ -1,3 +1,7 @@
+/**
+ * Persisted gallery preferences: layout, visibility toggles, sort order.
+ */
+
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
