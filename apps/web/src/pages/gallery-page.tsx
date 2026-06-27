@@ -13,6 +13,7 @@ import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { useGalleryQuery } from '../hooks/use-gallery-query.ts'
 import { createDownloadJob, getApiErrorMessage, toggleFavorite } from '../lib/api.ts'
 import { SNACKBAR_DURATION_LONG } from '../lib/constants.ts'
+import { QUERY_KEYS } from '../lib/query-keys.ts'
 
 export function GalleryPage() {
   const { t } = useTranslation()
@@ -88,7 +89,7 @@ export function GalleryPage() {
 
     try {
       await toggleFavorite(id, newValue)
-      await queryClient.invalidateQueries({ queryKey: ['gallery'] })
+      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.GALLERY })
     } catch (error) {
       console.error('Failed to toggle favorite', error)
       setFavoriteOverrides((currentOverrides) => ({

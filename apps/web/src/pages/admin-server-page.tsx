@@ -22,6 +22,7 @@ import { useTranslation } from 'react-i18next'
 
 import { getApiErrorMessage, request } from '../lib/api.ts'
 import { SETTINGS_PANEL_HEIGHT, SNACKBAR_DURATION_SHORT } from '../lib/constants.ts'
+import { QUERY_KEYS } from '../lib/query-keys.ts'
 
 interface ServerSettings {
   max_download_images: number
@@ -114,7 +115,7 @@ export function AdminServerPage() {
   const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error'>('success')
 
   const settingsQuery = useQuery({
-    queryKey: ['adminSettings'],
+    queryKey: QUERY_KEYS.ADMIN_SETTINGS,
     queryFn: async () => {
       return request<ServerSettings>('/api/settings')
     },
@@ -136,7 +137,7 @@ export function AdminServerPage() {
       })
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(['adminSettings'], data)
+      queryClient.setQueryData(QUERY_KEYS.ADMIN_SETTINGS, data)
       setSettings(toFormState(data))
       setIsDirty(false)
       setSnackbarSeverity('success')

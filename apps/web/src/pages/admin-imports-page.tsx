@@ -43,6 +43,7 @@ import {
   uploadWithProgress,
 } from '../lib/api.ts'
 import { SNACKBAR_DURATION_LONG } from '../lib/constants.ts'
+import { QUERY_KEYS } from '../lib/query-keys.ts'
 import type { ImportJobRow, ImportJobStatus } from '../types.ts'
 
 interface LocalUploadJob {
@@ -98,12 +99,12 @@ export function AdminImportsPage() {
   useServerEvents(
     'import_job_updated',
     useCallback(() => {
-      queryClient.invalidateQueries({ queryKey: ['importJobs'] })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.IMPORT_JOBS })
     }, [queryClient]),
   )
 
   const jobsQuery = useQuery({
-    queryKey: ['importJobs'],
+    queryKey: QUERY_KEYS.IMPORT_JOBS,
     queryFn: async () => {
       return request<{ items: ImportJobRow[] }>('/api/admin/imports')
     },

@@ -10,6 +10,7 @@ import AppShell from './app-shell.tsx'
 import { AuthProvider } from './auth/auth-provider.tsx'
 import { RequireAuth, RequireRole } from './auth/route-guards.tsx'
 import { ReloadPrompt } from './components/ReloadPrompt.tsx'
+import { ROUTES } from './lib/routes.ts'
 import { AdminImportsPage } from './pages/admin-imports-page.tsx'
 import { AdminServerPage } from './pages/admin-server-page.tsx'
 import { AdminUsersPage } from './pages/admin-users-page.tsx'
@@ -57,17 +58,17 @@ function App() {
           <AuthProvider>
             <BrowserRouter>
               <Routes>
-                <Route path="/login" element={<LoginPage />} />
+                <Route path={ROUTES.LOGIN} element={<LoginPage />} />
                 <Route element={<RequireAuth />}>
                   <Route element={<AppShell mode={mode} onToggleMode={handleToggleMode} />}>
                     <Route index element={<GalleryPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
                     <Route element={<RequireRole role="editor" />}>
-                      <Route path="/admin/imports" element={<AdminImportsPage />} />
+                      <Route path={ROUTES.ADMIN_IMPORTS} element={<AdminImportsPage />} />
                     </Route>
                     <Route element={<RequireRole role="admin" />}>
-                      <Route path="/admin/users" element={<AdminUsersPage />} />
-                      <Route path="/admin/server" element={<AdminServerPage />} />
+                      <Route path={ROUTES.ADMIN_USERS} element={<AdminUsersPage />} />
+                      <Route path={ROUTES.ADMIN_SERVER} element={<AdminServerPage />} />
                     </Route>
                   </Route>
                 </Route>

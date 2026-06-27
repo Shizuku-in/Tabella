@@ -4,6 +4,7 @@ import type { ReactNode } from 'react'
 import { createContext, useContext } from 'react'
 
 import { getMe, login as loginRequest, logout as logoutRequest } from '../lib/api.ts'
+import { QUERY_KEYS } from '../lib/query-keys.ts'
 import type { AuthStatus, SessionUser } from '../types.ts'
 
 interface AuthContextValue {
@@ -18,7 +19,7 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
   const meQuery = useQuery({
-    queryKey: ['auth', 'me'],
+    queryKey: QUERY_KEYS.AUTH_ME,
     queryFn: getMe,
     retry: false,
   })
@@ -39,12 +40,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     async login(credentials) {
       const response = await loginMutation.mutateAsync(credentials)
-      queryClient.setQueryData(['auth', 'me'], response)
+      queryClient.setQueryData(QUERY_KEYS.AUTH_ME, response)
       return response.user
     },
     async logout() {
       await logoutMutation.mutateAsync()
-      queryClient.setQueryData(['auth', 'me'], null)
+      queryClient.setQueryData(QUERY_KEYS.AUTH_ME, null)
     },
   }
 

@@ -27,6 +27,7 @@ import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { useDownloadTracker } from '../hooks/use-download-tracker.ts'
 import { SNACKBAR_DURATION_LONG } from '../lib/constants.ts'
+import { ROUTES } from '../lib/routes.ts'
 import { SearchBar } from './search-bar.tsx'
 import {
   FavoritesControl,
@@ -52,11 +53,11 @@ export function TopNavigation({
 }: TopNavigationProps) {
   const { t } = useTranslation()
   const location = useLocation()
-  const isGalleryRoute = location.pathname === '/'
-  const isAdminImportsRoute = location.pathname.startsWith('/admin/imports')
-  const isAdminServerRoute = location.pathname.startsWith('/admin/server')
-  const isAdminUsersRoute = location.pathname.startsWith('/admin/users')
-  const isProfileRoute = location.pathname.startsWith('/profile')
+  const isGalleryRoute = location.pathname === ROUTES.HOME
+  const isAdminImportsRoute = location.pathname.startsWith(ROUTES.ADMIN_IMPORTS)
+  const isAdminServerRoute = location.pathname.startsWith(ROUTES.ADMIN_SERVER)
+  const isAdminUsersRoute = location.pathname.startsWith(ROUTES.ADMIN_USERS)
+  const isProfileRoute = location.pathname.startsWith(ROUTES.PROFILE)
 
   const topBarConfig = useGalleryPreferencesStore((state) => state.topBarConfig)
 
@@ -127,7 +128,7 @@ export function TopNavigation({
           >
             <Typography
               component={RouterLink}
-              to="/"
+              to={ROUTES.HOME}
               variant="h5"
               sx={{
                 flexShrink: 0,

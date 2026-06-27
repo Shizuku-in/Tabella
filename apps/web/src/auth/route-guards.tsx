@@ -2,6 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 
 import { FullscreenState } from '../components/fullscreen-state.tsx'
+import { ROUTES } from '../lib/routes.ts'
 import type { UserRole } from '../types.ts'
 import { useAuth } from './auth-provider.tsx'
 
@@ -21,7 +22,7 @@ export function RequireAuth() {
 
   if (status === 'anonymous') {
     const next = `${location.pathname}${location.search}${location.hash}`
-    return <Navigate to={`/login?next=${encodeURIComponent(next)}`} replace />
+    return <Navigate to={`${ROUTES.LOGIN}?next=${encodeURIComponent(next)}`} replace />
   }
 
   return <Outlet />
@@ -47,7 +48,7 @@ export function RequireRole({ role }: { role: UserRole }) {
   }
 
   if (!user || ROLE_WEIGHT[user.role] < ROLE_WEIGHT[role]) {
-    return <Navigate to="/" replace />
+    return <Navigate to={ROUTES.HOME} replace />
   }
 
   return <Outlet />

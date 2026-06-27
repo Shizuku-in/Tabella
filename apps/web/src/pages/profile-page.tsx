@@ -19,6 +19,7 @@ import { useAuth } from '../auth/auth-provider.tsx'
 import { ApiError, getApiErrorMessage, request, uploadWithProgress } from '../lib/api.ts'
 import { API_ERROR_CODES } from '../lib/api-error-codes.ts'
 import { SNACKBAR_DURATION_SHORT } from '../lib/constants.ts'
+import { QUERY_KEYS } from '../lib/query-keys.ts'
 import type { SessionUser } from '../types.ts'
 
 interface ProfileFieldErrors {
@@ -129,7 +130,7 @@ export function ProfilePage() {
       setAvatarPreview(null)
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      queryClient.setQueryData(['auth', 'me'], (old: any) => {
+      queryClient.setQueryData(QUERY_KEYS.AUTH_ME, (old: any) => {
         if (!old || !old.user) return old
         return {
           ...old,

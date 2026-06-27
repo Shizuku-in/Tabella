@@ -23,6 +23,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useAuth } from '../auth/auth-provider.tsx'
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
+import { ROUTES } from '../lib/routes.ts'
 import type { GallerySort, LayoutMode, RatingFilter } from '../types.ts'
 import { AboutDialog } from './about-dialog.tsx'
 
@@ -296,8 +297,8 @@ export function UserControl() {
 
         <MenuItem
           component={RouterLink}
-          to="/profile"
-          selected={location.pathname === '/profile'}
+          to={ROUTES.PROFILE}
+          selected={location.pathname === ROUTES.PROFILE}
           onClick={() => setAnchorEl(null)}
         >
           <PersonOutlined fontSize="small" sx={{ mr: 1 }} />
@@ -307,8 +308,8 @@ export function UserControl() {
         {isAdmin && (
           <MenuItem
             component={RouterLink}
-            to="/admin/users"
-            selected={location.pathname.startsWith('/admin/users')}
+            to={ROUTES.ADMIN_USERS}
+            selected={location.pathname.startsWith(ROUTES.ADMIN_USERS)}
             onClick={() => setAnchorEl(null)}
           >
             <GroupOutlined fontSize="small" sx={{ mr: 1 }} />
@@ -319,8 +320,8 @@ export function UserControl() {
         {isEditor && (
           <MenuItem
             component={RouterLink}
-            to="/admin/imports"
-            selected={location.pathname.startsWith('/admin/imports')}
+            to={ROUTES.ADMIN_IMPORTS}
+            selected={location.pathname.startsWith(ROUTES.ADMIN_IMPORTS)}
             onClick={() => setAnchorEl(null)}
           >
             <PlaylistAdd fontSize="small" sx={{ mr: 1 }} />
@@ -331,8 +332,8 @@ export function UserControl() {
         {isAdmin && (
           <MenuItem
             component={RouterLink}
-            to="/admin/server"
-            selected={location.pathname.startsWith('/admin/server')}
+            to={ROUTES.ADMIN_SERVER}
+            selected={location.pathname.startsWith(ROUTES.ADMIN_SERVER)}
             onClick={() => setAnchorEl(null)}
           >
             <AdminPanelSettingsOutlined fontSize="small" sx={{ mr: 1 }} />

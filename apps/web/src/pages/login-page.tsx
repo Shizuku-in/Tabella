@@ -1,4 +1,4 @@
-import { LockOutlined } from '@mui/icons-material'
+﻿import { LockOutlined } from '@mui/icons-material'
 import {
   Alert,
   Box,
@@ -18,6 +18,7 @@ import { Navigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../auth/auth-provider.tsx'
 import { FullscreenState } from '../components/fullscreen-state.tsx'
 import { getApiErrorMessage } from '../lib/api.ts'
+import { ROUTES } from '../lib/routes.ts'
 
 export function LoginPage() {
   const { t } = useTranslation()
@@ -28,8 +29,8 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({})
-  const next = searchParams.get('next') || '/'
-  const targetLabel = useMemo(() => (next === '/' ? 'gallery' : next), [next])
+  const next = searchParams.get('next') || ROUTES.HOME
+  const targetLabel = useMemo(() => (next === ROUTES.HOME ? 'gallery' : next), [next])
 
   if (status === 'loading') {
     return (

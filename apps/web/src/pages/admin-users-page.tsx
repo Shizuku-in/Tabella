@@ -26,6 +26,7 @@ import { useAuth } from '../auth/auth-provider.tsx'
 import { UserDialog } from '../components/user-dialog.tsx'
 import { getApiErrorMessage, request } from '../lib/api.ts'
 import { SNACKBAR_DURATION_SHORT } from '../lib/constants.ts'
+import { QUERY_KEYS } from '../lib/query-keys.ts'
 import type { CreateUserDto, UpdateUserDto, UserRow } from '../types.ts'
 
 export function AdminUsersPage() {
@@ -51,7 +52,7 @@ export function AdminUsersPage() {
   }
 
   const usersQuery = useQuery({
-    queryKey: ['adminUsers'],
+    queryKey: QUERY_KEYS.ADMIN_USERS,
     queryFn: async () => {
       return request<UserRow[]>('/api/admin/users')
     },
@@ -66,7 +67,7 @@ export function AdminUsersPage() {
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ADMIN_USERS })
       showSnackbar(t('admin.users.createSuccess'), 'success')
     },
     onError: (err) => {
@@ -88,7 +89,7 @@ export function AdminUsersPage() {
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ADMIN_USERS })
       showSnackbar(t('admin.users.updateSuccess'), 'success')
     },
     onError: (err) => {
@@ -108,7 +109,7 @@ export function AdminUsersPage() {
       })
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminUsers'] })
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.ADMIN_USERS })
       showSnackbar(t('admin.users.deleteSuccess'), 'success')
     },
     onError: (err) => {

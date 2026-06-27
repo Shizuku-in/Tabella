@@ -1,3 +1,15 @@
+/**
+ * Gallery data fetching with cursor-based infinite scroll.
+ *
+ * Uses `useInfiniteQuery` to fetch pages from `GET /api/images`, flattening
+ * pages into a single item list. An `IntersectionObserver` on a sentinel
+ * `<div>` triggers `fetchNextPage` when there are more pages and the sentinel
+ * scrolls into view.
+ *
+ * Basic search and advanced search are mutually exclusive in the session store;
+ * this hook reads from both but routes the active filter set to the API.
+ */
+
 import { useInfiniteQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef } from 'react'
 import { useShallow } from 'zustand/react/shallow'
@@ -5,10 +17,13 @@ import { useShallow } from 'zustand/react/shallow'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import type { BackendImageListItem } from '../lib/api.ts'
 import { listImages } from '../lib/api.ts'
+import { QUERY_KEYS } from '../lib/query-keys.ts'
 import type { GalleryItem } from '../types.ts'
 
+/** Number of items per page in the gallery list. */
 const PAGE_SIZE = 50
 
+/** Maps backend `snake_case` fields to UI-facing camelCase. */
 function toGalleryItem(item: BackendImageListItem): GalleryItem {
   return {
     id: item.id,
@@ -30,6 +45,10 @@ function toGalleryItem(item: BackendImageListItem): GalleryItem {
   }
 }
 
+/**
+ * Returns the flat list of gallery items, the raw query state, and a ref to
+ * attach to a sentinel `<div>` for infinite scroll.
+ */
 export function useGalleryQuery() {
   const {
     searchTags,
@@ -67,7 +86,7 @@ export function useGalleryQuery() {
 
   const galleryQuery = useInfiniteQuery({
     queryKey: [
-      'gallery',
+      ...QUERY_KEYS.GALLERY,
       searchTags,
       advancedIncludeTags,
       excludeTags,
@@ -83,6 +102,7 @@ export function useGalleryQuery() {
       aspectRatioMax,
     ],
     queryFn: async ({ pageParam }) => {
+      // Basic and advanced search are mutually exclusive; active set wins.
       const tags = hasBasicSearch ? searchTags : advancedIncludeTags
 
       const response = await listImages({
@@ -116,6 +136,7 @@ export function useGalleryQuery() {
     [galleryQuery.data],
   )
 
+  // Sentinel `<div>` placed at the bottom of the gallery grid.
   const loadMoreRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -125,6 +146,7 @@ export function useGalleryQuery() {
       return undefined
     }
 
+    // Observe the sentinel; when it scrolls into view, fetch the next page.
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries

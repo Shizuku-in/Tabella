@@ -3,6 +3,8 @@ import { Box, Button, Stack, Typography } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 import { Link as RouterLink } from 'react-router-dom'
 
+import { ROUTES } from '../lib/routes.ts'
+
 export function NotFoundPage() {
   const { t } = useTranslation()
   return (
@@ -41,7 +43,7 @@ export function NotFoundPage() {
 
         <Button
           component={RouterLink}
-          to="/"
+          to={ROUTES.HOME}
           variant="outlined"
           size="large"
           startIcon={<HomeOutlined />}
