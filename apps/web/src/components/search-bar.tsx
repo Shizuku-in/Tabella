@@ -23,6 +23,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { suggestTags } from '../lib/api.ts'
+import { TAG_SUGGEST_DEBOUNCE_MS, TAG_SUGGEST_LIMIT } from '../lib/constants.ts'
 import { getTagColor } from '../lib/tags.ts'
 
 const CustomPopper = function (props: PopperProps) {
@@ -62,12 +63,12 @@ export function SearchBar() {
     }
     const timer = setTimeout(async () => {
       try {
-        const suggestions = await suggestTags(tagInput.trim(), 20)
+        const suggestions = await suggestTags(tagInput.trim(), TAG_SUGGEST_LIMIT)
         setTagSuggestions(suggestions.filter((s) => !searchTags.includes(s)))
       } catch {
         setTagSuggestions([])
       }
-    }, 300)
+    }, TAG_SUGGEST_DEBOUNCE_MS)
     return () => clearTimeout(timer)
   }, [tagInput, searchTags])
 

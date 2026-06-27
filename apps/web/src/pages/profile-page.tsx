@@ -18,6 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/auth-provider.tsx'
 import { ApiError, getApiErrorMessage, request, uploadWithProgress } from '../lib/api.ts'
 import { API_ERROR_CODES } from '../lib/api-error-codes.ts'
+import { SNACKBAR_DURATION_SHORT } from '../lib/constants.ts'
 import type { SessionUser } from '../types.ts'
 
 interface ProfileFieldErrors {
@@ -354,7 +355,7 @@ export function ProfilePage() {
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={SNACKBAR_DURATION_SHORT}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

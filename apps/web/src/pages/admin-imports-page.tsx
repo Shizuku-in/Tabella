@@ -42,6 +42,7 @@ import {
   request,
   uploadWithProgress,
 } from '../lib/api.ts'
+import { SNACKBAR_DURATION_LONG } from '../lib/constants.ts'
 import type { ImportJobRow, ImportJobStatus } from '../types.ts'
 
 interface LocalUploadJob {
@@ -494,7 +495,7 @@ export function AdminImportsPage() {
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
+        autoHideDuration={SNACKBAR_DURATION_LONG}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

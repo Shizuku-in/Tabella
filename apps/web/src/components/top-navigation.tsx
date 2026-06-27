@@ -26,6 +26,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { useDownloadTracker } from '../hooks/use-download-tracker.ts'
+import { SNACKBAR_DURATION_LONG } from '../lib/constants.ts'
 import { SearchBar } from './search-bar.tsx'
 import {
   FavoritesControl,
@@ -288,7 +289,7 @@ export function TopNavigation({
 
       <Snackbar
         open={error !== null}
-        autoHideDuration={6000}
+        autoHideDuration={SNACKBAR_DURATION_LONG}
         onClose={clearError}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

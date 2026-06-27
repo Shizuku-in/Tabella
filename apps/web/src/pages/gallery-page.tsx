@@ -12,6 +12,7 @@ import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { useGalleryQuery } from '../hooks/use-gallery-query.ts'
 import { createDownloadJob, getApiErrorMessage, toggleFavorite } from '../lib/api.ts'
+import { SNACKBAR_DURATION_LONG } from '../lib/constants.ts'
 
 export function GalleryPage() {
   const { t } = useTranslation()
@@ -262,7 +263,7 @@ export function GalleryPage() {
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={6000}
+        autoHideDuration={SNACKBAR_DURATION_LONG}
         onClose={handleCloseSnackbar}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

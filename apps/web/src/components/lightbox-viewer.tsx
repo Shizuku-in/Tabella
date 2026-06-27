@@ -40,6 +40,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { deleteImage, suggestTags, updateImage } from '../lib/api'
+import { TAG_SUGGEST_DEBOUNCE_MS, TAG_SUGGEST_LIMIT } from '../lib/constants'
 import { getTagColor } from '../lib/tags'
 import type { GalleryItem, Rating } from '../types'
 import { LightboxViewerInfo } from './lightbox-viewer-info'
@@ -131,12 +132,12 @@ export function LightboxViewer({
     }
     const timer = setTimeout(async () => {
       try {
-        const suggestions = await suggestTags(tagInput.trim(), 20)
+        const suggestions = await suggestTags(tagInput.trim(), TAG_SUGGEST_LIMIT)
         setTagSuggestions(suggestions.filter((s) => !editTags.includes(s)))
       } catch {
         setTagSuggestions([])
       }
-    }, 300)
+    }, TAG_SUGGEST_DEBOUNCE_MS)
     return () => clearTimeout(timer)
   }, [tagInput, editTags])
 

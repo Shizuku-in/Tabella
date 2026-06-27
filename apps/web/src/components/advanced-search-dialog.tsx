@@ -22,6 +22,7 @@ import { useShallow } from 'zustand/react/shallow'
 
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { suggestTags } from '../lib/api.ts'
+import { TAG_SUGGEST_DEBOUNCE_MS, TAG_SUGGEST_LIMIT } from '../lib/constants.ts'
 import { getTagColor } from '../lib/tags.ts'
 
 export interface AdvancedSearchDialogProps {
@@ -143,12 +144,12 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
     }
     const timer = setTimeout(async () => {
       try {
-        const suggestions = await suggestTags(tagInputInclude.trim(), 20)
+        const suggestions = await suggestTags(tagInputInclude.trim(), TAG_SUGGEST_LIMIT)
         setTagSuggestionsInclude(suggestions.filter((s) => !localIncludeTags.includes(s)))
       } catch {
         setTagSuggestionsInclude([])
       }
-    }, 300)
+    }, TAG_SUGGEST_DEBOUNCE_MS)
     return () => clearTimeout(timer)
   }, [tagInputInclude, localIncludeTags])
 
@@ -160,12 +161,12 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
     }
     const timer = setTimeout(async () => {
       try {
-        const suggestions = await suggestTags(tagInput.trim(), 20)
+        const suggestions = await suggestTags(tagInput.trim(), TAG_SUGGEST_LIMIT)
         setTagSuggestions(suggestions.filter((s) => !localExcludeTags.includes(s)))
       } catch {
         setTagSuggestions([])
       }
-    }, 300)
+    }, TAG_SUGGEST_DEBOUNCE_MS)
     return () => clearTimeout(timer)
   }, [tagInput, localExcludeTags])
 

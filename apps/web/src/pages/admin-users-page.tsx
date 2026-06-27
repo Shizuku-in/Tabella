@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/auth-provider.tsx'
 import { UserDialog } from '../components/user-dialog.tsx'
 import { getApiErrorMessage, request } from '../lib/api.ts'
+import { SNACKBAR_DURATION_SHORT } from '../lib/constants.ts'
 import type { CreateUserDto, UpdateUserDto, UserRow } from '../types.ts'
 
 export function AdminUsersPage() {
@@ -232,7 +233,7 @@ export function AdminUsersPage() {
 
       <Snackbar
         open={snackbar.open}
-        autoHideDuration={4000}
+        autoHideDuration={SNACKBAR_DURATION_SHORT}
         onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >

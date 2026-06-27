@@ -21,7 +21,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { getApiErrorMessage, request } from '../lib/api.ts'
-import { SETTINGS_PANEL_HEIGHT } from '../lib/constants.ts'
+import { SETTINGS_PANEL_HEIGHT, SNACKBAR_DURATION_SHORT } from '../lib/constants.ts'
 
 interface ServerSettings {
   max_download_images: number
@@ -436,7 +436,7 @@ export function AdminServerPage() {
 
       <Snackbar
         open={snackbarOpen}
-        autoHideDuration={4000}
+        autoHideDuration={SNACKBAR_DURATION_SHORT}
         onClose={() => setSnackbarOpen(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
