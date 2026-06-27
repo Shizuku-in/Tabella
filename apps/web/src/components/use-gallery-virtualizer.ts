@@ -1,3 +1,7 @@
+/**
+ * Layout virtualizer for the gallery.
+ */
+
 import { useEffect, useMemo, useState } from 'react'
 
 import type { GalleryItem, LayoutMode } from '../types.ts'
@@ -11,6 +15,7 @@ export interface VirtualizerPosition {
   index: number
 }
 
+/** Returns visible item positions based on scroll position and layout mode. */
 export function useGalleryVirtualizer({
   containerRef,
   items,
@@ -82,6 +87,7 @@ export function useGalleryVirtualizer({
     let totalH = 0
 
     if (layoutMode === 'grid') {
+      // Fixed cell size: every item fills a square. Rows and columns are uniform.
       const colWidth = (containerWidth - (columns - 1) * gap) / columns
       items.forEach((item, index) => {
         const row = Math.floor(index / columns)
@@ -92,10 +98,12 @@ export function useGalleryVirtualizer({
         if (y + colWidth > totalH) totalH = y + colWidth
       })
     } else if (layoutMode === 'masonry') {
+      // Place each item in the shortest column so far — keeps column heights roughly balanced.
       const colWidth = (containerWidth - (columns - 1) * gap) / columns
       const colHeights = new Array(columns).fill(0)
 
       items.forEach((item, index) => {
+        // Find the column with the smallest accumulated height
         let minCol = 0
         for (let c = 1; c < columns; c++) {
           if (colHeights[c] < colHeights[minCol]) minCol = c
@@ -111,6 +119,10 @@ export function useGalleryVirtualizer({
       })
       totalH = Math.max(...colHeights) - gap
     } else if (layoutMode === 'justified') {
+      // Fill rows to container width. Accumulate items until their projected
+      // width (at a target row height) exceeds the container, then scale down
+      // the row height to fit exactly. Last row is clamped to avoid stretching
+      // a single image across the full width.
       const targetHeight = justifiedRowHeight
       let currentRow: { item: GalleryItem; aspect: number; index: number }[] = []
       let currentAspectSum = 0
@@ -122,13 +134,13 @@ export function useGalleryVirtualizer({
         currentAspectSum += aspect
 
         const projectedWidth = currentAspectSum * targetHeight + (currentRow.length - 1) * gap
-
         const isLast = index === items.length - 1
+
         if (projectedWidth >= containerWidth || isLast) {
-          // Calculate the exactly fitting height for this row
+          // Fit the row exactly to container width by adjusting height
           let finalHeight = (containerWidth - (currentRow.length - 1) * gap) / currentAspectSum
 
-          // If it's the last row and it's too short, clamp it
+          // Last row with too few items: clamp to avoid a single image blowing up
           if (isLast && finalHeight > targetHeight * 1.5) {
             finalHeight = targetHeight
           }
@@ -151,13 +163,11 @@ export function useGalleryVirtualizer({
     return { positions: posArray, totalHeight: totalH }
   }, [items, layoutMode, containerWidth, columns, justifiedRowHeight, gap])
 
-  // Filter visible items
+  // Filter visible items relative to the container, not the window.
+  // Overscan extends the visible window vertically so items just outside
+  // the viewport are pre-rendered, reducing pop-in on fast scroll.
   const visiblePositions = useMemo(() => {
-    // scrollY is the absolute window scroll
-    // The container starts at containerTop relative to the top of the page.
-    // So the scroll position relative to the container is:
     const relativeScrollTop = scrollY - containerTop
-
     const visibleStart = relativeScrollTop - overscan
     const visibleEnd = relativeScrollTop + windowHeight + overscan
 

@@ -1,3 +1,7 @@
+/**
+ * Gallery preferences and visibility settings dialog.
+ */
+
 import {
   Box,
   Button,
@@ -110,6 +114,12 @@ function BreakpointSlider({
   )
 }
 
+/**
+ * Tabbed settings dialog: layout (grid/masonry/justified columns, row height,
+ * top-bar visibility), display (hover info, mobile details, results count),
+ * quality (gallery and lightbox image quality), and general preferences.
+ * Reads from and writes to the persisted {@link useGalleryPreferencesStore}.
+ */
 export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
   const { t, i18n } = useTranslation()
   const theme = useTheme()

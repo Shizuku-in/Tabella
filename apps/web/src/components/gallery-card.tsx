@@ -1,3 +1,7 @@
+/**
+ * Gallery image card with lazy loading, rating badge, and favorite toggle.
+ */
+
 import { DownloadOutlined, Favorite, FavoriteBorder } from '@mui/icons-material'
 import { Box, IconButton, Stack, Typography } from '@mui/material'
 import { alpha } from '@mui/material/styles'
@@ -28,6 +32,10 @@ export interface GalleryCardProps {
 
 import { useTranslation } from 'react-i18next'
 
+/**
+ * Renders a gallery image card: lazy-loaded thumbnail, rating badge, selection
+ * overlay, hover info (filename/dimensions/tags), and favorite toggle.
+ */
 export function GalleryCard({
   item,
   layoutMode,

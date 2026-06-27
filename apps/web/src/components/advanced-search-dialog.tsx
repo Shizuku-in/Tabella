@@ -1,3 +1,7 @@
+/**
+ * Advanced search dialog with date range, dimensions, and aspect-ratio filters.
+ */
+
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/set-state-in-effect */
 import {
@@ -50,6 +54,12 @@ const hideSpinButton = {
     },
 }
 
+/**
+ * Advanced search dialog with include/exclude tags, rating filter, date range,
+ * dimensions, and aspect-ratio filters. Reads from and writes to
+ * {@link useGallerySessionStore}; activating basic search clears these filters
+ * (mutual exclusion enforced in the store).
+ */
 export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProps) {
   const { t } = useTranslation()
   const {

@@ -1,3 +1,7 @@
+/**
+ * Full-screen image lightbox with keyboard and gallery navigation.
+ */
+
 /* eslint-disable react-hooks/set-state-in-effect, @typescript-eslint/no-explicit-any */
 import {
   BrokenImage,
@@ -66,6 +70,11 @@ interface LightboxViewerProps {
   onToggleFavorite?: (imageId: number) => void
 }
 
+/**
+ * Full-screen image viewer with keyboard/gallery navigation, tag editing,
+ * rating changes, and image deletion. State transitions: idle → navigating
+ * (ArrowLeft/Right) → editing (rating/tags panel) → deleting (confirm dialog).
+ */
 export function LightboxViewer({
   open,
   onClose,

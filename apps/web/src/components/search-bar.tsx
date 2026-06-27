@@ -1,3 +1,7 @@
+/**
+ * Tag-based search bar with autocomplete and advanced-search toggle.
+ */
+
 /* eslint-disable react-hooks/set-state-in-effect */
 import { ArrowBack, Search } from '@mui/icons-material'
 import type { PopperProps } from '@mui/material'
@@ -38,6 +42,10 @@ const CustomPopper = function (props: PopperProps) {
   )
 }
 
+/**
+ * Tag-based search bar with autocomplete and an advanced-search toggle.
+ * Activating basic search clears advanced filters (mutual exclusion).
+ */
 export function SearchBar() {
   const { t } = useTranslation()
   const { searchTags, setSearchTags } = useGallerySessionStore(
