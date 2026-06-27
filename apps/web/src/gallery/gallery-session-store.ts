@@ -46,6 +46,7 @@ interface GallerySessionState {
 
 export const useGallerySessionStore = create<GallerySessionState>((set) => ({
   searchTags: [],
+  /** Sets basic search tags. If advanced filters are active, clears them to avoid conflicts. */
   setSearchTags: (value) =>
     set((state) => {
       const isAdvancedActive =
@@ -76,6 +77,7 @@ export const useGallerySessionStore = create<GallerySessionState>((set) => ({
     }),
 
   sort: 'newest',
+  /** Switches sort order. Random sort generates a fresh seed to reshuffle. */
   setSort: (value) => {
     if (value === 'random') {
       set({ sort: value, randomSeed: Math.floor(Math.random() * 1000000) })
@@ -93,6 +95,7 @@ export const useGallerySessionStore = create<GallerySessionState>((set) => ({
   setFavoritesOnly: (value) => set({ favoritesOnly: value }),
 
   selectionMode: false,
+  /** Toggles selection mode. Exiting clears all selected IDs. */
   setSelectionMode: (value) =>
     set((state) => {
       if (!value && state.selectedIds.size > 0) {
@@ -102,6 +105,7 @@ export const useGallerySessionStore = create<GallerySessionState>((set) => ({
     }),
 
   selectedIds: new Set(),
+  /** Accepts a new set or an updater function `(prev) => new Set`. */
   setSelectedIds: (value) =>
     set((state) => ({
       selectedIds: typeof value === 'function' ? value(state.selectedIds) : value,

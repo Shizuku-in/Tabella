@@ -112,6 +112,8 @@ export const useGalleryPreferencesStore = create<GalleryPreferencesState>()(
       setTopBarConfig: (value) => set({ topBarConfig: value }),
     }),
     {
+      // Persisted to localStorage under key 'tabella.gallery.preferences'.
+      // Serialization (JSON) is handled automatically by zustand/persist.
       name: 'tabella.gallery.preferences',
       version: 1,
     },
