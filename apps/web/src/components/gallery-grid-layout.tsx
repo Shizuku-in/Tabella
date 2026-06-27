@@ -1,3 +1,7 @@
+/**
+ * Virtualized gallery grid: positions items and renders a scroll spacer.
+ */
+
 import { Box, useMediaQuery, useTheme } from '@mui/material'
 import { useRef } from 'react'
 

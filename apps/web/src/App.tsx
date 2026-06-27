@@ -1,3 +1,7 @@
+/**
+ * Root component: providers (MUI theme, dayjs, QueryClient, Auth, Router).
+ */
+
 import type { PaletteMode } from '@mui/material'
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs'

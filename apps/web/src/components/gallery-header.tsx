@@ -1,3 +1,7 @@
+/**
+ * Gallery header: result count and current sort/filter summary.
+ */
+
 import { Stack, Typography } from '@mui/material'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'

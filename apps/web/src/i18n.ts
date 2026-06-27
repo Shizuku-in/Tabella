@@ -1,3 +1,8 @@
+/**
+ * i18next configuration: Browser-language detection and English fallback.
+ * React escaping is disabled as React handles it by default.
+ */
+
 import i18n from 'i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import { initReactI18next } from 'react-i18next'
@@ -5,7 +10,7 @@ import { initReactI18next } from 'react-i18next'
 import en from './locales/en.json'
 import zhCN from './locales/zh-CN.json'
 
-// Extract type from English base
+/** Derive the translation key type from the English base. */
 export type Translations = typeof en
 
 i18n

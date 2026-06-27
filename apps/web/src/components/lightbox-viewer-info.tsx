@@ -1,3 +1,7 @@
+/**
+ * Lightbox side panel: metadata, file sizes, tag editing, and rating controls.
+ */
+
 import { Save } from '@mui/icons-material'
 import type { PopperProps } from '@mui/material'
 import {

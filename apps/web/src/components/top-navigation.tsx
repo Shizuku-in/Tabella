@@ -1,3 +1,7 @@
+/**
+ * Top navigation bar: gallery tabs, download tracker, user menu, theme toggle.
+ */
+
 import {
   DarkModeOutlined,
   DownloadOutlined,

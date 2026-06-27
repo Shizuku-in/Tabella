@@ -1,3 +1,7 @@
+/**
+ * About dialog: version, licence, and project links.
+ */
+
 import { GitHub } from '@mui/icons-material'
 import {
   Box,

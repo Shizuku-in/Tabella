@@ -1,3 +1,7 @@
+/**
+ * Create/edit user dialog (admin only).
+ */
+
 /* eslint-disable react-hooks/set-state-in-effect */
 import {
   Button,

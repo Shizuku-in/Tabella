@@ -1,3 +1,7 @@
+/**
+ * App shell: top navigation bar + scrollable content area.
+ */
+
 import type { PaletteMode } from '@mui/material'
 import { Box, Container } from '@mui/material'
 import { useState } from 'react'

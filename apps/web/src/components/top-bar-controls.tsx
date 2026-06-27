@@ -1,3 +1,7 @@
+/**
+ * Top-bar controls: sort, layout, rating filter, favorites, selection, overflow menu.
+ */
+
 import {
   AdminPanelSettingsOutlined,
   ArtTrack,
