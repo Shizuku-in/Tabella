@@ -1,3 +1,7 @@
+/**
+ * SSE-driven download job tracker with a 3s polling fallback.
+ */
+
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useCallback, useEffect, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
@@ -6,6 +10,10 @@ import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { formatApiErrorMessage } from '../lib/api.ts'
 import { useServerEvents } from './use-server-events.ts'
 
+/**
+ * Tracks a pending download job. Returns `isDownloading`, an optional error
+ * message, and a `clearError` callback.
+ */
 export function useDownloadTracker() {
   const [error, setError] = useState<string | null>(null)
 

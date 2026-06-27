@@ -1,10 +1,24 @@
+/**
+ * SSE singleton with reference-counted connections and backoff reconnect.
+ */
+
 import { useEffect } from 'react'
 
+/** Callback for SSE event data, optionally typed. */
 export type EventCallback<T = unknown> = (data: T) => void
 
-// Reconnect delays: 1s, 2s, 4s, 8s, 16s, capped at 30s
+/** Reconnect delays: 1s → 2s → 4s → 8s → 16s → 30s (cap). */
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000, 30000]
 
+/**
+ * Manages a singleton `EventSource` shared across all components.
+ *
+ * - Reference counting via `connect()` / `disconnect()` avoids duplicate
+ *   connections when multiple components subscribe.
+ * - Exponential-backoff reconnect with a 30s cap.
+ * - 401 pre-check: a `HEAD /api/events` probe runs before opening the
+ *   `EventSource`; if the server returns 401, reconnection is suppressed.
+ */
 class ServerEventsManager {
   private eventSource: EventSource | null = null
   private listeners: Map<string, Set<EventCallback>> = new Map()
@@ -148,6 +162,11 @@ class ServerEventsManager {
 
 export const serverEvents = new ServerEventsManager()
 
+/**
+ * Subscribes to a server-sent event. Automatically connects on mount and
+ * disconnects on unmount (reference-counted so the connection stays open
+ * while any component is subscribed).
+ */
 export function useServerEvents<T = unknown>(eventName: string, callback: EventCallback<T>) {
   useEffect(() => {
     serverEvents.connect()

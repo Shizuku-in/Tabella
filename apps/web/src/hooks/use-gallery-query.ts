@@ -1,13 +1,5 @@
 /**
- * Gallery data fetching with cursor-based infinite scroll.
- *
- * Uses `useInfiniteQuery` to fetch pages from `GET /api/images`, flattening
- * pages into a single item list. An `IntersectionObserver` on a sentinel
- * `<div>` triggers `fetchNextPage` when there are more pages and the sentinel
- * scrolls into view.
- *
- * Basic search and advanced search are mutually exclusive in the session store;
- * this hook reads from both but routes the active filter set to the API.
+ * Infinite-scroll gallery query with cursor-based pagination.
  */
 
 import { useInfiniteQuery } from '@tanstack/react-query'
