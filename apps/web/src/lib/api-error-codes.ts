@@ -1,3 +1,18 @@
+/**
+ * Mirror of the backend's error-code constants for the wire-format `error`
+ * field.
+ *
+ * These are the second of three layers that must stay in sync:
+ * 1. `apps/api/src/api/error_codes.rs` (Rust `&'static str`)
+ * 2. This file (TypeScript mirror)
+ * 3. `apps/web/src/locales/en.json` / `zh-CN.json` / ... (`api.errors.*` keys)
+ *
+ * Breaking the chain causes a build failure (the `ERROR_MESSAGE_MAP`
+ * uses `satisfies Record<ApiErrorCode, string>`).
+ *
+ * `NETWORK_ERROR` and `UPLOAD_ABORTED` are frontend-only
+ * (no corresponding Rust constant).
+ */
 export const API_ERROR_CODES = {
   AUTHENTICATION_REQUIRED: 'authentication_required',
   ADMIN_REQUIRED: 'admin_required',

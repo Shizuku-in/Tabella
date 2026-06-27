@@ -1,5 +1,13 @@
+/**
+ * Tag display helpers.
+ */
+
 import type { Theme } from '@mui/material/styles'
 
+/**
+ * Returns the MUI palette color for a tag based on its namespace.
+ * Bare tags (no `:`) and unknown namespaces fall back to `tags.unprefixed`.
+ */
 export function getTagColor(tag: string, theme: Theme): string {
   if (!tag.includes(':')) {
     return theme.palette.tags.unprefixed

@@ -1,9 +1,25 @@
+/**
+ * HTTP client and error model for the Tabella API.
+ *
+ * All requests carry `credentials: 'include'` (cookie-session auth).
+ * Backend `snake_case` responses are typed here; the query hook maps them
+ * to camelCase for the UI.
+ *
+ * Error responses use the shape `{ error: code, message, params }`.
+ * This module maps `code` to i18n keys via {@link ERROR_MESSAGE_MAP}.
+ */
+
 import i18n from '../i18n.ts'
 import type { AuthUserResponse, GallerySort, Rating } from '../types.ts'
 import { API_ERROR_CODES, type ApiErrorCode } from './api-error-codes.ts'
 
+/** Typed alias for the optional interpolation params in an API error. */
 export type ApiErrorParams = Record<string, unknown> | null
 
+/**
+ * Structured API error carrying the server's error code, a fallback message,
+ * and optional interpolation params for i18n.
+ */
 export class ApiError extends Error {
   readonly status: number
   readonly code?: string
@@ -76,6 +92,10 @@ function normalizeErrorParams(value: unknown): ApiErrorParams {
   return null
 }
 
+/**
+ * Translates a server error code to a user-facing message via i18n.
+ * Falls back to `api.errors.defaultRequestFailed` for unknown codes.
+ */
 export function formatApiErrorMessage(
   code?: string,
   params?: ApiErrorParams,
@@ -109,6 +129,7 @@ export function formatApiErrorMessage(
   return i18n.t('api.errors.defaultRequestFailed' as any, { defaultValue: fallbackMessage })
 }
 
+/** Extracts a translated message from an `ApiError`, `Error`, or unknown value. */
 export function getApiErrorMessage(error: unknown, fallbackMessage = 'Request failed.'): string {
   if (error instanceof ApiError) {
     return formatApiErrorMessage(error.code, error.params, error.fallbackMessage || fallbackMessage)
@@ -119,6 +140,11 @@ export function getApiErrorMessage(error: unknown, fallbackMessage = 'Request fa
   return fallbackMessage
 }
 
+/**
+ * Core fetch wrapper. Sets `credentials: 'include'` for cookie auth, infers
+ * `Content-Type: application/json` unless the body is FormData, and throws
+ * `ApiError` on non-2xx responses or network failure.
+ */
 export async function request<T>(input: string, init?: RequestInit): Promise<T> {
   const isFormData = init?.body instanceof FormData
   const headers = new Headers(init?.headers)
@@ -149,6 +175,7 @@ export async function request<T>(input: string, init?: RequestInit): Promise<T> 
   const body = isJson ? await response.json() : null
 
   if (!response.ok) {
+    // Normalize the backend { error, message, params } error response into a frontend ApiError
     throw new ApiError(
       response.status,
       body?.message ?? 'Request failed.',
@@ -160,6 +187,7 @@ export async function request<T>(input: string, init?: RequestInit): Promise<T> 
   return body as T
 }
 
+/** `GET /api/me` — current user. Returns `null` on 401. */
 export async function getMe(): Promise<AuthUserResponse | null> {
   try {
     return await request<AuthUserResponse>('/api/me')
@@ -172,6 +200,7 @@ export async function getMe(): Promise<AuthUserResponse | null> {
   }
 }
 
+/** `POST /api/auth/login` — sets session cookie. */
 export async function login(credentials: {
   username: string
   password: string
@@ -182,6 +211,10 @@ export async function login(credentials: {
   })
 }
 
+/**
+ * Multipart upload with progress tracking. Uses `XMLHttpRequest` instead of
+ * `fetch` because the Fetch API does not support upload progress events.
+ */
 export async function uploadWithProgress<T>(
   url: string,
   formData: FormData,
@@ -246,6 +279,7 @@ export async function uploadWithProgress<T>(
   })
 }
 
+/** `POST /api/auth/logout` — destroys session, clears cookie. */
 export async function logout(): Promise<void> {
   await request<void>('/api/auth/logout', {
     method: 'POST',
@@ -254,6 +288,7 @@ export async function logout(): Promise<void> {
 
 // ----- Gallery API -----
 
+/** Image detail used in the lightbox / detail view. */
 export interface ImageDetails {
   id: string
   hash: string
@@ -267,6 +302,7 @@ export interface ImageDetails {
   rating: 'safe' | 'suggestive' | 'explicit'
 }
 
+/** Raw image list item from the backend (`snake_case`). */
 export interface BackendImageListItem {
   id: number
   original_filename: string
@@ -290,13 +326,16 @@ export interface BackendImageListItem {
   } | null
 }
 
+/** Paginated image list response. `next_cursor` is null on the last page. */
 export interface BackendListImagesResponse {
   items: BackendImageListItem[]
   next_cursor: string | null
 }
 
+/** Derivative quality for downloads and random-image queries. */
 export type DownloadQuality = 'thumbnail' | 'sample' | 'original'
 
+/** Response from download job creation and status polling. */
 export interface DownloadJobResponse {
   id: string
   status: string
@@ -308,6 +347,7 @@ export interface DownloadJobResponse {
   error_detail?: string | null
 }
 
+/** `GET /api/images` — paginated list with cursor-based keyset pagination. */
 export async function listImages(query: {
   cursor?: string | null
   limit?: number
@@ -349,13 +389,14 @@ export async function listImages(query: {
   return request<BackendListImagesResponse>(`/api/images?${params.toString()}`)
 }
 
+/** `POST` or `DELETE /api/favorites/{id}` (idempotent). */
 export async function toggleFavorite(imageId: number, isFavorite: boolean): Promise<void> {
   await request<void>(`/api/favorites/${imageId}`, {
     method: isFavorite ? 'POST' : 'DELETE',
   })
 }
 
-// Update image rating and tags
+/** `PATCH /api/images/{id}` — updates rating, tags, note, source_url. */
 export async function updateImage(
   imageId: number,
   data: {
@@ -369,14 +410,14 @@ export async function updateImage(
   })
 }
 
-// Delete an image
+/** `DELETE /api/images/{id}` — permanently deletes the image and its files. */
 export async function deleteImage(imageId: number): Promise<void> {
   await request<void>(`/api/images/${imageId}`, {
     method: 'DELETE',
   })
 }
 
-// Suggest tags for autocomplete
+/** `GET /api/tags/suggest` — autocomplete tag names. */
 export async function suggestTags(query: string, limit?: number): Promise<string[]> {
   const params = new URLSearchParams({ q: query })
   if (limit) params.set('limit', limit.toString())
@@ -384,6 +425,7 @@ export async function suggestTags(query: string, limit?: number): Promise<string
   return res.items
 }
 
+/** `POST /api/download-jobs` — starts a background archive job. */
 export async function createDownloadJob(data: {
   image_ids: number[]
   quality: DownloadQuality
