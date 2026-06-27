@@ -262,6 +262,12 @@ export function LightboxViewer({
     setDownloadAnchorEl(null)
   }
 
+  /**
+   * Triggers a programmatic download by creating and clicking a temporary anchor tag.
+   *
+   * @param url - The source URL of the image to download
+   * @param filename - The target filename
+   */
   const triggerDownload = (url: string, filename: string) => {
     const link = document.createElement('a')
     link.href = url
@@ -283,6 +289,10 @@ export function LightboxViewer({
     return parts.length > 1 ? parts.pop()?.toUpperCase() : 'UNKNOWN'
   }
 
+  /**
+   * Submits the updated rating and tags to the backend.
+   * Defers the UI state update by calling `onUpdate()` so the parent can refresh.
+   */
   const handleSave = async () => {
     if (!item) return
     setIsSaving(true)
@@ -301,6 +311,11 @@ export function LightboxViewer({
     }
   }
 
+  /**
+   * Deletes the current image and attempts to navigate seamlessly to the next
+   * or previous image to prevent the viewer from closing abruptly, unless
+   * it is the last image in the gallery.
+   */
   const handleDeleteConfirm = async () => {
     if (!item) return
     setIsDeleting(true)

@@ -82,6 +82,9 @@ interface BreakpointSliderProps {
 
 const BREAKPOINTS = ['xs', 'sm', 'lg', 'xl'] as const
 
+/**
+ * A reusable group of sliders for configuring values across standard MUI breakpoints.
+ */
 function BreakpointSlider({
   value,
   onChange,

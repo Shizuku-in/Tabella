@@ -96,12 +96,18 @@ export function SearchBar() {
     }
   }, [searchTags, isMobile])
 
+  /**
+   * Closes the desktop search input if it loses focus and is empty.
+   */
   const handleSearchBlur = () => {
     if (!isMobile && searchTags.length === 0) {
       setSearchVisible(false)
     }
   }
 
+  /**
+   * Shared autocomplete component for both desktop (inline) and mobile (drawer) views.
+   */
   const renderAutocomplete = (isMobileView: boolean) => (
     <Autocomplete
       multiple

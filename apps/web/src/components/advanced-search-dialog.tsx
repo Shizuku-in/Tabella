@@ -180,6 +180,10 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
     return () => clearTimeout(timer)
   }, [tagInput, localExcludeTags])
 
+  /**
+   * Filters and restricts numeric inputs according to the specified mode, ensuring only
+   * valid numbers or integers are recorded in state. Clears relevant errors upon change.
+   */
   const handleNumericFieldChange = (
     field: keyof AdvancedSearchFieldErrors,
     setter: (value: string) => void,
@@ -197,6 +201,11 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
     }
   }
 
+  /**
+   * Validates all numeric constraints, converts local dates to ISO strings,
+   * updates the global search session state, and closes the dialog.
+   * If advanced filters are activated, basic search tags are cleared to enforce mutual exclusion.
+   */
   const handleApply = () => {
     const nextErrors = validateAdvancedSearchFields(
       {
@@ -241,6 +250,9 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
     onClose()
   }
 
+  /**
+   * Clears all local form state. (Does not apply to global state until saved)
+   */
   const handleClearAll = () => {
     setLocalIncludeTags([])
     setLocalExcludeTags([])
@@ -510,6 +522,10 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
   )
 }
 
+/**
+ * Validates the dimension and aspect ratio inputs for the advanced search form.
+ * Ensures values are positive numbers/integers where applicable.
+ */
 function validateAdvancedSearchFields(
   values: {
     minWidth: string
@@ -521,6 +537,7 @@ function validateAdvancedSearchFields(
 ): AdvancedSearchFieldErrors {
   const errors: AdvancedSearchFieldErrors = {}
 
+  /** Validates that the input is a safe integer greater than zero. */
   const validatePositiveInteger = (value: string, label: string) => {
     const trimmed = value.trim()
     if (!trimmed) return undefined
@@ -534,6 +551,7 @@ function validateAdvancedSearchFields(
     return undefined
   }
 
+  /** Validates that the input is a finite float/number greater than zero. */
   const validatePositiveNumber = (value: string, label: string) => {
     const trimmed = value.trim()
     if (!trimmed) return undefined
