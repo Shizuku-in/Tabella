@@ -3,11 +3,14 @@
  */
 
 import { Alert, AlertTitle, Button, Snackbar } from '@mui/material'
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useRegisterSW } from 'virtual:pwa-register/react'
 
 export function ReloadPrompt() {
   const { t } = useTranslation()
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   const {
     offlineReady: [offlineReady, setOfflineReady],
     needRefresh: [needRefresh, setNeedRefresh],
@@ -15,7 +18,8 @@ export function ReloadPrompt() {
   } = useRegisterSW({
     onRegisteredSW(_swUrl, r) {
       if (r) {
-        setInterval(
+        if (intervalRef.current) clearInterval(intervalRef.current)
+        intervalRef.current = setInterval(
           () => {
             r.update()
           },
@@ -27,6 +31,12 @@ export function ReloadPrompt() {
       console.log('SW registration error', error)
     },
   })
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+    }
+  }, [])
 
   return (
     <>
