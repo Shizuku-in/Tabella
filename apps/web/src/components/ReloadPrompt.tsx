@@ -21,7 +21,9 @@ export function ReloadPrompt() {
         if (intervalRef.current) clearInterval(intervalRef.current)
         intervalRef.current = setInterval(
           () => {
-            r.update()
+            r.update().catch(() => {
+              /* update check failed (offline, SW script unavailable, etc.) — try again next interval */
+            })
           },
           60 * 60 * 1000,
         ) // Check for updates every hour
