@@ -7,17 +7,20 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon/*', 'icons/*'],
+      includeAssets: ['favicon/*', 'icons/*', 'fonts/*'],
       workbox: {
+        globPatterns: ['**/*.{js,css,html,woff2}'],
         navigateFallbackDenylist: [/^\/api\//, /^\/media\//],
       },
       manifest: {
+        id: '/',
         name: 'Tabella',
         short_name: 'Tabella',
-        description: 'Advanced Media Gallery',
-        theme_color: '#ffffff',
+        description: 'A modern lite gallery.',
+        theme_color: '#0c0d11',
         background_color: '#ffffff',
         display: 'standalone',
+        categories: ['photo', 'entertainment'],
         icons: [
           {
             src: '/favicon/android-chrome-192x192.png',
@@ -28,6 +31,12 @@ export default defineConfig({
             src: '/favicon/android-chrome-512x512.png',
             sizes: '512x512',
             type: 'image/png',
+          },
+          {
+            src: '/favicon/android-chrome-512x512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
           },
         ],
       },

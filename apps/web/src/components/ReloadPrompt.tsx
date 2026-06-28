@@ -13,8 +13,15 @@ export function ReloadPrompt() {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(r) {
-      console.log('SW Registered: ' + r)
+    onRegisteredSW(_swUrl, r) {
+      if (r) {
+        setInterval(
+          () => {
+            r.update()
+          },
+          60 * 60 * 1000,
+        ) // Check for updates every hour
+      }
     },
     onRegisterError(error) {
       console.log('SW registration error', error)
@@ -25,6 +32,8 @@ export function ReloadPrompt() {
     <>
       <Snackbar
         open={offlineReady}
+        autoHideDuration={5000}
+        onClose={() => setOfflineReady(false)}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
         sx={{ mb: 2, ml: 2 }}
       >

@@ -22,7 +22,14 @@ mod tasks;
 use std::time::Duration;
 
 use anyhow::Context;
-use axum::{Router, http::StatusCode, middleware, routing::any};
+use axum::{
+    Router,
+    extract::Request,
+    http::{StatusCode, header},
+    middleware::{self, Next},
+    response::Response,
+    routing::any,
+};
 use config::Config;
 use sqlx::postgres::PgPoolOptions;
 use tower_http::services::ServeDir;
@@ -150,7 +157,9 @@ async fn main() -> anyhow::Result<()> {
         );
     }
 
-    let app = app.layer(TraceLayer::new_for_http());
+    let app = app
+        .layer(middleware::from_fn(pwa_no_cache))
+        .layer(TraceLayer::new_for_http());
 
     let listener = tokio::net::TcpListener::bind(config.listen_addr)
         .await
@@ -237,7 +246,20 @@ fn init_tracing() {
         .init();
 }
 
-/// SPA fallback handler; returns 404 for unknown `/api/` routes.
+/// Returns 404 for blocked static paths.
 async fn not_found() -> StatusCode {
     StatusCode::NOT_FOUND
+}
+
+/// Sets `Cache-Control: no-cache` on service-worker and manifest responses
+/// so that browsers and CDNs always revalidate these critical PWA files.
+async fn pwa_no_cache(request: Request, next: Next) -> Response {
+    let is_pwa_file = matches!(request.uri().path(), "/sw.js" | "/manifest.webmanifest");
+    let mut response = next.run(request).await;
+    if is_pwa_file {
+        response
+            .headers_mut()
+            .insert(header::CACHE_CONTROL, "no-cache".parse().unwrap());
+    }
+    response
 }
