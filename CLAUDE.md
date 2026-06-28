@@ -131,6 +131,24 @@ Plain SQLx migrations in `apps/api/migrations/` (`NNNN_name.sql`), embedded via 
 - Rust edition 2024; handlers return `Result<_, ApiError>`; errors wrapped with `anyhow::Context` and surfaced via `ApiError::internal`.
 - Conventional-commit messages, often Chinese (`fix(web):`, `chore:`). Match the existing style.
 
+### Comments
+
+Comments are written in English and explain _why_, not _what_. Match the surrounding density.
+
+Backend (Rust):
+
+- Every module opens with a `//!` inner doc comment — one line for simple modules, or a multi-section markdown block (with `# Heading`s and ` ```text ` diagrams) for the complex ones (`import_worker.rs`).
+- Public items (`fn`, `struct`, `enum`, variants) get `///` outer doc comments. Use markdown: backtick cross-references like [`upsert_tag`], `**bold**` for emphasis, and note concurrency/transaction contracts where relevant.
+- In-body `//` comments explain non-obvious decisions (race guards, ordering constraints, why a query is shaped a certain way) — not line-by-line narration.
+- No `TODO`/`FIXME` markers and no `#[allow(...)]` lint suppressions in committed code; fix the underlying issue instead.
+
+Frontend (TypeScript):
+
+- Every `.ts`/`.tsx` file opens with a `/** */` JSDoc header describing its purpose, key behaviors, and `{@link Symbol}` cross-references.
+- Exported constants, types, and standalone functions get a single-line `/** ... */` JSDoc. Zustand setters get a one-line `/** */` describing side-effects, placed directly above the method inside the `create(...)` block.
+- In-body `//` comments explain mutually-exclusive state, derived values, and other non-obvious logic.
+- Lint suppressions are always rule-scoped and never bare: `// eslint-disable-next-line <rule>` for a single line, or a file-top `/* eslint-disable <rule> */` block (after the JSDoc header) when a whole file needs it. No `@ts-ignore`/`@ts-expect-error`.
+
 ## Deployment
 
 Multi-stage `Dockerfile` (pnpm build → cargo `--release` with `SQLX_OFFLINE=true` → debian-slim runtime serving frontend from `/app/dist`). `docker-compose.yml` adds Postgres 16. Manual/systemd deploy docs and a Caddyfile example live in `deploy/` and `docs/`. The full HTTP API reference (all routes, parameters, and response shapes) is at `docs/api-reference.md`.
