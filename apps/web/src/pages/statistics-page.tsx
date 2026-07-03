@@ -16,11 +16,15 @@ import {
   TableRow,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
+import type { Theme } from '@mui/material/styles'
+import { alpha, useTheme } from '@mui/material/styles'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 
+import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { request } from '../lib/api.ts'
+import { ROUTES } from '../lib/routes.ts'
 
 interface StatsData {
   totalImages: number
@@ -47,8 +51,37 @@ function formatBytes(bytes: number, decimals = 2) {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
+/** Maps a tag string to its theme color by extracting the namespace. */
+function tagColor(tag: string, theme: Theme): string {
+  const colon = tag.indexOf(':')
+  const namespace = colon > -1 ? tag.slice(0, colon).toLowerCase() : 'unprefixed'
+  const colors = theme.palette.tags
+  switch (namespace) {
+    case 'parody':
+      return colors.parody
+    case 'character':
+      return colors.character
+    case 'artist':
+      return colors.artist
+    case 'general':
+      return colors.general
+    default:
+      // Unknown namespaces fall back to unprefixed grey;
+      // unprefixed tags use the dedicated unprefixed colour.
+      return colors.unprefixed
+  }
+}
+
 export function StatisticsPage() {
   const { t } = useTranslation()
+  const theme = useTheme<Theme>()
+  const navigate = useNavigate()
+  const setSearchTags = useGallerySessionStore((s) => s.setSearchTags)
+
+  const handleTagClick = (tag: string) => {
+    setSearchTags([tag])
+    navigate(ROUTES.HOME)
+  }
 
   const statsQuery = useQuery({
     queryKey: ['stats'],
@@ -177,7 +210,17 @@ export function StatisticsPage() {
                         fontSize: '0.875rem',
                       }}
                     >
-                      {item.tag}
+                      <Box
+                        component="span"
+                        onClick={() => handleTagClick(item.tag)}
+                        sx={{
+                          color: tagColor(item.tag, theme),
+                          cursor: 'pointer',
+                          '&:hover': { textDecoration: 'underline' },
+                        }}
+                      >
+                        {item.tag}
+                      </Box>
                     </TableCell>
                     <TableCell
                       align="right"
