@@ -7,7 +7,6 @@ import {
   CloudUploadOutlined,
   Done,
   Error as ErrorIcon,
-  PlayArrowOutlined,
   WarningAmberOutlined,
 } from '@mui/icons-material'
 import UploadOutlinedIcon from '@mui/icons-material/UploadOutlined'
@@ -487,9 +486,7 @@ export function AdminImportsPage() {
         <DialogActions sx={{ p: 2, pt: 0 }}>
           <Button onClick={() => setServerDialogOpen(false)}>{t('common.cancel')}</Button>
           <Button
-            variant="contained"
-            color="primary"
-            startIcon={<PlayArrowOutlined />}
+            variant="outlined"
             onClick={() => startJobMutation.mutate(serverPath)}
             disabled={startJobMutation.isPending}
           >

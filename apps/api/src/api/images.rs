@@ -468,6 +468,10 @@ fn random_image_url(row: &RandomImageRow, quality: &DownloadQuality) -> String {
 /// Returns one randomly-selected image. Safe-by-default when no rating filter
 /// is supplied (see [`allowed_ratings`]).
 ///
+/// Supports the same filter set as [`list_images`] for tags (`include_tags` /
+/// `exclude_tags`) and favorites (`favorites_only`), which are ANDed with the
+/// rating constraints.
+///
 /// Uses `ORDER BY random()` — acceptable for small private libraries but a
 /// known limitation at scale.
 async fn random_image(
@@ -475,7 +479,18 @@ async fn random_image(
     jar: CookieJar,
     Query(query): Query<RandomImageQuery>,
 ) -> Result<Json<RandomImageResponse>, ApiError> {
-    let _user = require_user(&state, &jar).await?;
+    let user = require_user(&state, &jar).await?;
+
+    let include_tags: Vec<String> = query
+        .include_tags
+        .iter()
+        .filter_map(|tag| normalize_tag_filter(tag))
+        .collect();
+    let exclude_tags: Vec<String> = query
+        .exclude_tags
+        .iter()
+        .filter_map(|tag| normalize_tag_filter(tag))
+        .collect();
 
     let allowed = allowed_ratings(&query.rating, query.max_rating);
     if allowed.is_empty() {
@@ -503,7 +518,58 @@ async fn random_image(
     );
     let ratings: Vec<&str> = allowed.iter().map(|rating| rating.as_str()).collect();
     builder.push_bind(ratings);
-    builder.push(") ORDER BY random() LIMIT 1");
+    builder.push(") ");
+
+    if query.favorites_only {
+        builder
+            .push("AND EXISTS (SELECT 1 FROM favorites f WHERE f.image_id = i.id AND f.user_id = ");
+        builder.push_bind(user.id);
+        builder.push(") ");
+    }
+
+    for tag in &include_tags {
+        let (namespace, name) = match tag.find(':') {
+            Some(pos) => (Some(&tag[..pos]), &tag[pos + 1..]),
+            None => (None, tag.as_str()),
+        };
+
+        builder.push(
+            "AND EXISTS ( \
+                SELECT 1 \
+                FROM image_tags it \
+                JOIN tags t ON t.id = it.tag_id \
+                WHERE it.image_id = i.id AND t.normalized_name = ",
+        );
+        builder.push_bind(name);
+        if let Some(ns) = namespace {
+            builder.push(" AND t.normalized_namespace = ");
+            builder.push_bind(ns);
+        }
+        builder.push(") ");
+    }
+
+    for tag in &exclude_tags {
+        let (namespace, name) = match tag.find(':') {
+            Some(pos) => (Some(&tag[..pos]), &tag[pos + 1..]),
+            None => (None, tag.as_str()),
+        };
+
+        builder.push(
+            "AND NOT EXISTS ( \
+                SELECT 1 \
+                FROM image_tags it \
+                JOIN tags t ON t.id = it.tag_id \
+                WHERE it.image_id = i.id AND t.normalized_name = ",
+        );
+        builder.push_bind(name);
+        if let Some(ns) = namespace {
+            builder.push(" AND t.normalized_namespace = ");
+            builder.push_bind(ns);
+        }
+        builder.push(") ");
+    }
+
+    builder.push("ORDER BY random() LIMIT 1");
 
     let row: Option<RandomImageRow> = builder
         .build_query_as()

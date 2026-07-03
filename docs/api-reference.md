@@ -127,13 +127,16 @@ No auth.
 
 **Query parameters**
 
-| param        | type                              | description                                                                  |
-| ------------ | --------------------------------- | ---------------------------------------------------------------------------- |
-| `rating`     | CSV or repeated                   | exact set to pick from                                                       |
-| `max_rating` | `safe`\|`suggestive`\|`explicit`  | inclusive ceiling; default behaviour when _neither_ param is given is `safe` |
-| `quality`    | `thumbnail`\|`sample`\|`original` | which URL to return as `url`; default `original`                             |
+| param            | type                              | description                                                                  |
+| ---------------- | --------------------------------- | ---------------------------------------------------------------------------- |
+| `rating`         | CSV or repeated                   | exact set to pick from                                                       |
+| `max_rating`     | `safe`\|`suggestive`\|`explicit`  | inclusive ceiling; default behaviour when _neither_ param is given is `safe` |
+| `quality`        | `thumbnail`\|`sample`\|`original` | which URL to return as `url`; default `original`                             |
+| `include_tags`   | CSV or repeated                   | AND-filter: image must have all listed tags                                  |
+| `exclude_tags`   | CSV or repeated                   | AND-filter: image must not have any listed tags                              |
+| `favorites_only` | boolean                           | only return the caller's favorites                                           |
 
-When both `rating` and `max_rating` are supplied they are ANDed (intersection). Providing `max_rating=explicit` lifts the ceiling; providing `rating=explicit` picks from an exact set.
+When both `rating` and `max_rating` are supplied they are ANDed (intersection). Providing `max_rating=explicit` lifts the ceiling; providing `rating=explicit` picks from an exact set. Tag filters and `favorites_only` further narrow the result set.
 
 **Response 200**
 

@@ -246,6 +246,12 @@ pub(crate) struct RandomImageQuery {
     /// Which derivative URL to surface as the primary `url`.
     #[serde(default)]
     pub(crate) quality: DownloadQuality,
+    #[serde(default, deserialize_with = "deserialize_csv_or_repeated")]
+    pub(crate) include_tags: Vec<String>,
+    #[serde(default, deserialize_with = "deserialize_csv_or_repeated")]
+    pub(crate) exclude_tags: Vec<String>,
+    #[serde(default)]
+    pub(crate) favorites_only: bool,
 }
 
 /// Response for `GET /api/images/random`. `url` reflects the requested quality
