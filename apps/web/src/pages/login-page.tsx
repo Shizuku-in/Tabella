@@ -24,6 +24,18 @@ import { FullscreenState } from '../components/fullscreen-state.tsx'
 import { getApiErrorMessage } from '../lib/api.ts'
 import { ROUTES } from '../lib/routes.ts'
 
+/**
+ * Tachie (standing portrait) image set. One is randomly picked each time the
+ * login page renders. Drop images into `public/tachie/` and list their
+ * filenames below, e.g. `'/images/tachie.png'`.
+ */
+const TACHIE_SET: string[] = ['/images/example.webp']
+
+function pickTachie(): string | null {
+  if (TACHIE_SET.length === 0) return null
+  return TACHIE_SET[Math.floor(Math.random() * TACHIE_SET.length)]
+}
+
 export function LoginPage() {
   const { t } = useTranslation()
   const { status, login } = useAuth()
@@ -35,6 +47,7 @@ export function LoginPage() {
   const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({})
   const next = searchParams.get('next') || ROUTES.HOME
   const targetLabel = useMemo(() => (next === ROUTES.HOME ? 'gallery' : next), [next])
+  const tachie = useMemo(() => pickTachie(), [])
 
   if (status === 'loading') {
     return (
@@ -87,8 +100,28 @@ export function LoginPage() {
         placeItems: 'center',
         px: 2,
         py: 3,
+        position: 'relative',
+        overflow: 'hidden',
       }}
     >
+      {/* Tachie (standing portrait) — add images to TACHIE_SET above. */}
+      {tachie && (
+        <Box
+          component="img"
+          src={tachie}
+          alt=""
+          sx={{
+            position: 'absolute',
+            right: 0,
+            bottom: 0,
+            maxHeight: '30vh',
+            width: 'auto',
+            display: 'block',
+            pointerEvents: 'none',
+            userSelect: 'none',
+          }}
+        />
+      )}
       <Paper
         component="form"
         onSubmit={handleSubmit}
@@ -100,6 +133,7 @@ export function LoginPage() {
           borderRadius: 2,
           bgcolor: 'background.paper',
           boxShadow: 'none',
+          zIndex: 1,
         }}
       >
         <Stack spacing={2.25}>
