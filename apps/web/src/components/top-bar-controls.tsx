@@ -4,6 +4,7 @@
 
 import {
   AdminPanelSettingsOutlined,
+  AnalyticsOutlined,
   ArtTrack,
   CheckCircle,
   CheckCircleOutlined,
@@ -307,6 +308,16 @@ export function UserControl() {
         >
           <PersonOutlined fontSize="small" sx={{ mr: 1 }} />
           {t('nav.menuProfile')}
+        </MenuItem>
+
+        <MenuItem
+          component={RouterLink}
+          to={ROUTES.STATS}
+          selected={location.pathname.startsWith(ROUTES.STATS)}
+          onClick={() => setAnchorEl(null)}
+        >
+          <AnalyticsOutlined fontSize="small" sx={{ mr: 1 }} />
+          {t('nav.menuStats')}
         </MenuItem>
 
         {isAdmin && (

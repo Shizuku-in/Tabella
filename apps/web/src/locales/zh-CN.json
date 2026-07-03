@@ -27,6 +27,7 @@
     "users": "/Users",
     "server": "/Server",
     "profile": "/Profile",
+    "stats": "/Statistics",
     "advancedSearch": "高级搜索",
     "downloading": "正在打包下载...",
     "darkMode": "深色模式",
@@ -35,6 +36,7 @@
     "guest": "访客",
     "viewer": "查看者",
     "menuProfile": "个人资料",
+    "menuStats": "图库统计",
     "menuUsers": "用户管理",
     "menuImports": "导入任务",
     "menuServer": "服务器管理",
@@ -241,6 +243,16 @@
         "requestFailed": "更新个人资料失败：{{message}}"
       }
     }
+  },
+  "stats": {
+    "title": "统计信息",
+    "totalImages": "图片总数",
+    "totalStorage": "存储占用",
+    "tagsTitle": "标签",
+    "tagsCount": "共 {{count}} 个标签",
+    "tagName": "标签",
+    "tagCount": "数量",
+    "noData": "暂无数据"
   },
   "admin": {
     "users": {

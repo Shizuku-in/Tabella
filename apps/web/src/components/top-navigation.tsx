@@ -62,6 +62,7 @@ export function TopNavigation({
   const isAdminServerRoute = location.pathname.startsWith(ROUTES.ADMIN_SERVER)
   const isAdminUsersRoute = location.pathname.startsWith(ROUTES.ADMIN_USERS)
   const isProfileRoute = location.pathname.startsWith(ROUTES.PROFILE)
+  const isStatsRoute = location.pathname.startsWith(ROUTES.STATS)
 
   const topBarConfig = useGalleryPreferencesStore((state) => state.topBarConfig)
 
@@ -210,6 +211,22 @@ export function TopNavigation({
                 }}
               >
                 {t('nav.profile')}
+              </Typography>
+            )}
+
+            {isStatsRoute && (
+              <Typography
+                sx={{
+                  color: 'text.secondary',
+                  fontFamily: '"Google Sans Code", monospace',
+                  fontWeight: 500,
+                  fontSize: '0.95rem',
+                  ml: 0.5,
+                  mr: 1,
+                  fontStyle: 'italic',
+                }}
+              >
+                {t('nav.stats')}
               </Typography>
             )}
 

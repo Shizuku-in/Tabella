@@ -27,6 +27,7 @@
     "users": "/Users",
     "server": "/Server",
     "profile": "/Profile",
+    "stats": "/Statistics",
     "advancedSearch": "Advanced Search",
     "downloading": "Downloading archive...",
     "darkMode": "Dark mode",
@@ -35,6 +36,7 @@
     "guest": "Guest",
     "viewer": "Viewer",
     "menuProfile": "Profile",
+    "menuStats": "Statistics",
     "menuUsers": "Users",
     "menuImports": "Import Jobs",
     "menuServer": "Server Manage",
@@ -241,6 +243,16 @@
         "requestFailed": "Failed to update profile: {{message}}"
       }
     }
+  },
+  "stats": {
+    "title": "Statistics",
+    "totalImages": "Total Images",
+    "totalStorage": "Total Storage",
+    "tagsTitle": "Tags",
+    "tagsCount": "{{count}} tags",
+    "tagName": "Tag",
+    "tagCount": "Count",
+    "noData": "No data available"
   },
   "admin": {
     "users": {

@@ -22,6 +22,7 @@ import { GalleryPage } from './pages/gallery-page.tsx'
 import { LoginPage } from './pages/login-page.tsx'
 import { NotFoundPage } from './pages/not-found-page.tsx'
 import { ProfilePage } from './pages/profile-page.tsx'
+import { StatisticsPage } from './pages/statistics-page.tsx'
 import { buildTheme } from './theme.ts'
 
 const queryClient = new QueryClient({
@@ -67,6 +68,7 @@ function App() {
                   <Route element={<AppShell mode={mode} onToggleMode={handleToggleMode} />}>
                     <Route index element={<GalleryPage />} />
                     <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
+                    <Route path={ROUTES.STATS} element={<StatisticsPage />} />
                     <Route element={<RequireRole role="editor" />}>
                       <Route path={ROUTES.ADMIN_IMPORTS} element={<AdminImportsPage />} />
                     </Route>
