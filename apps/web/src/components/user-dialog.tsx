@@ -151,7 +151,7 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
         </DialogContent>
         <DialogActions>
           <Button onClick={onClose}>{t('common.cancel')}</Button>
-          <Button type="submit" variant="outlined" disabled={loading || !isDirty}>
+          <Button type="submit" variant="contained" disabled={loading || !isDirty}>
             {t('common.save')}
           </Button>
         </DialogActions>

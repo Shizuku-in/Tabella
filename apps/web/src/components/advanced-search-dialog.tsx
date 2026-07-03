@@ -20,7 +20,7 @@ import {
 import { alpha } from '@mui/material/styles'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import dayjs, { Dayjs } from 'dayjs'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -60,6 +60,12 @@ const hideSpinButton = {
  * {@link useGallerySessionStore}; activating basic search clears these filters
  * (mutual exclusion enforced in the store).
  */
+function arraysEqual(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false
+  const sorted = (arr: string[]) => [...arr].sort()
+  return sorted(a).every((v, i) => v === sorted(b)[i])
+}
+
 export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProps) {
   const { t } = useTranslation()
   const {
@@ -264,6 +270,60 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
     setLocalArMax('')
     setErrors({})
   }
+
+  /** Whether every local form field is empty. */
+  const isFormEmpty = useMemo(
+    () =>
+      localIncludeTags.length === 0 &&
+      localExcludeTags.length === 0 &&
+      localUploadedAfter === null &&
+      localUploadedBefore === null &&
+      localMinWidth.trim() === '' &&
+      localMinHeight.trim() === '' &&
+      localArMin.trim() === '' &&
+      localArMax.trim() === '',
+    [
+      localIncludeTags,
+      localExcludeTags,
+      localUploadedAfter,
+      localUploadedBefore,
+      localMinWidth,
+      localMinHeight,
+      localArMin,
+      localArMax,
+    ],
+  )
+
+  /** Whether the local form matches the global store — nothing to apply. */
+  const isFormUnchanged = useMemo(
+    () =>
+      arraysEqual(localIncludeTags, advancedIncludeTags) &&
+      arraysEqual(localExcludeTags, excludeTags) &&
+      (localUploadedAfter?.startOf('day').toISOString() ?? null) === (uploadedAfter ?? null) &&
+      (localUploadedBefore?.endOf('day').toISOString() ?? null) === (uploadedBefore ?? null) &&
+      (localMinWidth || null) === (minWidth?.toString() ?? null) &&
+      (localMinHeight || null) === (minHeight?.toString() ?? null) &&
+      (localArMin || null) === (aspectRatioMin?.toString() ?? null) &&
+      (localArMax || null) === (aspectRatioMax?.toString() ?? null),
+    [
+      localIncludeTags,
+      localExcludeTags,
+      localUploadedAfter,
+      localUploadedBefore,
+      localMinWidth,
+      localMinHeight,
+      localArMin,
+      localArMax,
+      advancedIncludeTags,
+      excludeTags,
+      uploadedAfter,
+      uploadedBefore,
+      minWidth,
+      minHeight,
+      aspectRatioMin,
+      aspectRatioMax,
+    ],
+  )
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -506,14 +566,14 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
         </Stack>
       </DialogContent>
       <DialogActions sx={{ p: 2, justifyContent: 'space-between' }}>
-        <Button onClick={handleClearAll} color="error" variant="text">
+        <Button onClick={handleClearAll} color="error" variant="text" disabled={isFormEmpty}>
           {t('gallery.advancedSearch.clearAll')}
         </Button>
         <Stack direction="row" spacing={1}>
           <Button onClick={onClose} color="inherit">
             {t('common.cancel')}
           </Button>
-          <Button onClick={handleApply} variant="contained" color="primary">
+          <Button onClick={handleApply} variant="contained" disabled={isFormUnchanged}>
             {t('gallery.advancedSearch.apply')}
           </Button>
         </Stack>

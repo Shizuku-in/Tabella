@@ -146,7 +146,6 @@ export function AdminUsersPage() {
       deleteMutation.mutate(userToDelete.id)
     }
     setDeleteConfirmOpen(false)
-    setUserToDelete(null)
   }
 
   const handleDialogSubmit = async (data: CreateUserDto | UpdateUserDto) => {
@@ -221,7 +220,11 @@ export function AdminUsersPage() {
         user={editingUser}
       />
 
-      <Dialog open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        slotProps={{ transition: { onExited: () => setUserToDelete(null) } }}
+      >
         <DialogTitle>{t('admin.users.confirmDeleteTitle')}</DialogTitle>
         <DialogContent>
           <DialogContentText sx={{ whiteSpace: 'pre-line' }}>
@@ -230,7 +233,7 @@ export function AdminUsersPage() {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteConfirmOpen(false)}>{t('common.cancel')}</Button>
-          <Button color="error" onClick={handleConfirmDelete}>
+          <Button variant="contained" color="error" onClick={handleConfirmDelete}>
             {t('common.delete')}
           </Button>
         </DialogActions>

@@ -170,8 +170,8 @@
       "minAspectPlaceholder": "e.g. 1.77 for 16:9",
       "maxAspect": "Max Aspect Ratio (W/H)",
       "maxAspectPlaceholder": "e.g. 0.56 for 9:16",
-      "clearAll": "Clear All",
-      "apply": "Apply Filters",
+      "clearAll": "Clear",
+      "apply": "Apply",
       "errors": {
         "positiveInteger": "{{label}} must be a positive integer.",
         "greaterThanZero": "{{label}} must be greater than 0.",

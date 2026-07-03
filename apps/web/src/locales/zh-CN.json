@@ -170,8 +170,8 @@
       "minAspectPlaceholder": "例如：16:9 输入 1.77",
       "maxAspect": "最大宽高比 (W/H)",
       "maxAspectPlaceholder": "例如：9:16 输入 0.56",
-      "clearAll": "清除全部",
-      "apply": "应用筛选",
+      "clearAll": "清除",
+      "apply": "应用",
       "errors": {
         "positiveInteger": "{{label}} 必须是正整数。",
         "greaterThanZero": "{{label}} 必须大于 0。",
