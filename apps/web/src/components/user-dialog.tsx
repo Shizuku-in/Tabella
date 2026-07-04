@@ -59,7 +59,7 @@ export function UserDialog({ open, onClose, onSubmit, user }: UserDialogProps) {
     }
   }, [open, user])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault()
     const nextErrors = validateFields({ username, password, isEdit }, t)
     setErrors(nextErrors)

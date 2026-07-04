@@ -172,7 +172,7 @@ export function AdminServerPage() {
     setIsDirty(true)
   }
 
-  const handleSave = (e?: React.FormEvent) => {
+  const handleSave = (e?: React.SyntheticEvent) => {
     e?.preventDefault()
     if (settings) {
       const nextErrors = validateServerSettingsFields(settings, t)

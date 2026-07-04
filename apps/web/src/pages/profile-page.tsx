@@ -107,7 +107,7 @@ export function ProfilePage() {
     e.target.value = ''
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault()
     const nextErrors = validateProfileFields({ username, currentPassword, newPassword }, t)
     setErrors(nextErrors)
