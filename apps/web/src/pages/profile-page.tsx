@@ -198,7 +198,9 @@ export function ProfilePage() {
 
   return (
     <Stack spacing={4} sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
-      <Typography variant="h5">{t('auth.profile.title')}</Typography>
+      <Typography variant="h5" sx={{ fontWeight: 600 }}>
+        {t('auth.profile.title')}
+      </Typography>
 
       <Paper sx={{ p: 4 }}>
         <Stack spacing={4}>
