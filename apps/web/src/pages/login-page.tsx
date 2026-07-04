@@ -2,7 +2,7 @@
  * Authentication page for user login and session initialization.
  */
 
-import { LockOutlined } from '@mui/icons-material'
+import { LockOutlined, LoginOutlined } from '@mui/icons-material'
 import {
   Alert,
   Box,
@@ -116,10 +116,11 @@ export function LoginPage() {
 
     try {
       await login({ username, password })
+      // Don't clear submitting here — the exit animation plays immediately and
+      // the spinner looks more natural than a brief flash of the normal button.
       setExiting(true)
     } catch (error) {
       setErrorMessage(getApiErrorMessage(error, t('auth.login.signInFailed')))
-    } finally {
       setSubmitting(false)
     }
   }
@@ -247,7 +248,13 @@ export function LoginPage() {
             variant="contained"
             type="submit"
             disabled={submitting}
-            startIcon={submitting ? <CircularProgress size={16} color="inherit" /> : undefined}
+            startIcon={
+              submitting ? (
+                <CircularProgress size={16} color="inherit" />
+              ) : (
+                <LoginOutlined fontSize="small" />
+              )
+            }
             sx={{ mt: 0.5 }}
           >
             {submitting ? t('auth.login.signingIn') : t('auth.login.signIn')}
