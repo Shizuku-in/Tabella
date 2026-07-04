@@ -7,7 +7,7 @@ import {
   CloudUploadOutlined,
   Done,
   Error as ErrorIcon,
-  WarningAmberOutlined,
+  Warning,
 } from '@mui/icons-material'
 import UploadOutlinedIcon from '@mui/icons-material/UploadOutlined'
 import {
@@ -374,7 +374,7 @@ export function AdminImportsPage() {
                 color = 'success.main'
                 progressColor = 'success'
               } else if (job.status === 'completed_with_errors') {
-                icon = <WarningAmberOutlined color="warning" />
+                icon = <Warning color="warning" />
                 color = 'warning.main'
                 progressColor = 'warning'
               } else if (job.status === 'failed') {

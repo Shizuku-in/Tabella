@@ -17,7 +17,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
-import { alpha } from '@mui/material/styles'
+import { alpha, useTheme } from '@mui/material/styles'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import dayjs, { Dayjs } from 'dayjs'
 import { useEffect, useMemo, useState } from 'react'
@@ -68,6 +68,7 @@ function arraysEqual(a: string[], b: string[]): boolean {
 
 export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProps) {
   const { t } = useTranslation()
+  const theme = useTheme()
   const {
     searchTags,
     setSearchTags,
@@ -339,6 +340,13 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
               freeSolo
               options={tagSuggestionsInclude}
               filterOptions={(x) => x}
+              renderOption={(props, option) => (
+                <li {...props}>
+                  <Box component="span" sx={{ color: getTagColor(option, theme) }}>
+                    {option}
+                  </Box>
+                </li>
+              )}
               value={localIncludeTags}
               inputValue={tagInputInclude}
               onInputChange={(_, newValue) => setTagInputInclude(newValue)}
@@ -385,6 +393,13 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
               freeSolo
               options={tagSuggestions}
               filterOptions={(x) => x}
+              renderOption={(props, option) => (
+                <li {...props}>
+                  <Box component="span" sx={{ color: getTagColor(option, theme) }}>
+                    {option}
+                  </Box>
+                </li>
+              )}
               value={localExcludeTags}
               inputValue={tagInput}
               onInputChange={(_, newValue) => setTagInput(newValue)}

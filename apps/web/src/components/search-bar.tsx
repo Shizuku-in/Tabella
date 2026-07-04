@@ -116,6 +116,13 @@ export function SearchBar() {
       slots={{ popper: CustomPopper }}
       options={tagSuggestions}
       filterOptions={(x) => x}
+      renderOption={(props, option) => (
+        <li {...props}>
+          <Box component="span" sx={{ color: getTagColor(option, theme) }}>
+            {option}
+          </Box>
+        </li>
+      )}
       value={searchTags}
       inputValue={tagInput}
       onInputChange={(_, newValue) => setTagInput(newValue)}
