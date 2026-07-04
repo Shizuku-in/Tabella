@@ -24,9 +24,10 @@ import { FullscreenState } from '../components/fullscreen-state.tsx'
 import { getApiErrorMessage } from '../lib/api.ts'
 import { ROUTES } from '../lib/routes.ts'
 
-/** Shared easing for the exit transition (MUI deceleration curve). */
-const EXIT_EASING = 'cubic-bezier(0.4, 0, 0.2, 1)'
-const EXIT_DURATION_MS = 500
+/** Shared easing for enter/exit transitions (MUI deceleration curve). */
+const TRANSITION_EASING = 'cubic-bezier(0.4, 0, 0.2, 1)'
+const TRANSITION_DURATION_MS = 500
+const TRANSITION_CSS = `opacity ${TRANSITION_DURATION_MS}ms ${TRANSITION_EASING}, transform ${TRANSITION_DURATION_MS}ms ${TRANSITION_EASING}`
 
 /**
  * Tachie (standing portrait) image set. One is randomly picked each time the
@@ -49,23 +50,37 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({})
+  const [entering, setEntering] = useState(true)
   const [exiting, setExiting] = useState(false)
+  const isAnimating = entering || exiting
   const next = searchParams.get('next') || ROUTES.HOME
   const targetLabel = useMemo(() => (next === ROUTES.HOME ? 'gallery' : next), [next])
   const tachie = useMemo(() => pickTachie(), [])
 
-  // Wait for exit animation to finish before navigating away.
+  // Double-RAF so the browser paints the enter-from state before transitioning
+  // to idle — without this a hard refresh skips the enter animation.
+  useEffect(() => {
+    let canceled = false
+    requestAnimationFrame(() => {
+      if (canceled) return
+      requestAnimationFrame(() => {
+        if (!canceled) setEntering(false)
+      })
+    })
+    return () => {
+      canceled = true
+    }
+  }, [])
+
+  // Hold the login page during the exit animation, then allow navigation.
   useEffect(() => {
     if (!exiting) return
-    const timer = setTimeout(() => setExiting(false), EXIT_DURATION_MS)
+    const timer = setTimeout(() => setExiting(false), TRANSITION_DURATION_MS)
     return () => clearTimeout(timer)
   }, [exiting])
 
-  // During the exit transition, keep rendering the login page (not the loading
-  // skeleton) so the fade/slide-out animation can play.
-  if (exiting) {
-    // fall through to the login form below
-  } else if (status === 'loading') {
+  // Skip the loading skeleton while animating so there is content to fade out.
+  if (!isAnimating && status === 'loading') {
     return (
       <FullscreenState
         title={t('auth.login.checkingSession')}
@@ -136,11 +151,9 @@ export function LoginPage() {
             display: 'block',
             pointerEvents: 'none',
             userSelect: 'none',
-            opacity: exiting ? 0 : 1,
-            transform: exiting ? 'translateY(24px)' : 'translateY(0)',
-            transition: exiting
-              ? `opacity ${EXIT_DURATION_MS}ms ${EXIT_EASING}, transform ${EXIT_DURATION_MS}ms ${EXIT_EASING}`
-              : undefined,
+            opacity: isAnimating ? 0 : 1,
+            transform: isAnimating ? 'translateY(24px)' : 'translateY(0)',
+            transition: TRANSITION_CSS,
           }}
         />
       )}
@@ -156,11 +169,9 @@ export function LoginPage() {
           bgcolor: 'background.paper',
           boxShadow: 'none',
           zIndex: 1,
-          opacity: exiting ? 0 : 1,
-          transform: exiting ? 'scale(0.98)' : 'scale(1)',
-          transition: exiting
-            ? `opacity ${EXIT_DURATION_MS}ms ${EXIT_EASING}, transform ${EXIT_DURATION_MS}ms ${EXIT_EASING}`
-            : undefined,
+          opacity: isAnimating ? 0 : 1,
+          transform: isAnimating ? 'scale(0.98)' : 'scale(1)',
+          transition: TRANSITION_CSS,
         }}
       >
         <Stack spacing={2.25}>

@@ -188,7 +188,7 @@
       "refresh": "Please refresh and try again.",
       "noMatching": "No matching images",
       "noMatchingDesc": "Try clearing the search or relaxing the rating filter.",
-      "end": "End of gallery",
+      "end": "No More!",
       "scrollMore": "Scroll for more",
       "downloadFail": "Failed to start download: {{message}}",
       "downloadNetwork": "Network error while starting download."

@@ -188,7 +188,7 @@
       "refresh": "请刷新重试。",
       "noMatching": "没有匹配的图片",
       "noMatchingDesc": "尝试清除或放宽搜索条件和年龄评级筛选。",
-      "end": "已加载完全部内容",
+      "end": "已经没有啦！",
       "scrollMore": "滚动加载更多",
       "downloadFail": "启动下载失败：{{message}}",
       "downloadNetwork": "启动下载时出现网络错误。"
