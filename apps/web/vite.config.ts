@@ -64,6 +64,10 @@ export default defineConfig({
             return 'react-vendor'
           }
 
+          if (id.includes('@mui/x-date-pickers') || id.includes('dayjs')) {
+            return 'date-vendor'
+          }
+
           return undefined
         },
       },

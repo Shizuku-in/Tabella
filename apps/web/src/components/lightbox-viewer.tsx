@@ -626,6 +626,7 @@ export function LightboxViewer({
       <Fade in={showOverlays && currentIndex > 0 && !(isMobile && showInfoPanel)}>
         <IconButton
           onClick={handlePrev}
+          aria-label={t('gallery.viewer.previous')}
           sx={{
             position: 'absolute',
             left: 16,
@@ -643,6 +644,7 @@ export function LightboxViewer({
       <Fade in={showOverlays && currentIndex < items.length - 1}>
         <IconButton
           onClick={handleNext}
+          aria-label={t('gallery.viewer.next')}
           sx={{
             position: 'absolute',
             right: !isMobile && showInfoPanel ? 376 : 16,

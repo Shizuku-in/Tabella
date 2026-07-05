@@ -3,13 +3,12 @@ FROM node:24.15.0-slim AS frontend-builder
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@11.5.2 --activate
 
-# Copy workspace files
+# Install dependencies first — only invalidates when lockfile changes
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-# Copy web app
-COPY apps/web apps/web/
-
-# Install dependencies and build
 RUN pnpm install --frozen-lockfile
+
+# Copy web app source after install so dependency layer stays cached
+COPY apps/web apps/web/
 RUN pnpm --filter @tabella/web build
 
 # Stage 2: Build the Rust backend

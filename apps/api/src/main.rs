@@ -147,6 +147,7 @@ async fn main() -> anyhow::Result<()> {
             ServeDir::new(media_root.join("thumbnails")),
         )
         .nest_service("/media/avatars", ServeDir::new(media_root.join("avatars")))
+        .route_layer(middleware::from_fn(set_media_cache_headers))
         .route_layer(middleware::from_fn_with_state(
             app_state.clone(),
             api::require_media_session,
@@ -181,6 +182,7 @@ async fn main() -> anyhow::Result<()> {
     }
 
     let app = app
+        .layer(middleware::from_fn(set_security_headers))
         .layer(middleware::from_fn(pwa_no_cache))
         .layer(TraceLayer::new_for_http());
 
@@ -267,6 +269,34 @@ fn init_tracing() {
         )
         .with(tracing_subscriber::fmt::layer())
         .init();
+}
+
+/// Sets basic security headers on every response.
+async fn set_security_headers(request: Request, next: Next) -> Response {
+    let mut response = next.run(request).await;
+    let headers = response.headers_mut();
+    headers.insert(header::X_CONTENT_TYPE_OPTIONS, "nosniff".parse().unwrap());
+    headers.insert(header::X_FRAME_OPTIONS, "DENY".parse().unwrap());
+    headers.insert(
+        header::REFERRER_POLICY,
+        "strict-origin-when-cross-origin".parse().unwrap(),
+    );
+    response
+}
+
+/// Sets long-lived `Cache-Control` headers on successful media responses.
+/// Derivative file names include the SHA-256 of the original content, so the
+/// content at a given URL never changes. `immutable` is deliberately omitted
+/// so that a force-refresh (Ctrl+F5) can still bypass the cache.
+async fn set_media_cache_headers(request: Request, next: Next) -> Response {
+    let mut response = next.run(request).await;
+    if response.status().is_success() {
+        response.headers_mut().insert(
+            header::CACHE_CONTROL,
+            "public, max-age=31536000".parse().unwrap(),
+        );
+    }
+    response
 }
 
 /// Returns 404 for blocked static paths.

@@ -153,7 +153,9 @@
       "showTags": "显示底部标签",
       "deleteTitle": "删除图片",
       "deleteWarning": "此操作无法撤销。\n图片及所有相关数据将被永久删除。",
-      "deleting": "删除中..."
+      "deleting": "删除中...",
+      "previous": "上一张",
+      "next": "下一张"
     },
     "advancedSearch": {
       "title": "高级搜索",
