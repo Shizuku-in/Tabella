@@ -209,6 +209,7 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
         created_by_user_id: Option<i64>,
     }
 
+    // 1. Claim the next queued job
     let job: Option<JobRow> = sqlx::query_as(
         r#"
         UPDATE import_jobs
@@ -234,7 +235,7 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
     tracing::info!("Found import job: {} (type: {})", job.id, job.source_type);
 
     // 2. Process the job
-    let dynamic_config = DynamicConfig::load(&state.pool, &state.config).await;
+    let dynamic_config = state.dynamic_config().await;
     let result = run_import_job(
         job.id,
         &job.source_archive_path,
@@ -244,6 +245,7 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
         &state.tx,
         dynamic_config.import_progress_batch_size,
         job.created_by_user_id,
+        &dynamic_config,
     )
     .await;
 
@@ -344,6 +346,7 @@ async fn run_import_job(
     tx: &tokio::sync::broadcast::Sender<ServerEvent>,
     progress_batch_size: usize,
     uploader_id: Option<i64>,
+    dyn_config: &DynamicConfig,
 ) -> Result<bool> {
     let mut source_path = PathBuf::from(source_path_str);
 
@@ -514,15 +517,13 @@ async fn run_import_job(
     let originals_dir = config.media_root.join("originals");
     std::fs::create_dir_all(&originals_dir)?;
 
-    let dyn_config = crate::config::DynamicConfig::load(pool, config).await;
-
     for (index, file_path) in files_to_process.into_iter().enumerate() {
         match process_single_file(
             &file_path,
             &originals_dir,
             pool,
             config,
-            &dyn_config,
+            dyn_config,
             uploader_id,
         )
         .await

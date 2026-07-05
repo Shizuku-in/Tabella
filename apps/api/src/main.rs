@@ -19,6 +19,7 @@ mod import_worker;
 mod tags;
 mod tasks;
 
+use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Context;
@@ -30,8 +31,9 @@ use axum::{
     response::Response,
     routing::any,
 };
-use config::Config;
+use config::{Config, DynamicConfig};
 use sqlx::postgres::PgPoolOptions;
+use tokio::sync::RwLock;
 use tower_http::services::ServeDir;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
@@ -52,6 +54,23 @@ pub(crate) struct AppState {
     /// Signalled on shutdown so background workers can stop accepting new work
     /// and exit cleanly once their current job finishes.
     pub(crate) shutdown: tokio_util::sync::CancellationToken,
+    /// In-memory cache of [`DynamicConfig`] to avoid hitting the `settings` table
+    /// on every request. Refreshed on startup and after `PUT /api/settings`.
+    dynamic_config: Arc<RwLock<DynamicConfig>>,
+}
+
+impl AppState {
+    /// Returns a clone of the cached dynamic config without a DB round-trip.
+    pub(crate) async fn dynamic_config(&self) -> DynamicConfig {
+        self.dynamic_config.read().await.clone()
+    }
+
+    /// Reloads [`DynamicConfig`] from the database and updates the cache.
+    /// Called after settings are modified via `PUT /api/settings`.
+    pub(crate) async fn refresh_dynamic_config(&self) {
+        let fresh = DynamicConfig::load(&self.pool, &self.config).await;
+        *self.dynamic_config.write().await = fresh;
+    }
 }
 
 /// Full startup sequence: env → config → tracing → DB → workers → router → serve.
@@ -91,11 +110,15 @@ async fn main() -> anyhow::Result<()> {
 
     let shutdown = tokio_util::sync::CancellationToken::new();
 
+    // Pre-load dynamic config from DB so every request reads from memory.
+    let dynamic_config = DynamicConfig::load(&pool, &config).await;
+
     let app_state = AppState {
         config: config.clone(),
         pool: pool.clone(),
         tx,
         shutdown: shutdown.clone(),
+        dynamic_config: Arc::new(RwLock::new(dynamic_config)),
     };
 
     // Spawn the import worker; keep its handle so we can wait for the in-flight

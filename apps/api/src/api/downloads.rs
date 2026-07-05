@@ -20,7 +20,6 @@ use uuid::Uuid;
 
 use crate::{
     AppState,
-    config::DynamicConfig,
     dto::{DownloadJobRequest, DownloadQuality},
     tasks::archive::{ArchiveTask, process_archive_job},
 };
@@ -83,7 +82,7 @@ async fn create_download_job(
     Json(request): Json<DownloadJobRequest>,
 ) -> Result<Json<DownloadJobResponse>, ApiError> {
     let user = require_user(&state, &jar).await?;
-    let settings = DynamicConfig::load(&state.pool, &state.config).await;
+    let settings = state.dynamic_config().await;
 
     if request.image_ids.is_empty() {
         return Err(ApiError::bad_request(

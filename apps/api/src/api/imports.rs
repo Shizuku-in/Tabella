@@ -194,9 +194,7 @@ async fn upload_import_files(
 ) -> Result<Json<serde_json::Value>, ApiError> {
     let user = require_editor(&state, &jar).await?;
 
-    let max_upload_bytes = crate::config::DynamicConfig::load(&state.pool, &state.config)
-        .await
-        .max_upload_bytes;
+    let max_upload_bytes = state.dynamic_config().await.max_upload_bytes;
 
     // Create a temp directory for this upload batch
     let batch_id = uuid::Uuid::new_v4();

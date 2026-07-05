@@ -26,7 +26,7 @@ async fn get_settings(
     jar: CookieJar,
 ) -> Result<Json<DynamicConfig>, ApiError> {
     require_admin(&state, &jar).await?;
-    Ok(Json(DynamicConfig::load(&state.pool, &state.config).await))
+    Ok(Json(state.dynamic_config().await))
 }
 
 /// Validates and persists the full [`DynamicConfig`]. Partial merge is not
@@ -49,6 +49,10 @@ async fn update_settings(
         .save(&state.pool)
         .await
         .map_err(ApiError::internal)?;
+
+    // Refresh the in-memory cache so all subsequent requests see the new config
+    // without a DB round-trip.
+    state.refresh_dynamic_config().await;
 
     Ok(Json(new_settings))
 }

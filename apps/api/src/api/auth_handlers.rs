@@ -65,7 +65,7 @@ async fn login(
     let user_agent = headers
         .get("user-agent")
         .and_then(|value| value.to_str().ok());
-    let dynamic_config = crate::config::DynamicConfig::load(&state.pool, &state.config).await;
+    let dynamic_config = state.dynamic_config().await;
     let (session_id, expires_at) = auth::create_session(
         &state.pool,
         dynamic_config.session_ttl_hours,
@@ -98,7 +98,7 @@ async fn logout(
             .map_err(ApiError::internal)?;
     }
 
-    let dynamic_config = crate::config::DynamicConfig::load(&state.pool, &state.config).await;
+    let dynamic_config = state.dynamic_config().await;
     Ok((
         jar.add(auth::build_logout_cookie(
             &state.config.session_cookie_name,
