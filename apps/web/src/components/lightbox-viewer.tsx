@@ -44,8 +44,8 @@ import { useShallow } from 'zustand/react/shallow'
 import { useAuth } from '../auth/auth-provider.tsx'
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
-import { deleteImage, suggestTags, updateImage } from '../lib/api'
-import { TAG_SUGGEST_DEBOUNCE_MS, TAG_SUGGEST_LIMIT } from '../lib/constants'
+import { useTagSuggestions } from '../hooks/use-tag-suggestions.ts'
+import { deleteImage, updateImage } from '../lib/api'
 import { getTagColor } from '../lib/tags'
 import type { GalleryItem, Rating } from '../types'
 import { LightboxViewerInfo } from './lightbox-viewer-info'
@@ -112,7 +112,7 @@ export function LightboxViewer({
   const [editRating, setEditRating] = useState<Rating>('safe')
   const [editTags, setEditTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
+  const tagSuggestions = useTagSuggestions(tagInput, editTags)
   const [isSaving, setIsSaving] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [hasChanges, setHasChanges] = useState(false)
@@ -139,22 +139,6 @@ export function LightboxViewer({
     // resets whenever the parent re-creates the items array (e.g. cache update).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [item?.id])
-
-  useEffect(() => {
-    if (!tagInput.trim()) {
-      setTagSuggestions([])
-      return
-    }
-    const timer = setTimeout(async () => {
-      try {
-        const suggestions = await suggestTags(tagInput.trim(), TAG_SUGGEST_LIMIT)
-        setTagSuggestions(suggestions.filter((s) => !editTags.includes(s)))
-      } catch {
-        setTagSuggestions([])
-      }
-    }, TAG_SUGGEST_DEBOUNCE_MS)
-    return () => clearTimeout(timer)
-  }, [tagInput, editTags])
 
   useEffect(() => {
     if (open) {

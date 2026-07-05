@@ -25,8 +25,7 @@ import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
-import { suggestTags } from '../lib/api.ts'
-import { TAG_SUGGEST_DEBOUNCE_MS, TAG_SUGGEST_LIMIT } from '../lib/constants.ts'
+import { useTagSuggestions } from '../hooks/use-tag-suggestions.ts'
 import { getTagColor } from '../lib/tags.ts'
 
 export interface AdvancedSearchDialogProps {
@@ -114,11 +113,11 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
   // Local state for the dialog form
   const [localIncludeTags, setLocalIncludeTags] = useState<string[]>([])
   const [tagInputInclude, setTagInputInclude] = useState('')
-  const [tagSuggestionsInclude, setTagSuggestionsInclude] = useState<string[]>([])
+  const tagSuggestionsInclude = useTagSuggestions(tagInputInclude, localIncludeTags)
 
   const [localExcludeTags, setLocalExcludeTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
+  const tagSuggestions = useTagSuggestions(tagInput, localExcludeTags)
 
   const [localUploadedAfter, setLocalUploadedAfter] = useState<Dayjs | null>(null)
   const [localUploadedBefore, setLocalUploadedBefore] = useState<Dayjs | null>(null)
@@ -152,40 +151,6 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
     aspectRatioMin,
     aspectRatioMax,
   ])
-
-  // Fetch tag suggestions for includeTags
-  useEffect(() => {
-    if (!tagInputInclude.trim()) {
-      setTagSuggestionsInclude([])
-      return
-    }
-    const timer = setTimeout(async () => {
-      try {
-        const suggestions = await suggestTags(tagInputInclude.trim(), TAG_SUGGEST_LIMIT)
-        setTagSuggestionsInclude(suggestions.filter((s) => !localIncludeTags.includes(s)))
-      } catch {
-        setTagSuggestionsInclude([])
-      }
-    }, TAG_SUGGEST_DEBOUNCE_MS)
-    return () => clearTimeout(timer)
-  }, [tagInputInclude, localIncludeTags])
-
-  // Fetch tag suggestions for excludeTags
-  useEffect(() => {
-    if (!tagInput.trim()) {
-      setTagSuggestions([])
-      return
-    }
-    const timer = setTimeout(async () => {
-      try {
-        const suggestions = await suggestTags(tagInput.trim(), TAG_SUGGEST_LIMIT)
-        setTagSuggestions(suggestions.filter((s) => !localExcludeTags.includes(s)))
-      } catch {
-        setTagSuggestions([])
-      }
-    }, TAG_SUGGEST_DEBOUNCE_MS)
-    return () => clearTimeout(timer)
-  }, [tagInput, localExcludeTags])
 
   /**
    * Filters and restricts numeric inputs according to the specified mode, ensuring only

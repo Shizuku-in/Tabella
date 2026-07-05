@@ -26,8 +26,7 @@ import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
-import { suggestTags } from '../lib/api.ts'
-import { TAG_SUGGEST_DEBOUNCE_MS, TAG_SUGGEST_LIMIT } from '../lib/constants.ts'
+import { useTagSuggestions } from '../hooks/use-tag-suggestions.ts'
 import { getTagColor } from '../lib/tags.ts'
 
 const CustomPopper = function (props: PopperProps) {
@@ -60,25 +59,9 @@ export function SearchBar() {
 
   const [searchVisible, setSearchVisible] = useState(() => !isMobile && searchTags.length > 0)
   const [tagInput, setTagInput] = useState('')
-  const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
+  const tagSuggestions = useTagSuggestions(tagInput, searchTags)
   const searchInputRef = useRef<HTMLInputElement>(null)
   const mobileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (!tagInput.trim()) {
-      setTagSuggestions([])
-      return
-    }
-    const timer = setTimeout(async () => {
-      try {
-        const suggestions = await suggestTags(tagInput.trim(), TAG_SUGGEST_LIMIT)
-        setTagSuggestions(suggestions.filter((s) => !searchTags.includes(s)))
-      } catch {
-        setTagSuggestions([])
-      }
-    }, TAG_SUGGEST_DEBOUNCE_MS)
-    return () => clearTimeout(timer)
-  }, [tagInput, searchTags])
 
   useEffect(() => {
     if (searchVisible) {
