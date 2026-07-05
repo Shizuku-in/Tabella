@@ -6,7 +6,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
-import { createContext, useContext } from 'react'
+import { createContext, useCallback, useContext, useMemo } from 'react'
 
 import { getMe, login as loginRequest, logout as logoutRequest } from '../lib/api.ts'
 import { QUERY_KEYS } from '../lib/query-keys.ts'
@@ -40,19 +40,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const user = meQuery.data?.user ?? null
   const status: AuthStatus = meQuery.isPending ? 'loading' : user ? 'authenticated' : 'anonymous'
 
-  const value: AuthContextValue = {
-    status,
-    user,
-    async login(credentials) {
+  /** Stable across renders so background meQuery refetches don't cascade to all consumers. */
+  const login = useCallback(
+    async (credentials: { username: string; password: string }) => {
       const response = await loginMutation.mutateAsync(credentials)
       queryClient.setQueryData(QUERY_KEYS.AUTH_ME, response)
       return response.user
     },
-    async logout() {
-      await logoutMutation.mutateAsync()
-      queryClient.setQueryData(QUERY_KEYS.AUTH_ME, null)
-    },
-  }
+    [loginMutation, queryClient],
+  )
+
+  /** Stable across renders — see {@link login}. */
+  const logout = useCallback(async () => {
+    await logoutMutation.mutateAsync()
+    queryClient.setQueryData(QUERY_KEYS.AUTH_ME, null)
+  }, [logoutMutation, queryClient])
+
+  const value = useMemo<AuthContextValue>(
+    () => ({ status, user, login, logout }),
+    [status, user, login, logout],
+  )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
