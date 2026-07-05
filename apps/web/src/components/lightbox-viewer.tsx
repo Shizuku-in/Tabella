@@ -135,7 +135,10 @@ export function LightboxViewer({
       setEditTags([...item.tags])
       setHasChanges(false)
     }
-  }, [item])
+    // Depend on item.id, not the whole item object — otherwise the edit state
+    // resets whenever the parent re-creates the items array (e.g. cache update).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item?.id])
 
   useEffect(() => {
     if (!tagInput.trim()) {
@@ -181,7 +184,10 @@ export function LightboxViewer({
         })
         .catch(() => {})
     }
-  }, [item])
+    // Depend on item.id, not the whole item object — the thumbnail/sample URLs
+    // don't change for the same image, so we only need to fetch sizes on navigation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item?.id])
 
   const imgSrc = useMemo(() => {
     if (!item) return ''

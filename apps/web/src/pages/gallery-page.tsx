@@ -3,6 +3,7 @@
  */
 
 import { Alert, Box, CircularProgress, Snackbar, Stack, Typography } from '@mui/material'
+import type { InfiniteData } from '@tanstack/react-query'
 import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -18,6 +19,7 @@ import { useGalleryQuery } from '../hooks/use-gallery-query.ts'
 import { createDownloadJob, getApiErrorMessage, toggleFavorite } from '../lib/api.ts'
 import { SNACKBAR_DURATION_LONG } from '../lib/constants.ts'
 import { QUERY_KEYS } from '../lib/query-keys.ts'
+import type { GalleryItem } from '../types.ts'
 
 export function GalleryPage() {
   const { t } = useTranslation()
@@ -86,6 +88,7 @@ export function GalleryPage() {
     const currentValue = favoriteOverrides[id] ?? item.favorite
     const newValue = !currentValue
 
+    // Optimistic UI update
     setFavoriteOverrides((currentOverrides) => ({
       ...currentOverrides,
       [id]: newValue,
@@ -93,7 +96,23 @@ export function GalleryPage() {
 
     try {
       await toggleFavorite(id, newValue)
-      await queryClient.invalidateQueries({ queryKey: QUERY_KEYS.GALLERY })
+      // Update cache in-place instead of refetching all pages, avoiding
+      // N network requests where N is the number of already-loaded pages.
+      queryClient.setQueriesData<InfiniteData<{ items: GalleryItem[]; nextCursor: string | null }>>(
+        { queryKey: QUERY_KEYS.GALLERY, exact: false },
+        (old) => {
+          if (!old) return old
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              items: page.items.map((img) =>
+                img.id === id ? { ...img, favorite: newValue } : img,
+              ),
+            })),
+          }
+        },
+      )
     } catch (error) {
       console.error('Failed to toggle favorite', error)
       setFavoriteOverrides((currentOverrides) => ({
