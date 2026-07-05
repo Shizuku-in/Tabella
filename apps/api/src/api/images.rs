@@ -916,11 +916,12 @@ async fn delete_image(
 }
 
 /// Autocomplete tag names by case-insensitive prefix search.
+/// Results are cached for 60 seconds — tag changes are infrequent.
 async fn suggest_tags(
     State(state): State<AppState>,
     jar: CookieJar,
     Query(query): Query<TagSuggestQuery>,
-) -> Result<Json<serde_json::Value>, ApiError> {
+) -> Result<Response, ApiError> {
     let _user = require_user(&state, &jar).await?;
 
     let limit = query.limit.unwrap_or(20).clamp(1, 50) as i64;
@@ -942,18 +943,25 @@ async fn suggest_tags(
     .await
     .map_err(|e| ApiError::internal(e.into()))?;
 
-    Ok(Json(json!({
+    let mut response = Json(json!({
         "items": items
-    })))
+    }))
+    .into_response();
+    response.headers_mut().insert(
+        axum::http::header::CACHE_CONTROL,
+        "private, max-age=60".parse().unwrap(),
+    );
+    Ok(response)
 }
 
 /// Lists tags with per-tag image counts, sorted by frequency descending.
 /// Optionally filtered to a single namespace.
+/// Results are cached for 30 seconds — count changes are infrequent.
 async fn list_tags(
     State(state): State<AppState>,
     jar: CookieJar,
     Query(query): Query<ListTagsQuery>,
-) -> Result<Json<serde_json::Value>, ApiError> {
+) -> Result<Response, ApiError> {
     let _user = require_user(&state, &jar).await?;
 
     let limit = query.limit.unwrap_or(100).clamp(1, 500) as i64;
@@ -992,15 +1000,18 @@ async fn list_tags(
         .map(|r| json!({ "tag": r.tag, "count": r.count }))
         .collect();
 
-    Ok(Json(json!({ "items": items })))
+    let mut response = Json(json!({ "items": items })).into_response();
+    response.headers_mut().insert(
+        axum::http::header::CACHE_CONTROL,
+        "private, max-age=30".parse().unwrap(),
+    );
+    Ok(response)
 }
 
 /// Gallery summary: total images, tags (attached to ≥1 image), storage bytes,
-/// and per-rating counts.
-async fn stats(
-    State(state): State<AppState>,
-    jar: CookieJar,
-) -> Result<Json<StatsResponse>, ApiError> {
+/// and per-rating counts. Results are cached for 10 seconds because stats
+/// naturally lag behind concurrent imports.
+async fn stats(State(state): State<AppState>, jar: CookieJar) -> Result<Response, ApiError> {
     let _user = require_user(&state, &jar).await?;
 
     #[derive(sqlx::FromRow)]
@@ -1029,7 +1040,7 @@ async fn stats(
     .await
     .map_err(|e| ApiError::internal(e.into()))?;
 
-    Ok(Json(StatsResponse {
+    let mut response = Json(StatsResponse {
         total_images: row.total_images,
         total_tags: row.total_tags,
         total_size_bytes: row.total_size_bytes,
@@ -1038,7 +1049,13 @@ async fn stats(
             suggestive: row.suggestive_count,
             explicit: row.explicit_count,
         },
-    }))
+    })
+    .into_response();
+    response.headers_mut().insert(
+        axum::http::header::CACHE_CONTROL,
+        "private, max-age=10".parse().unwrap(),
+    );
+    Ok(response)
 }
 
 /// Adds an image to the caller's favorites. Idempotent (`ON CONFLICT DO NOTHING`).

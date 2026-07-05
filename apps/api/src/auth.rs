@@ -128,8 +128,10 @@ pub(crate) async fn create_session(
     Ok((session_id, expires_at))
 }
 
-/// Extracts the session cookie, validates it against the DB, and updates `last_seen_at`
-/// in a single round-trip via a CTE.
+/// Validates the session cookie against the DB and loads the corresponding
+/// user. This is a read-only query — `last_seen_at` is left unchanged because
+/// session expiry is governed by `expires_at` (fixed at creation time), not by
+/// a sliding window.
 ///
 /// Returns `Ok(None)` when unauthenticated (no cookie, expired, or invalid session).
 pub(crate) async fn current_user_from_jar(
@@ -142,14 +144,10 @@ pub(crate) async fn current_user_from_jar(
 
     let row = sqlx::query(
         r#"
-        WITH updated AS (
-            UPDATE sessions SET last_seen_at = now()
-            WHERE id = $1 AND expires_at > now()
-            RETURNING user_id
-        )
         SELECT u.id, u.username, u.role, u.avatar_url
-        FROM updated s
+        FROM sessions s
         JOIN users u ON u.id = s.user_id
+        WHERE s.id = $1 AND s.expires_at > now()
         "#,
     )
     .bind(session_id)
