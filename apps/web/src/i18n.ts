@@ -13,18 +13,24 @@ import zhCN from './locales/zh-CN.json'
 /** Derive the translation key type from the English base. */
 export type Translations = typeof en
 
+/** Supported languages with their i18n code and native display name. */
+export const SUPPORTED_LANGUAGES = [
+  { code: 'en', label: 'English' },
+  { code: 'zh-CN', label: '简体中文' },
+] as const
+
+/** Build the resource map from the language list so a new language only needs
+ *  an import + an entry in `SUPPORTED_LANGUAGES`. */
+const resources: Record<string, { translation: typeof en }> = {
+  en: { translation: en },
+  'zh-CN': { translation: zhCN },
+}
+
 i18n
   .use(LanguageDetector)
   .use(initReactI18next)
   .init({
-    resources: {
-      en: {
-        translation: en,
-      },
-      'zh-CN': {
-        translation: zhCN,
-      },
-    },
+    resources,
     fallbackLng: 'en',
     interpolation: {
       escapeValue: false, // React already escapes by default

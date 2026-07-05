@@ -31,6 +31,7 @@ import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/react/shallow'
 
 import { useGalleryPreferencesStore } from '../gallery/gallery-preferences-store.ts'
+import { SUPPORTED_LANGUAGES } from '../i18n'
 import { SETTINGS_PANEL_HEIGHT } from '../lib/constants.ts'
 
 export interface SettingsDialogProps {
@@ -503,8 +504,11 @@ export function SettingsDialog({ open, onClose }: SettingsDialogProps) {
               onChange={(e) => i18n.changeLanguage(e.target.value)}
               sx={{ width: 150, mt: 1 }}
             >
-              <MenuItem value="en">English</MenuItem>
-              <MenuItem value="zh-CN">简体中文</MenuItem>
+              {SUPPORTED_LANGUAGES.map((lang) => (
+                <MenuItem key={lang.code} value={lang.code}>
+                  {lang.label}
+                </MenuItem>
+              ))}
             </Select>
           </Box>
         </TabPanel>
