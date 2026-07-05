@@ -200,7 +200,7 @@ export function AdminImportsPage() {
     },
     onError: (err: unknown) => {
       if (err instanceof ApiError && err.code === 'UPLOAD_ABORTED') {
-        showSnackbar('Upload cancelled', 'success')
+        showSnackbar(t('admin.imports.uploadCancelled'), 'success')
       } else {
         showSnackbar(
           t('admin.imports.uploadFail', {

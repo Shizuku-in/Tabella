@@ -342,6 +342,7 @@
       "startSuccess": "Job started. Job ID: {{id}}",
       "startFail": "Failed to start job: {{message}}",
       "uploadFail": "Failed to upload: {{message}}",
+      "uploadCancelled": "Upload cancelled.",
       "buttons": {
         "package": "Package",
         "folder": "Folder",

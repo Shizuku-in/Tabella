@@ -342,6 +342,7 @@
       "startSuccess": "任务已启动。任务 ID: {{id}}",
       "startFail": "启动任务失败: {{message}}",
       "uploadFail": "上传失败: {{message}}",
+      "uploadCancelled": "上传已取消。",
       "buttons": {
         "package": "压缩包",
         "folder": "文件夹",
