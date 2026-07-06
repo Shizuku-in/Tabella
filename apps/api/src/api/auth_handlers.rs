@@ -55,15 +55,12 @@ fn client_ip_key(headers: &HeaderMap) -> String {
 fn check_login_rate_limit(key: &str) -> bool {
     let mut map = LOGIN_RATE_LIMITER.lock().unwrap();
     let now = Instant::now();
+    // Evict expired entries to prevent unbounded memory growth.
+    map.retain(|_, entry| now.duration_since(entry.window_start) <= RATE_LIMIT_WINDOW);
     let entry = map.entry(key.to_string()).or_insert(LoginRateEntry {
         failures: 0,
         window_start: now,
     });
-    // Reset the window if it has elapsed.
-    if now.duration_since(entry.window_start) > RATE_LIMIT_WINDOW {
-        entry.failures = 0;
-        entry.window_start = now;
-    }
     entry.failures >= MAX_FAILED_ATTEMPTS
 }
 
@@ -71,14 +68,11 @@ fn check_login_rate_limit(key: &str) -> bool {
 fn record_failed_login(key: &str) {
     let mut map = LOGIN_RATE_LIMITER.lock().unwrap();
     let now = Instant::now();
+    map.retain(|_, entry| now.duration_since(entry.window_start) <= RATE_LIMIT_WINDOW);
     let entry = map.entry(key.to_string()).or_insert(LoginRateEntry {
         failures: 0,
         window_start: now,
     });
-    if now.duration_since(entry.window_start) > RATE_LIMIT_WINDOW {
-        entry.failures = 0;
-        entry.window_start = now;
-    }
     entry.failures += 1;
 }
 

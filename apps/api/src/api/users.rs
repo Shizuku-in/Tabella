@@ -73,7 +73,9 @@ pub(crate) async fn create_user(
 
     validate_password(&payload.password)?;
 
-    let password_hash = hash_password(&payload.password).map_err(ApiError::internal)?;
+    let password_hash = hash_password(&payload.password)
+        .await
+        .map_err(ApiError::internal)?;
 
     let role_str = match payload.role {
         UserRole::Admin => "admin",
@@ -177,7 +179,7 @@ pub(crate) async fn update_user(
 
     if let Some(password) = payload.password {
         validate_password(&password)?;
-        let password_hash = hash_password(&password).map_err(ApiError::internal)?;
+        let password_hash = hash_password(&password).await.map_err(ApiError::internal)?;
         query_builder.push(", password_hash = ");
         query_builder.push_bind(password_hash);
         has_updates = true;

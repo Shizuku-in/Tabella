@@ -113,6 +113,7 @@ async fn update_profile(
                 .map_err(|e| ApiError::internal(e.into()))?;
 
         if !crate::auth::verify_password(current_password, &current_hash)
+            .await
             .map_err(ApiError::internal)?
         {
             return Err(ApiError::bad_request(
@@ -123,7 +124,9 @@ async fn update_profile(
 
         crate::api::users::validate_password(new_password)?;
 
-        let new_hash = hash_password(new_password).map_err(ApiError::internal)?;
+        let new_hash = hash_password(new_password)
+            .await
+            .map_err(ApiError::internal)?;
 
         query_builder.push(", password_hash = ");
         query_builder.push_bind(new_hash);

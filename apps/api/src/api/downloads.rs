@@ -128,7 +128,7 @@ async fn create_download_job(
 
     for record in &records {
         let abs_path = download_source_path(&state.config.media_root, record, &request.quality);
-        if let Ok(metadata) = std::fs::metadata(&abs_path) {
+        if let Ok(metadata) = tokio::fs::metadata(&abs_path).await {
             total_bytes += metadata.len() as i64;
         }
         image_paths.push((

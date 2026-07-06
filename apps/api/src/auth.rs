@@ -31,7 +31,7 @@ pub(crate) async fn bootstrap_default_admin(pool: &PgPool, config: &Config) -> R
         return Ok(());
     }
 
-    let password_hash = hash_password(&config.bootstrap_admin_password)?;
+    let password_hash = hash_password(&config.bootstrap_admin_password).await?;
     let normalized_username = normalize_username(&config.bootstrap_admin_username);
 
     sqlx::query(
@@ -86,7 +86,7 @@ pub(crate) async fn authenticate(
     };
 
     let password_hash: String = row.get("password_hash");
-    if !verify_password(password, &password_hash)? {
+    if !verify_password(password, &password_hash).await? {
         return Ok(None);
     }
 
@@ -244,25 +244,42 @@ pub(crate) fn session_id_from_jar(jar: &CookieJar, cookie_name: &str) -> Option<
 }
 
 /// Hashes a password with Argon2 (default params, random salt per call).
-pub(crate) fn hash_password(password: &str) -> Result<String> {
-    let salt = SaltString::generate(&mut OsRng);
-    let argon2 = Argon2::default();
+///
+/// Runs on a blocking thread via [`tokio::task::spawn_blocking`] because
+/// Argon2 is deliberately CPU-intensive (~100–300 ms).
+pub(crate) async fn hash_password(password: &str) -> Result<String> {
+    let password = password.to_string();
+    tokio::task::spawn_blocking(move || {
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
 
-    argon2
-        .hash_password(password.as_bytes(), &salt)
-        .map(|hash| hash.to_string())
-        .map_err(|error| anyhow!("failed to hash password: {error}"))
+        argon2
+            .hash_password(password.as_bytes(), &salt)
+            .map(|hash| hash.to_string())
+            .map_err(|error| anyhow!("failed to hash password: {error}"))
+    })
+    .await
+    .context("password hashing task panicked")?
 }
 
 /// Verifies a password against a stored Argon2 hash. Returns `Ok(true)` on match,
 /// `Ok(false)` on mismatch, and `Err` only when the stored hash is malformed.
-pub(crate) fn verify_password(password: &str, password_hash: &str) -> Result<bool> {
-    let parsed_hash = PasswordHash::new(password_hash)
-        .map_err(|error| anyhow!("stored password hash could not be parsed: {error}"))?;
+///
+/// Runs on a blocking thread via [`tokio::task::spawn_blocking`] because
+/// Argon2 is deliberately CPU-intensive (~100–300 ms).
+pub(crate) async fn verify_password(password: &str, password_hash: &str) -> Result<bool> {
+    let password = password.to_string();
+    let password_hash = password_hash.to_string();
+    tokio::task::spawn_blocking(move || {
+        let parsed_hash = PasswordHash::new(&password_hash)
+            .map_err(|error| anyhow!("stored password hash could not be parsed: {error}"))?;
 
-    Ok(Argon2::default()
-        .verify_password(password.as_bytes(), &parsed_hash)
-        .is_ok())
+        Ok(Argon2::default()
+            .verify_password(password.as_bytes(), &parsed_hash)
+            .is_ok())
+    })
+    .await
+    .context("password verification task panicked")?
 }
 
 /// Normalizes a username to trimmed lowercase for uniqueness comparison.

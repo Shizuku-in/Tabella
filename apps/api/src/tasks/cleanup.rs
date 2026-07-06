@@ -79,6 +79,7 @@ pub(crate) async fn run_cleanup_worker(pool: PgPool, temp_root: PathBuf, media_r
 
         cleanup_orphan_media(&pool, &media_root).await;
         cleanup_orphan_tags(&pool, ORPHAN_TEMP_TTL).await;
+        cleanup_expired_sessions(&pool).await;
     }
 }
 
@@ -146,6 +147,25 @@ async fn cleanup_orphan_tags(pool: &PgPool, older_than: Duration) {
         Ok(_) => {}
         Err(e) => {
             error!(%e, "Failed to prune orphan tags");
+        }
+    }
+}
+
+/// Deletes expired session rows so the `sessions` table doesn't grow
+/// indefinitely. Session validity is checked on every request via
+/// `expires_at > now()`, but expired rows are never removed otherwise.
+async fn cleanup_expired_sessions(pool: &PgPool) {
+    let result = sqlx::query("DELETE FROM sessions WHERE expires_at < now()")
+        .execute(pool)
+        .await;
+
+    match result {
+        Ok(r) if r.rows_affected() > 0 => {
+            info!(removed = r.rows_affected(), "Pruned expired sessions");
+        }
+        Ok(_) => {}
+        Err(e) => {
+            error!(%e, "Failed to prune expired sessions");
         }
     }
 }

@@ -769,18 +769,22 @@ async fn update_image(
 ) -> Result<Response, ApiError> {
     let _user = require_editor(&state, &jar).await?;
 
-    if let Some(rating) = &body.rating {
-        sqlx::query("UPDATE images SET rating = $1, updated_at = now() WHERE id = $2")
-            .bind(rating.as_str())
-            .bind(image_id)
-            .execute(&state.pool)
-            .await
-            .map_err(|e| ApiError::internal(e.into()))?;
-    }
+    let mut tx = state
+        .pool
+        .begin()
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
 
-    // note and source_url are plain scalar updates; empty string clears the field.
-    if body.note.is_some() || body.source_url.is_some() {
+    // Consolidated scalar updates (rating, note, source_url) in one query
+    // inside the same transaction as tags for atomicity.
+    let has_scalar_updates =
+        body.rating.is_some() || body.note.is_some() || body.source_url.is_some();
+    if has_scalar_updates {
         let mut builder = sqlx::QueryBuilder::new("UPDATE images SET updated_at = now()");
+        if let Some(ref rating) = body.rating {
+            builder.push(", rating = ");
+            builder.push_bind(rating.as_str());
+        }
         if let Some(ref note) = body.note {
             builder.push(", note = ");
             builder.push_bind(note.as_str());
@@ -793,18 +797,12 @@ async fn update_image(
         builder.push_bind(image_id);
         builder
             .build()
-            .execute(&state.pool)
+            .execute(&mut *tx)
             .await
             .map_err(|e| ApiError::internal(e.into()))?;
     }
 
     if let Some(tags) = &body.tags {
-        let mut tx = state
-            .pool
-            .begin()
-            .await
-            .map_err(|e| ApiError::internal(e.into()))?;
-
         // Remember which tags this image had so we can prune any that become
         // orphaned once the old associations are replaced below.
         let previous_tag_ids = crate::tags::image_tag_ids(&mut tx, image_id)
@@ -830,11 +828,11 @@ async fn update_image(
         crate::tags::cleanup_orphan_tags(&mut tx, &previous_tag_ids)
             .await
             .map_err(|e| ApiError::internal(e.into()))?;
-
-        tx.commit()
-            .await
-            .map_err(|e| ApiError::internal(e.into()))?;
     }
+
+    tx.commit()
+        .await
+        .map_err(|e| ApiError::internal(e.into()))?;
 
     Ok(StatusCode::NO_CONTENT.into_response())
 }
