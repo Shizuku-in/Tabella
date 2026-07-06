@@ -289,6 +289,13 @@ export function AdminImportsPage() {
             </TableRow>
           </TableHead>
           <TableBody>
+            {jobsQuery.isLoading && (
+              <TableRow>
+                <TableCell colSpan={3} align="center" sx={{ py: 6 }}>
+                  <CircularProgress size={24} />
+                </TableCell>
+              </TableRow>
+            )}
             {Object.values(activeUploads)
               .reverse()
               .map((job) => (

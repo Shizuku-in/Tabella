@@ -233,7 +233,7 @@ export function GalleryCard({
                 onClick={(e) => {
                   e.stopPropagation()
                 }}
-                aria-label="download"
+                aria-label={t('gallery.viewer.download')}
                 sx={{
                   width: 32,
                   height: 32,

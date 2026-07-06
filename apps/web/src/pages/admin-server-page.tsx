@@ -9,6 +9,7 @@ import {
   Alert,
   Box,
   Button,
+  CircularProgress,
   FormControlLabel,
   Paper,
   Snackbar,
@@ -192,7 +193,11 @@ export function AdminServerPage() {
   }
 
   if (settingsQuery.isLoading || !settings) {
-    return <Typography sx={{ p: 4 }}>{t('admin.server.loading')}</Typography>
+    return (
+      <Stack sx={{ alignItems: 'center', justifyContent: 'center', py: 8 }}>
+        <CircularProgress size={32} />
+      </Stack>
+    )
   }
 
   if (settingsQuery.isError) {

@@ -6,6 +6,7 @@ import { AddOutlined, DeleteOutlined, EditOutlined } from '@mui/icons-material'
 import {
   Alert,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -179,6 +180,13 @@ export function AdminUsersPage() {
             </TableRow>
           </TableHead>
           <TableBody>
+            {usersQuery.isLoading && (
+              <TableRow>
+                <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
+                  <CircularProgress size={24} />
+                </TableCell>
+              </TableRow>
+            )}
             {usersQuery.data?.map((u) => (
               <TableRow key={u.id}>
                 <TableCell>{u.id}</TableCell>
