@@ -5,6 +5,7 @@ use sqlx::PgPool;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
+use tokio_util::sync::CancellationToken;
 use tracing::{error, info};
 
 const ORPHAN_TEMP_TTL: Duration = Duration::from_secs(24 * 3600);
@@ -21,11 +22,30 @@ struct ExpiredJobRow {
 
 /// Runs every hour: deletes expired download jobs + zips, prunes orphaned
 /// temp dirs/older than 24h, and sweeps orphan tags + media files.
-pub(crate) async fn run_cleanup_worker(pool: PgPool, temp_root: PathBuf, media_root: PathBuf) {
+///
+/// Respects `shutdown`: wakes from idle sleep immediately when the token is
+/// cancelled so the worker exits without waiting for the next hourly tick.
+pub(crate) async fn run_cleanup_worker(
+    pool: PgPool,
+    temp_root: PathBuf,
+    media_root: PathBuf,
+    shutdown: CancellationToken,
+) {
     let mut interval = tokio::time::interval(Duration::from_secs(3600)); // Every hour
 
     loop {
-        interval.tick().await;
+        // Wait for the next tick, but exit immediately if shutdown is requested.
+        // `biased` ensures the shutdown branch is always checked first so we
+        // don't waste time running a non-urgent cleanup cycle at shutdown.
+        tokio::select! {
+            biased;
+            _ = shutdown.cancelled() => {
+                info!("Cleanup worker stopping: shutdown requested");
+                return;
+            }
+            _ = interval.tick() => {}
+        }
+
         info!("Running download jobs cleanup task");
 
         let expired_jobs = sqlx::query_as::<_, ExpiredJobRow>(

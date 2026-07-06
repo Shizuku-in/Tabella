@@ -124,12 +124,11 @@ async fn main() -> anyhow::Result<()> {
     // Spawn the import worker; keep its handle so we can wait for the in-flight
     // job to finish during graceful shutdown.
     let import_worker_handle = tokio::spawn(import_worker::start_worker(app_state.clone()));
-    // The cleanup worker is a periodic, idempotent task with no in-flight state
-    // worth protecting, so it can be dropped on shutdown.
-    tokio::spawn(tasks::cleanup::run_cleanup_worker(
+    let cleanup_worker_handle = tokio::spawn(tasks::cleanup::run_cleanup_worker(
         pool.clone(),
         config.temp_root.clone(),
         config.media_root.clone(),
+        shutdown.clone(),
     ));
 
     let frontend_dir = std::env::var("TABELLA_FRONTEND_DIR").unwrap_or_else(|_| "dist".to_string());
@@ -205,10 +204,10 @@ async fn main() -> anyhow::Result<()> {
         .context("axum server exited unexpectedly")?;
 
     // `shutdown_signal` already cancelled the token the moment the signal
-    // arrived, so the import worker stopped claiming new jobs and open SSE
+    // arrived, so the background workers stopped claiming new work and open SSE
     // streams ended (letting graceful shutdown drain and return). Now wait for
-    // the worker to finish its in-flight job, bounded by a timeout so a large
-    // archive can't hang shutdown.
+    // the workers to finish their in-flight work, bounded by a timeout so a slow
+    // job or a stuck cleanup can't hang shutdown.
     tracing::info!("HTTP server stopped, draining background workers");
 
     const WORKER_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(30);
@@ -219,6 +218,16 @@ async fn main() -> anyhow::Result<()> {
             "import worker did not finish within {}s; exiting anyway (the in-flight job will be \
              reset to failed on next startup)",
             WORKER_SHUTDOWN_TIMEOUT.as_secs()
+        ),
+    }
+
+    const CLEANUP_SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(10);
+    match tokio::time::timeout(CLEANUP_SHUTDOWN_TIMEOUT, cleanup_worker_handle).await {
+        Ok(Ok(())) => tracing::info!("cleanup worker drained cleanly"),
+        Ok(Err(e)) => tracing::error!("cleanup worker task panicked during shutdown: {:?}", e),
+        Err(_) => tracing::warn!(
+            "cleanup worker did not finish within {}s; exiting anyway",
+            CLEANUP_SHUTDOWN_TIMEOUT.as_secs()
         ),
     }
 
