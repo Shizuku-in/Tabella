@@ -41,6 +41,32 @@ use super::{
     guards::{require_editor, require_user},
 };
 
+/// Pushes an `AND EXISTS` / `AND NOT EXISTS` subquery that filters images by
+/// a single tag. The tag string may include an optional `namespace:` prefix.
+fn push_tag_filter(builder: &mut sqlx::QueryBuilder<sqlx::Postgres>, tag: &str, negate: bool) {
+    let (namespace, name) = match tag.find(':') {
+        Some(pos) => (Some(&tag[..pos]), &tag[pos + 1..]),
+        None => (None, tag),
+    };
+
+    let exists = if negate {
+        " AND NOT EXISTS ("
+    } else {
+        " AND EXISTS ("
+    };
+    builder.push(exists);
+    builder.push(
+        " SELECT 1 FROM image_tags it JOIN tags t ON t.id = it.tag_id \
+         WHERE it.image_id = i.id AND t.normalized_name = ",
+    );
+    builder.push_bind(name);
+    if let Some(ns) = namespace {
+        builder.push(" AND t.normalized_namespace = ");
+        builder.push_bind(ns);
+    }
+    builder.push(") ");
+}
+
 /// Registers image, tag, stats, and favorite routes under `/api/`.
 pub(crate) fn routes(state: AppState) -> Router {
     Router::new()
@@ -203,45 +229,11 @@ async fn list_images(
     }
 
     for tag in &include_tags {
-        let (namespace, name) = match tag.find(':') {
-            Some(pos) => (Some(&tag[..pos]), &tag[pos + 1..]),
-            None => (None, tag.as_str()),
-        };
-
-        builder.push(
-            " AND EXISTS ( \
-                SELECT 1 \
-                FROM image_tags it \
-                JOIN tags t ON t.id = it.tag_id \
-                WHERE it.image_id = i.id AND t.normalized_name = ",
-        );
-        builder.push_bind(name);
-        if let Some(ns) = namespace {
-            builder.push(" AND t.normalized_namespace = ");
-            builder.push_bind(ns);
-        }
-        builder.push(") ");
+        push_tag_filter(&mut builder, tag, false);
     }
 
     for tag in &exclude_tags {
-        let (namespace, name) = match tag.find(':') {
-            Some(pos) => (Some(&tag[..pos]), &tag[pos + 1..]),
-            None => (None, tag.as_str()),
-        };
-
-        builder.push(
-            " AND NOT EXISTS ( \
-                SELECT 1 \
-                FROM image_tags it \
-                JOIN tags t ON t.id = it.tag_id \
-                WHERE it.image_id = i.id AND t.normalized_name = ",
-        );
-        builder.push_bind(name);
-        if let Some(ns) = namespace {
-            builder.push(" AND t.normalized_namespace = ");
-            builder.push_bind(ns);
-        }
-        builder.push(") ");
+        push_tag_filter(&mut builder, tag, true);
     }
 
     if let Some(cursor) = &cursor {
@@ -528,45 +520,11 @@ async fn random_image(
     }
 
     for tag in &include_tags {
-        let (namespace, name) = match tag.find(':') {
-            Some(pos) => (Some(&tag[..pos]), &tag[pos + 1..]),
-            None => (None, tag.as_str()),
-        };
-
-        builder.push(
-            "AND EXISTS ( \
-                SELECT 1 \
-                FROM image_tags it \
-                JOIN tags t ON t.id = it.tag_id \
-                WHERE it.image_id = i.id AND t.normalized_name = ",
-        );
-        builder.push_bind(name);
-        if let Some(ns) = namespace {
-            builder.push(" AND t.normalized_namespace = ");
-            builder.push_bind(ns);
-        }
-        builder.push(") ");
+        push_tag_filter(&mut builder, tag, false);
     }
 
     for tag in &exclude_tags {
-        let (namespace, name) = match tag.find(':') {
-            Some(pos) => (Some(&tag[..pos]), &tag[pos + 1..]),
-            None => (None, tag.as_str()),
-        };
-
-        builder.push(
-            "AND NOT EXISTS ( \
-                SELECT 1 \
-                FROM image_tags it \
-                JOIN tags t ON t.id = it.tag_id \
-                WHERE it.image_id = i.id AND t.normalized_name = ",
-        );
-        builder.push_bind(name);
-        if let Some(ns) = namespace {
-            builder.push(" AND t.normalized_namespace = ");
-            builder.push_bind(ns);
-        }
-        builder.push(") ");
+        push_tag_filter(&mut builder, tag, true);
     }
 
     builder.push("ORDER BY random() LIMIT 1");
