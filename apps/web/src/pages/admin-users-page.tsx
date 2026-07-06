@@ -5,6 +5,7 @@
 import { AddOutlined, DeleteOutlined, EditOutlined } from '@mui/icons-material'
 import {
   Alert,
+  Box,
   Button,
   CircularProgress,
   Dialog,
@@ -30,7 +31,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/auth-provider.tsx'
 import { UserDialog } from '../components/user-dialog.tsx'
 import { getApiErrorMessage, request } from '../lib/api.ts'
-import { SNACKBAR_DURATION_SHORT } from '../lib/constants.ts'
+import { CONTENT_MAX_WIDTH, SNACKBAR_DURATION_SHORT } from '../lib/constants.ts'
 import { QUERY_KEYS } from '../lib/query-keys.ts'
 import type { CreateUserDto, UpdateUserDto, UserRow } from '../types.ts'
 
@@ -158,7 +159,7 @@ export function AdminUsersPage() {
   }
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} sx={{ maxWidth: CONTENT_MAX_WIDTH, mx: 'auto' }}>
       <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6" sx={{ display: 'none' }}>
           {t('admin.users.title')}
@@ -169,56 +170,58 @@ export function AdminUsersPage() {
       </Stack>
 
       <Paper sx={{ overflow: 'hidden' }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ width: '80px' }}>{t('admin.users.id')}</TableCell>
-              <TableCell>{t('admin.users.username')}</TableCell>
-              <TableCell>{t('admin.users.role')}</TableCell>
-              <TableCell>{t('admin.users.createdAt')}</TableCell>
-              <TableCell align="right">{t('admin.users.actions')}</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {usersQuery.isLoading && (
+        <Box sx={{ overflowX: 'auto' }}>
+          <Table size="small">
+            <TableHead>
               <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
-                  <CircularProgress size={24} />
-                </TableCell>
+                <TableCell sx={{ width: '80px' }}>{t('admin.users.id')}</TableCell>
+                <TableCell>{t('admin.users.username')}</TableCell>
+                <TableCell>{t('admin.users.role')}</TableCell>
+                <TableCell>{t('admin.users.createdAt')}</TableCell>
+                <TableCell align="right">{t('admin.users.actions')}</TableCell>
               </TableRow>
-            )}
-            {usersQuery.data?.map((u) => (
-              <TableRow key={u.id}>
-                <TableCell>{u.id}</TableCell>
-                <TableCell>{u.username}</TableCell>
-                <TableCell sx={{ textTransform: 'capitalize' }}>{u.role}</TableCell>
-                <TableCell>{new Date(u.created_at).toLocaleString()}</TableCell>
-                <TableCell align="right">
-                  <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
-                    <IconButton size="small" color="primary" onClick={() => handleEditClick(u)}>
-                      <EditOutlined fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={() => handleDeleteClick(u)}
-                      disabled={u.id === currentUser?.id}
-                    >
-                      <DeleteOutlined fontSize="small" />
-                    </IconButton>
-                  </Stack>
-                </TableCell>
-              </TableRow>
-            ))}
-            {usersQuery.data?.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={5} align="center" sx={{ py: 3, color: 'text.secondary' }}>
-                  {t('admin.users.noUsers')}
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+            </TableHead>
+            <TableBody>
+              {usersQuery.isLoading && (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 6 }}>
+                    <CircularProgress size={24} />
+                  </TableCell>
+                </TableRow>
+              )}
+              {usersQuery.data?.map((u) => (
+                <TableRow key={u.id}>
+                  <TableCell>{u.id}</TableCell>
+                  <TableCell>{u.username}</TableCell>
+                  <TableCell sx={{ textTransform: 'capitalize' }}>{u.role}</TableCell>
+                  <TableCell>{new Date(u.created_at).toLocaleString()}</TableCell>
+                  <TableCell align="right">
+                    <Stack direction="row" spacing={1} sx={{ justifyContent: 'flex-end' }}>
+                      <IconButton size="small" color="primary" onClick={() => handleEditClick(u)}>
+                        <EditOutlined fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => handleDeleteClick(u)}
+                        disabled={u.id === currentUser?.id}
+                      >
+                        <DeleteOutlined fontSize="small" />
+                      </IconButton>
+                    </Stack>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {usersQuery.data?.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} align="center" sx={{ py: 3, color: 'text.secondary' }}>
+                    {t('admin.users.noUsers')}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Box>
       </Paper>
 
       <UserDialog

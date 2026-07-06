@@ -27,7 +27,11 @@ import { Fragment, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { getApiErrorMessage, request } from '../lib/api.ts'
-import { SETTINGS_PANEL_HEIGHT, SNACKBAR_DURATION_SHORT } from '../lib/constants.ts'
+import {
+  CONTENT_MAX_WIDTH,
+  SETTINGS_PANEL_HEIGHT,
+  SNACKBAR_DURATION_SHORT,
+} from '../lib/constants.ts'
 import { QUERY_KEYS } from '../lib/query-keys.ts'
 
 interface ServerSettings {
@@ -215,7 +219,7 @@ export function AdminServerPage() {
   return (
     <Fragment>
       <form onSubmit={handleSave} noValidate>
-        <Stack spacing={3} sx={{ p: { xs: 2, sm: 4 }, maxWidth: 800, mx: 'auto' }}>
+        <Stack spacing={3} sx={{ p: { xs: 2, sm: 4 }, maxWidth: CONTENT_MAX_WIDTH, mx: 'auto' }}>
           <Stack direction="row" sx={{ alignItems: 'center', justifyContent: 'space-between' }}>
             <Typography variant="h5" sx={{ fontWeight: 600 }}>
               {t('admin.server.title')}
@@ -234,7 +238,7 @@ export function AdminServerPage() {
             sx={{
               display: 'flex',
               flexDirection: isMobile ? 'column' : 'row',
-              height: SETTINGS_PANEL_HEIGHT,
+              minHeight: SETTINGS_PANEL_HEIGHT,
               borderRadius: 1,
               overflow: 'hidden',
               '& input[type=number]': {

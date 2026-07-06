@@ -24,5 +24,8 @@ export const TAG_SUGGEST_LIMIT = 20
 /** Snackbar auto-hide duration for success/info (ms). */
 export const SNACKBAR_DURATION_SHORT = 4000
 
+/** Max width for content pages (Profile, Statistics, Admin Users/Imports/Server). */
+export const CONTENT_MAX_WIDTH = 800
+
 /** Snackbar auto-hide duration for errors/long messages (ms). */
 export const SNACKBAR_DURATION_LONG = 6000

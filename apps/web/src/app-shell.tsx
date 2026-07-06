@@ -5,7 +5,7 @@
  */
 
 import type { PaletteMode } from '@mui/material'
-import { Box, CircularProgress, Container } from '@mui/material'
+import { Box, Container } from '@mui/material'
 import { lazy, Suspense, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 
@@ -44,7 +44,7 @@ export default function AppShell({ mode, onToggleMode }: AppShellProps) {
       <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
 
       {hasOpenedAdvancedSearch && (
-        <Suspense fallback={<CircularProgress size={24} />}>
+        <Suspense fallback={null}>
           <AdvancedSearchDialog
             open={advancedSearchOpen}
             onClose={() => setAdvancedSearchOpen(false)}

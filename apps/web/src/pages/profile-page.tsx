@@ -23,7 +23,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '../auth/auth-provider.tsx'
 import { ApiError, getApiErrorMessage, request, uploadWithProgress } from '../lib/api.ts'
 import { API_ERROR_CODES } from '../lib/api-error-codes.ts'
-import { SNACKBAR_DURATION_SHORT } from '../lib/constants.ts'
+import { CONTENT_MAX_WIDTH, SNACKBAR_DURATION_SHORT } from '../lib/constants.ts'
 import { QUERY_KEYS } from '../lib/query-keys.ts'
 import type { SessionUser } from '../types.ts'
 
@@ -199,7 +199,7 @@ export function ProfilePage() {
     Boolean(avatarFile)
 
   return (
-    <Stack spacing={4} sx={{ maxWidth: 600, mx: 'auto', mt: 4 }}>
+    <Stack spacing={4} sx={{ maxWidth: CONTENT_MAX_WIDTH, mx: 'auto', mt: 4 }}>
       <Typography variant="h5" sx={{ fontWeight: 600 }}>
         {t('auth.profile.title')}
       </Typography>

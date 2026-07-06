@@ -12,7 +12,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
   TableRow,
   Typography,
 } from '@mui/material'
@@ -24,6 +23,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { request } from '../lib/api.ts'
+import { CONTENT_MAX_WIDTH } from '../lib/constants.ts'
 import { ROUTES } from '../lib/routes.ts'
 import { getTagColor } from '../lib/tags.ts'
 
@@ -89,7 +89,12 @@ export function StatisticsPage() {
   return (
     <Stack
       spacing={3}
-      sx={{ p: { xs: 2, sm: 4 }, maxWidth: 800, mx: 'auto', height: 'calc(100vh - 80px)' }}
+      sx={{
+        p: { xs: 2, sm: 4 },
+        maxWidth: CONTENT_MAX_WIDTH,
+        mx: 'auto',
+        height: 'calc(100vh - 80px)',
+      }}
     >
       <Typography variant="h5" sx={{ fontWeight: 600 }}>
         {t('stats.title')}
@@ -172,15 +177,7 @@ export function StatisticsPage() {
 
         {tags.length > 0 ? (
           <Box sx={{ flex: 1, overflow: 'auto' }}>
-            <Table size="small" stickyHeader>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: 600 }}>{t('stats.tagName')}</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 600, width: 100 }}>
-                    {t('stats.tagCount')}
-                  </TableCell>
-                </TableRow>
-              </TableHead>
+            <Table size="small" sx={{ tableLayout: 'fixed' }}>
               <TableBody>
                 {tags.map((item) => (
                   <TableRow key={item.tag} sx={{ '&:last-child td': { border: 0 } }}>
@@ -194,6 +191,10 @@ export function StatisticsPage() {
                         component="span"
                         onClick={() => handleTagClick(item.tag)}
                         sx={{
+                          display: 'block',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
                           color: getTagColor(item.tag, theme),
                           cursor: 'pointer',
                           '&:hover': { textDecoration: 'underline' },
@@ -204,7 +205,11 @@ export function StatisticsPage() {
                     </TableCell>
                     <TableCell
                       align="right"
-                      sx={{ color: 'text.secondary', fontVariantNumeric: 'tabular-nums' }}
+                      sx={{
+                        color: 'text.secondary',
+                        fontVariantNumeric: 'tabular-nums',
+                        width: 70,
+                      }}
                     >
                       {item.count}
                     </TableCell>

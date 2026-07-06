@@ -45,7 +45,7 @@ import {
   request,
   uploadWithProgress,
 } from '../lib/api.ts'
-import { SNACKBAR_DURATION_LONG } from '../lib/constants.ts'
+import { CONTENT_MAX_WIDTH, SNACKBAR_DURATION_LONG } from '../lib/constants.ts'
 import { QUERY_KEYS } from '../lib/query-keys.ts'
 import type { ImportJobRow, ImportJobStatus } from '../types.ts'
 
@@ -229,7 +229,7 @@ export function AdminImportsPage() {
   }
 
   return (
-    <Stack spacing={3}>
+    <Stack spacing={3} sx={{ maxWidth: CONTENT_MAX_WIDTH, mx: 'auto' }}>
       <Stack
         direction={{ xs: 'column', md: 'row' }}
         spacing={2}
