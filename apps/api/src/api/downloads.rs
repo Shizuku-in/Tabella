@@ -330,6 +330,8 @@ async fn download_job_file(
         )
     })?;
 
+    let file_size = file.metadata().await.map(|m| m.len()).ok();
+
     let stream = ReaderStream::new(file);
     let body = Body::from_stream(stream);
 
@@ -345,6 +347,12 @@ async fn download_job_file(
         header::CONTENT_DISPOSITION,
         HeaderValue::from_str(&content_disposition).map_err(|e| ApiError::internal(e.into()))?,
     );
+    if let Some(size) = file_size {
+        response.headers_mut().insert(
+            header::CONTENT_LENGTH,
+            HeaderValue::from_str(&size.to_string()).map_err(|e| ApiError::internal(e.into()))?,
+        );
+    }
 
     Ok(response)
 }
