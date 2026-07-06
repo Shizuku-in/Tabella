@@ -37,11 +37,7 @@ pub(crate) async fn list_users(
     let users = rows
         .into_iter()
         .map(|row| {
-            let role = match row.role.as_str() {
-                "admin" => UserRole::Admin,
-                "editor" => UserRole::Editor,
-                _ => UserRole::Viewer,
-            };
+            let role = UserRole::try_from(row.role.as_str()).unwrap_or(UserRole::Viewer);
             UserResponse {
                 id: row.id,
                 username: row.username,
@@ -77,11 +73,7 @@ pub(crate) async fn create_user(
         .await
         .map_err(ApiError::internal)?;
 
-    let role_str = match payload.role {
-        UserRole::Admin => "admin",
-        UserRole::Editor => "editor",
-        UserRole::Viewer => "viewer",
-    };
+    let role_str = payload.role.as_str();
 
     let row = sqlx::query!(
         r#"
@@ -164,11 +156,7 @@ pub(crate) async fn update_user(
     let mut password_changed = false;
 
     if let Some(role) = payload.role {
-        let role_str = match role {
-            UserRole::Admin => "admin",
-            UserRole::Editor => "editor",
-            UserRole::Viewer => "viewer",
-        };
+        let role_str = role.as_str();
         if role_str != current_role {
             query_builder.push(", role = ");
             query_builder.push_bind(role_str);

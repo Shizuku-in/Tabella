@@ -164,14 +164,10 @@ async fn update_profile(
             .map_err(|e| ApiError::internal(e.into()))?;
     }
 
-    use crate::dto::UserRole;
     use sqlx::Row;
     let role_str: String = row.get("role");
-    let role = match role_str.as_str() {
-        "admin" => UserRole::Admin,
-        "editor" => UserRole::Editor,
-        _ => UserRole::Viewer,
-    };
+    let role =
+        crate::dto::UserRole::try_from(role_str.as_str()).unwrap_or(crate::dto::UserRole::Viewer);
 
     Ok(Json(UserResponse {
         id: row.get("id"),

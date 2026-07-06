@@ -26,12 +26,23 @@ pub(crate) struct HealthResponse {
 }
 
 /// Role-based access control: `admin > editor > viewer`.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum UserRole {
     Admin,
     Editor,
     Viewer,
+}
+
+impl UserRole {
+    /// Returns the wire representation used in JSON and the database.
+    pub(crate) fn as_str(self) -> &'static str {
+        match self {
+            Self::Admin => "admin",
+            Self::Editor => "editor",
+            Self::Viewer => "viewer",
+        }
+    }
 }
 
 impl TryFrom<&str> for UserRole {
