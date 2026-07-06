@@ -191,7 +191,7 @@ export function StatisticsPage() {
                         component="span"
                         onClick={() => handleTagClick(item.tag)}
                         sx={{
-                          display: 'block',
+                          display: 'inline-block',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
                           whiteSpace: 'nowrap',
