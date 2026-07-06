@@ -159,9 +159,9 @@ async fn cleanup_orphan_media(pool: &PgPool, media_root: &Path) {
     let referenced: Result<Vec<String>, _> = sqlx::query_scalar(
         r#"
         SELECT original_path FROM images
-        UNION
+        UNION ALL
         SELECT preview_path FROM images
-        UNION
+        UNION ALL
         SELECT thumbnail_path FROM images
         "#,
     )

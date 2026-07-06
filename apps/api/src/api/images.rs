@@ -1028,7 +1028,7 @@ async fn stats(State(state): State<AppState>, jar: CookieJar) -> Result<Response
         r#"
         SELECT
             COUNT(*)::bigint AS total_images,
-            COALESCE((SELECT COUNT(*) FROM tags t WHERE EXISTS (SELECT 1 FROM image_tags it WHERE it.tag_id = t.id)), 0)::bigint AS total_tags,
+            COALESCE((SELECT COUNT(DISTINCT tag_id) FROM image_tags), 0)::bigint AS total_tags,
             COALESCE(SUM(file_size), 0)::bigint AS total_size_bytes,
             COALESCE(SUM(CASE WHEN rating = 'safe' THEN 1 ELSE 0 END), 0)::bigint AS safe_count,
             COALESCE(SUM(CASE WHEN rating = 'suggestive' THEN 1 ELSE 0 END), 0)::bigint AS suggestive_count,
