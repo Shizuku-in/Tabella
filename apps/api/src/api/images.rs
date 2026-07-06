@@ -617,7 +617,7 @@ fn decode_image_cursor(raw: &str) -> Result<ImageListCursor, ApiError> {
 /// Pushes a `WHERE` clause that continues a keyset-paginated scan after the
 /// last-seen row. The comparison operator and columns depend on the sort direction.
 fn push_image_cursor_filter(
-    builder: &mut sqlx::QueryBuilder<'_, sqlx::Postgres>,
+    builder: &mut sqlx::QueryBuilder<sqlx::Postgres>,
     sort: ImageSort,
     cursor: &ImageListCursor,
 ) -> Result<(), ApiError> {
@@ -702,7 +702,7 @@ fn push_image_cursor_filter(
 
 /// Appends an `ORDER BY` clause for the requested sort mode, with `i.id` as
 /// the deterministic tiebreaker.
-fn push_image_sort_order(builder: &mut sqlx::QueryBuilder<'_, sqlx::Postgres>, sort: ImageSort) {
+fn push_image_sort_order(builder: &mut sqlx::QueryBuilder<sqlx::Postgres>, sort: ImageSort) {
     match sort {
         ImageSort::Newest => {
             builder.push(" ORDER BY i.imported_at DESC, i.id DESC ");
