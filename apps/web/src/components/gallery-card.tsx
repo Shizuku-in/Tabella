@@ -170,7 +170,9 @@ export function GalleryCard({
           sx={{
             position: 'absolute',
             insetInline: 0,
-            bottom: 0,
+            // -1px ensures the gradient overlay always reaches the card's bottom
+            // edge regardless of sub-pixel rounding at fractional container heights.
+            bottom: '-1px',
             display: 'flex',
             alignItems: 'flex-end',
             justifyContent: 'space-between',
