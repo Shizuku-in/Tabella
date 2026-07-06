@@ -106,6 +106,17 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("failed to bootstrap default admin")?;
 
+    // Crash recovery: mark download jobs interrupted by a previous restart.
+    // Download jobs are spawned via tokio::spawn and have no owning worker loop,
+    // so recovery must happen at startup rather than inside a worker.
+    if let Err(e) = sqlx::query(
+        "UPDATE download_jobs SET status = 'failed', error_message = 'Interrupted by server restart', error_code = 'internal_error' WHERE status IN ('pending', 'processing')"
+    )
+    .execute(&pool)
+    .await {
+        tracing::error!("failed to recover stuck download jobs: {:?}", e);
+    }
+
     let (tx, _rx) = tokio::sync::broadcast::channel(512);
 
     let shutdown = tokio_util::sync::CancellationToken::new();
