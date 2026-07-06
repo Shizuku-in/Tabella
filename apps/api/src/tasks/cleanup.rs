@@ -40,13 +40,13 @@ pub(crate) async fn run_cleanup_worker(
         tokio::select! {
             biased;
             _ = shutdown.cancelled() => {
-                info!("Cleanup worker stopping: shutdown requested");
+                info!("cleanup worker stopping: shutdown requested");
                 return;
             }
             _ = interval.tick() => {}
         }
 
-        info!("Running download jobs cleanup task");
+        info!("running download jobs cleanup task");
 
         let expired_jobs = sqlx::query_as::<_, ExpiredJobRow>(
             r#"
@@ -67,9 +67,9 @@ pub(crate) async fn run_cleanup_worker(
                         let abs_path = temp_root.join(&file_path);
                         if abs_path.exists() {
                             if let Err(e) = tokio::fs::remove_file(&abs_path).await {
-                                error!(%job_id, %e, "Failed to delete expired zip file");
+                                error!(%job_id, %e, "failed to delete expired zip file");
                             } else {
-                                info!(%job_id, "Deleted expired zip file");
+                                info!(%job_id, "deleted expired zip file");
                             }
                         }
                     }
@@ -80,12 +80,12 @@ pub(crate) async fn run_cleanup_worker(
                         .execute(&pool)
                         .await
                     {
-                        error!(%job_id, %e, "Failed to delete expired job record");
+                        error!(%job_id, %e, "failed to delete expired job record");
                     }
                 }
             }
             Err(e) => {
-                error!(%e, "Failed to fetch expired download jobs");
+                error!(%e, "failed to fetch expired download jobs");
             }
         }
 
@@ -137,9 +137,9 @@ async fn cleanup_old_child_dirs(root: &Path, label: &str, older_than: Duration) 
 
         let path = entry.path();
         if let Err(e) = tokio::fs::remove_dir_all(&path).await {
-            error!(?path, %label, %e, "Failed to delete orphaned temp directory");
+            error!(?path, %label, %e, "failed to delete orphaned temp directory");
         } else {
-            info!(?path, %label, "Deleted orphaned temp directory");
+            info!(?path, %label, "deleted orphaned temp directory");
         }
     }
 }
@@ -162,11 +162,11 @@ async fn cleanup_orphan_tags(pool: &PgPool, older_than: Duration) {
 
     match result {
         Ok(r) if r.rows_affected() > 0 => {
-            info!(removed = r.rows_affected(), "Pruned orphan tags");
+            info!(removed = r.rows_affected(), "pruned orphan tags");
         }
         Ok(_) => {}
         Err(e) => {
-            error!(%e, "Failed to prune orphan tags");
+            error!(%e, "failed to prune orphan tags");
         }
     }
 }
@@ -181,11 +181,11 @@ async fn cleanup_expired_sessions(pool: &PgPool) {
 
     match result {
         Ok(r) if r.rows_affected() > 0 => {
-            info!(removed = r.rows_affected(), "Pruned expired sessions");
+            info!(removed = r.rows_affected(), "pruned expired sessions");
         }
         Ok(_) => {}
         Err(e) => {
-            error!(%e, "Failed to prune expired sessions");
+            error!(%e, "failed to prune expired sessions");
         }
     }
 }
@@ -211,7 +211,7 @@ async fn cleanup_orphan_media(pool: &PgPool, media_root: &Path) {
     let referenced: HashSet<String> = match referenced {
         Ok(paths) => paths.into_iter().collect(),
         Err(e) => {
-            error!(%e, "Failed to fetch referenced media paths; skipping orphan media sweep");
+            error!(%e, "failed to fetch referenced media paths; skipping orphan media sweep");
             return;
         }
     };
@@ -255,9 +255,9 @@ async fn cleanup_orphan_media(pool: &PgPool, media_root: &Path) {
 
             let path = entry.path();
             if let Err(e) = tokio::fs::remove_file(&path).await {
-                error!(?path, %e, "Failed to delete orphaned media file");
+                error!(?path, %e, "failed to delete orphaned media file");
             } else {
-                info!(?path, "Deleted orphaned media file");
+                info!(?path, "deleted orphaned media file");
             }
         }
     }

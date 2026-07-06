@@ -217,7 +217,7 @@ async fn upload_import_files(
         let name = field.name().unwrap_or("unknown_name").to_string();
         let file_name_opt = field.file_name().map(|s| s.to_string());
         tracing::info!(
-            "Received field: name={}, file_name={:?}",
+            "received field: name={}, file_name={:?}",
             name,
             file_name_opt
         );

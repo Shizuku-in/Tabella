@@ -23,7 +23,7 @@ pub(crate) async fn process_archive_job(state: AppState, task: ArchiveTask) {
     let job_id = task.job_id;
     match spawn_blocking_zip(task).await {
         Ok(relative_zip_path) => {
-            info!(%job_id, "Archive job completed successfully");
+            info!(%job_id, "archive job completed successfully");
             let _ = sqlx::query(
                 r#"
                 UPDATE download_jobs
@@ -35,7 +35,7 @@ pub(crate) async fn process_archive_job(state: AppState, task: ArchiveTask) {
             .bind(job_id)
             .execute(&state.pool)
             .await
-            .inspect_err(|e| error!(%job_id, %e, "Failed to update job status to completed"));
+            .inspect_err(|e| error!(%job_id, %e, "failed to update job status to completed"));
 
             let _ = state.tx.send(ServerEvent {
                 event: "download_job_updated".to_string(),
@@ -43,7 +43,7 @@ pub(crate) async fn process_archive_job(state: AppState, task: ArchiveTask) {
             });
         }
         Err(e) => {
-            error!(%job_id, %e, "Archive job failed");
+            error!(%job_id, %e, "archive job failed");
             let _ = sqlx::query(
                 r#"
                 UPDATE download_jobs
@@ -58,7 +58,7 @@ pub(crate) async fn process_archive_job(state: AppState, task: ArchiveTask) {
             .bind(job_id)
             .execute(&state.pool)
             .await
-            .inspect_err(|e| error!(%job_id, %e, "Failed to update job status to failed"));
+            .inspect_err(|e| error!(%job_id, %e, "failed to update job status to failed"));
 
             let _ = state.tx.send(ServerEvent {
                 event: "download_job_updated".to_string(),

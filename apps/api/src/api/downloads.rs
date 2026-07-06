@@ -323,7 +323,7 @@ async fn download_job_file(
     let abs_path = state.config.temp_root.join(&file_path);
 
     let file = tokio::fs::File::open(&abs_path).await.map_err(|e| {
-        error!(%e, "Failed to open download zip file");
+        error!(%e, "failed to open download zip file");
         ApiError::not_found(
             crate::api::error_codes::DOWNLOAD_ARCHIVE_MISSING,
             "The archive file no longer exists",

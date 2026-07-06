@@ -159,7 +159,7 @@ fn extract_7z_blocking(archive_path: &Path, temp_extract_dir: &Path) -> Result<V
 /// stops claiming new jobs once the token is cancelled, letting the in-flight
 /// job finish.
 pub(crate) async fn start_worker(state: AppState) {
-    tracing::info!("Starting background import worker");
+    tracing::info!("starting background import worker");
 
     // Clean up any jobs that were left in a running state due to a server crash or restart.
     if let Err(e) = sqlx::query(
@@ -167,7 +167,7 @@ pub(crate) async fn start_worker(state: AppState) {
     )
     .execute(&state.pool)
     .await {
-        tracing::error!("Failed to clean up stuck jobs: {:?}", e);
+        tracing::error!("failed to clean up stuck jobs: {:?}", e);
     }
 
     let shutdown = state.shutdown.clone();
@@ -176,21 +176,21 @@ pub(crate) async fn start_worker(state: AppState) {
         // Stop claiming new jobs once shutdown has been requested. Any job
         // already in flight has run to completion before this check.
         if shutdown.is_cancelled() {
-            tracing::info!("Import worker stopping: shutdown requested");
+            tracing::info!("import worker stopping: shutdown requested");
             return;
         }
 
         match process_next_job(&state).await {
             Ok(true) => continue, // Processed a job, check for next one immediately
             Ok(false) => {}       // No jobs found, sleep
-            Err(e) => tracing::error!("Import worker error: {:?}", e),
+            Err(e) => tracing::error!("import worker error: {:?}", e),
         }
 
         // Idle wait, but wake up immediately if shutdown is requested.
         tokio::select! {
             _ = sleep(Duration::from_secs(5)) => {}
             _ = shutdown.cancelled() => {
-                tracing::info!("Import worker stopping: shutdown requested");
+                tracing::info!("import worker stopping: shutdown requested");
                 return;
             }
         }
@@ -232,7 +232,7 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
         None => return Ok(false),
     };
 
-    tracing::info!("Found import job: {} (type: {})", job.id, job.source_type);
+    tracing::info!("found import job: {} (type: {})", job.id, job.source_type);
 
     // 2. Process the job
     let dynamic_config = state.dynamic_config().await;
@@ -259,7 +259,7 @@ async fn process_next_job(state: &AppState) -> Result<bool> {
             }
         }
         Err(e) => {
-            tracing::error!("Job {} failed: {:?}", job.id, e);
+            tracing::error!("job {} failed: {:?}", job.id, e);
             "failed"
         }
     };
@@ -324,9 +324,9 @@ fn cleanup_job_temp_dir(path: &Path, label: &str, job_id: Uuid) {
     }
 
     if let Err(e) = std::fs::remove_dir_all(path) {
-        tracing::error!(%job_id, %label, ?path, ?e, "Failed to clean up job temp directory");
+        tracing::error!(%job_id, %label, ?path, ?e, "failed to clean up job temp directory");
     } else {
-        tracing::info!(%job_id, %label, ?path, "Cleaned up job temp directory");
+        tracing::info!(%job_id, %label, ?path, "cleaned up job temp directory");
     }
 }
 
@@ -379,7 +379,7 @@ async fn run_import_job(
             .to_lowercase();
 
         if matches!(ext.as_str(), "zip") {
-            tracing::info!("Extracting ZIP archive: {:?}", source_path);
+            tracing::info!("extracting ZIP archive: {:?}", source_path);
 
             // Set status to extracting and update total items based on zip length
             sqlx::query(
@@ -458,7 +458,7 @@ async fn run_import_job(
                 }
             };
         } else if matches!(ext.as_str(), "7z") {
-            tracing::info!("Extracting 7Z archive: {:?}", source_path);
+            tracing::info!("extracting 7Z archive: {:?}", source_path);
 
             sqlx::query(
                 "UPDATE import_jobs SET status = 'extracting', updated_at = now() WHERE id = $1",
@@ -535,7 +535,7 @@ async fn run_import_job(
             Ok(true) => succeeded += 1,  // Success
             Ok(false) => succeeded += 1, // Skipped (already exists), user wants it counted as succeeded
             Err(e) => {
-                tracing::warn!("Failed to process file {:?}: {:?}", file_path, e);
+                tracing::warn!("failed to process file {:?}: {:?}", file_path, e);
                 failed += 1;
                 has_errors = true;
             }

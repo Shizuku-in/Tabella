@@ -231,11 +231,25 @@ impl Config {
 }
 
 /// Reads and parses an env var, returning `None` when absent or unparseable.
+///
+/// Logs a warning when the value exists but fails to parse, so misconfigured
+/// env vars don't silently fall back to the default.
 fn read_env<T>(key: &str) -> Option<T>
 where
     T: std::str::FromStr,
 {
-    env::var(key).ok()?.parse().ok()
+    let raw = env::var(key).ok()?;
+    match raw.parse() {
+        Ok(v) => Some(v),
+        Err(_) => {
+            tracing::warn!(
+                key = key,
+                value = raw,
+                "failed to parse env var, using default"
+            );
+            None
+        }
+    }
 }
 
 #[cfg(test)]
