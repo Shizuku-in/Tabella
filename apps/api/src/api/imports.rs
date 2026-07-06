@@ -6,7 +6,6 @@ use std::path::{Component, Path as StdPath, PathBuf};
 use axum::{
     Json, Router,
     extract::{DefaultBodyLimit, Multipart, Path, Query, State},
-    http::StatusCode,
     routing::{get, post},
 };
 use axum_extra::extract::CookieJar;
@@ -212,7 +211,7 @@ async fn upload_import_files(
     while let Some(mut field) = multipart
         .next_field()
         .await
-        .map_err(api_error_from_multipart)?
+        .map_err(ApiError::from_multipart_error)?
     {
         let name = field.name().unwrap_or("unknown_name").to_string();
         let file_name_opt = field.file_name().map(|s| s.to_string());
@@ -235,7 +234,11 @@ async fn upload_import_files(
                 .await
                 .map_err(|e| ApiError::internal(e.into()))?;
 
-            while let Some(chunk) = field.chunk().await.map_err(api_error_from_multipart)? {
+            while let Some(chunk) = field
+                .chunk()
+                .await
+                .map_err(ApiError::from_multipart_error)?
+            {
                 total_bytes = total_bytes.saturating_add(chunk.len() as u64);
                 if total_bytes > max_upload_bytes {
                     // Abort mid-stream; partial files go with the batch dir.
@@ -314,19 +317,6 @@ fn sanitize_upload_path(file_name: &str) -> Result<PathBuf, ApiError> {
     }
 
     Ok(sanitized)
-}
-
-fn api_error_from_multipart(error: axum::extract::multipart::MultipartError) -> ApiError {
-    match error.status() {
-        StatusCode::PAYLOAD_TOO_LARGE => {
-            ApiError::payload_too_large("Uploaded payload is too large.")
-        }
-        StatusCode::BAD_REQUEST => ApiError::bad_request(
-            crate::api::error_codes::INVALID_MULTIPART,
-            "Uploaded data could not be processed.",
-        ),
-        _ => ApiError::internal(error.into()),
-    }
 }
 
 #[cfg(test)]

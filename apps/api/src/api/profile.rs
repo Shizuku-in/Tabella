@@ -4,7 +4,6 @@
 use axum::{
     Json, Router,
     extract::{DefaultBodyLimit, Multipart, State},
-    http::StatusCode,
     routing::{get, post},
 };
 use axum_extra::extract::CookieJar;
@@ -201,11 +200,15 @@ async fn upload_avatar(
     while let Some(mut field) = multipart
         .next_field()
         .await
-        .map_err(api_error_from_multipart)?
+        .map_err(ApiError::from_multipart_error)?
     {
         if field.name() == Some("file") {
             let mut bytes = Vec::new();
-            while let Some(chunk) = field.chunk().await.map_err(api_error_from_multipart)? {
+            while let Some(chunk) = field
+                .chunk()
+                .await
+                .map_err(ApiError::from_multipart_error)?
+            {
                 bytes.extend_from_slice(&chunk);
             }
 
@@ -261,17 +264,4 @@ async fn upload_avatar(
     Ok(Json(json!({
         "avatar_url": url
     })))
-}
-
-fn api_error_from_multipart(error: axum::extract::multipart::MultipartError) -> ApiError {
-    match error.status() {
-        StatusCode::PAYLOAD_TOO_LARGE => {
-            ApiError::payload_too_large("Uploaded payload is too large.")
-        }
-        StatusCode::BAD_REQUEST => ApiError::bad_request(
-            crate::api::error_codes::INVALID_MULTIPART,
-            "Uploaded data could not be processed.",
-        ),
-        _ => ApiError::internal(error.into()),
-    }
 }

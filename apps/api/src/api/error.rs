@@ -10,6 +10,7 @@
 
 use axum::{
     Json,
+    extract::multipart::MultipartError,
     http::StatusCode,
     response::{IntoResponse, Response},
 };
@@ -135,6 +136,21 @@ impl ApiError {
     /// 500 — unexpected error. Details are logged but never sent to the client.
     pub(crate) fn internal(error: anyhow::Error) -> Self {
         Self::Internal(error)
+    }
+
+    /// Converts a multipart extraction error into the appropriate [`ApiError`]:
+    /// 413 for payloads that are too large, 400 for malformed data, 500 otherwise.
+    pub(crate) fn from_multipart_error(error: MultipartError) -> Self {
+        match error.status() {
+            StatusCode::PAYLOAD_TOO_LARGE => {
+                Self::payload_too_large("Uploaded payload is too large.")
+            }
+            StatusCode::BAD_REQUEST => Self::bad_request(
+                crate::api::error_codes::INVALID_MULTIPART,
+                "Uploaded data could not be processed.",
+            ),
+            _ => Self::internal(error.into()),
+        }
     }
 }
 
