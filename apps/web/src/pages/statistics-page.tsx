@@ -25,6 +25,7 @@ import { useNavigate } from 'react-router-dom'
 import { useGallerySessionStore } from '../gallery/gallery-session-store.ts'
 import { request } from '../lib/api.ts'
 import { ROUTES } from '../lib/routes.ts'
+import { getTagColor } from '../lib/tags.ts'
 
 interface StatsData {
   totalImages: number
@@ -49,27 +50,6 @@ function formatBytes(bytes: number, decimals = 2) {
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
-}
-
-/** Maps a tag string to its theme color by extracting the namespace. */
-function tagColor(tag: string, theme: Theme): string {
-  const colon = tag.indexOf(':')
-  const namespace = colon > -1 ? tag.slice(0, colon).toLowerCase() : 'unprefixed'
-  const colors = theme.palette.tags
-  switch (namespace) {
-    case 'parody':
-      return colors.parody
-    case 'character':
-      return colors.character
-    case 'artist':
-      return colors.artist
-    case 'general':
-      return colors.general
-    default:
-      // Unknown namespaces fall back to unprefixed grey;
-      // unprefixed tags use the dedicated unprefixed colour.
-      return colors.unprefixed
-  }
 }
 
 export function StatisticsPage() {
@@ -214,7 +194,7 @@ export function StatisticsPage() {
                         component="span"
                         onClick={() => handleTagClick(item.tag)}
                         sx={{
-                          color: tagColor(item.tag, theme),
+                          color: getTagColor(item.tag, theme),
                           cursor: 'pointer',
                           '&:hover': { textDecoration: 'underline' },
                         }}

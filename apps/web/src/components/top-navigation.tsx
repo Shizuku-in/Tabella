@@ -113,7 +113,7 @@ export function TopNavigation({
         position="sticky"
         elevation={0}
         sx={{
-          bgcolor: (theme) => alpha(theme.palette.background.paper, 0.86),
+          bgcolor: (theme) => alpha(theme.palette.background.paper, 0.84),
           color: 'text.primary',
         }}
       >
