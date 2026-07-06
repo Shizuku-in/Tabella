@@ -31,7 +31,7 @@ const TRANSITION_CSS = `opacity ${TRANSITION_DURATION_MS}ms ${TRANSITION_EASING}
 
 /**
  * Tachie (standing portrait) image set. One is randomly picked each time the
- * login page renders. Drop images into `public/tachie/` and list their
+ * login page renders. Drop images into `public/images/` and list their
  * filenames below, e.g. `'/images/tachie.png'`.
  */
 const TACHIE_SET: string[] = ['/images/example.webp']

@@ -7,10 +7,36 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['favicon/*', 'icons/*', 'fonts/*'],
+      includeAssets: ['favicon/*', 'icons/*', 'images/*', 'fonts/*'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff2}'],
         navigateFallbackDenylist: [/^\/api\//, /^\/media\//],
+        runtimeCaching: [
+          {
+            // Thumbnails — SHA256-addressed WebP, effectively immutable.
+            urlPattern: /^\/media\/thumbnails\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'thumbnails',
+              expiration: {
+                maxEntries: 2000,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+              },
+            },
+          },
+          {
+            // Samples (preview images) — same SHA256 addressing.
+            urlPattern: /^\/media\/samples\//,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'samples',
+              expiration: {
+                maxEntries: 2000,
+                maxAgeSeconds: 30 * 24 * 60 * 60,
+              },
+            },
+          },
+        ],
       },
       manifest: {
         id: '/',
