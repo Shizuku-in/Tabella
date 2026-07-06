@@ -34,6 +34,7 @@ pub const WEAK_PASSWORD_MISSING_NUMBER: &str = "weak_password_missing_number";
 pub const NO_FILE_UPLOADED: &str = "no_file_uploaded";
 pub const INVALID_MULTIPART: &str = "invalid_multipart";
 pub const PAYLOAD_TOO_LARGE: &str = "payload_too_large";
+pub const TOO_MANY_REQUESTS: &str = "too_many_requests";
 pub const NO_FILES_UPLOADED: &str = "no_files_uploaded";
 pub const INVALID_UPLOAD_PATH: &str = "invalid_upload_path";
 

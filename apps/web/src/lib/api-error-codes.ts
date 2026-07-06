@@ -27,6 +27,7 @@ export const API_ERROR_CODES = {
   NO_FILE_UPLOADED: 'no_file_uploaded',
   INVALID_MULTIPART: 'invalid_multipart',
   PAYLOAD_TOO_LARGE: 'payload_too_large',
+  TOO_MANY_REQUESTS: 'too_many_requests',
   INVALID_SETTINGS: 'invalid_settings',
   ROLE_CHANGE_NOT_ALLOWED: 'role_change_not_allowed',
   SELF_DELETE_NOT_ALLOWED: 'self_delete_not_allowed',

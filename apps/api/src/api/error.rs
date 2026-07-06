@@ -53,6 +53,12 @@ pub(crate) enum ApiError {
         message: String,
         params: Option<Value>,
     },
+    /// Rate limit exceeded.
+    TooManyRequests {
+        code: &'static str,
+        message: String,
+        params: Option<Value>,
+    },
     /// Unexpected error. Details are logged via `tracing::error!` and a generic
     /// `"internal_error"` response is returned to the client.
     Internal(anyhow::Error),
@@ -117,6 +123,15 @@ impl ApiError {
         }
     }
 
+    /// 429 — rate limit exceeded.
+    pub(crate) fn too_many_requests(message: impl Into<String>) -> Self {
+        Self::TooManyRequests {
+            code: crate::api::error_codes::TOO_MANY_REQUESTS,
+            message: message.into(),
+            params: None,
+        }
+    }
+
     /// 500 — unexpected error. Details are logged but never sent to the client.
     pub(crate) fn internal(error: anyhow::Error) -> Self {
         Self::Internal(error)
@@ -171,6 +186,15 @@ impl IntoResponse for ApiError {
                 params,
             } => (
                 StatusCode::NOT_FOUND,
+                Json(json!({ "error": code, "message": message, "params": params })),
+            )
+                .into_response(),
+            Self::TooManyRequests {
+                code,
+                message,
+                params,
+            } => (
+                StatusCode::TOO_MANY_REQUESTS,
                 Json(json!({ "error": code, "message": message, "params": params })),
             )
                 .into_response(),

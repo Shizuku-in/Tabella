@@ -413,6 +413,7 @@
       "internalError": "Internal server error.",
       "networkError": "Network error. Please check your connection.",
       "uploadAborted": "Upload aborted.",
+      "tooManyRequests": "Too many requests. Please wait before trying again.",
       "fallbackAllowedNumber": "the allowed number of",
       "DEFAULT_REQUEST_FAILED": "Request failed.",
       "defaultRequestFailed": "Request failed."

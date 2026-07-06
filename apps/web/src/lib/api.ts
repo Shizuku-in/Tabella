@@ -82,6 +82,7 @@ const ERROR_MESSAGE_MAP: Record<string, string> = {
   [API_ERROR_CODES.WEAK_PASSWORD_MISSING_NUMBER]: 'api.errors.weakPasswordMissingNumber',
   [API_ERROR_CODES.INTERNAL_ERROR]: 'api.errors.internalError',
   [API_ERROR_CODES.NETWORK_ERROR]: 'api.errors.networkError',
+  [API_ERROR_CODES.TOO_MANY_REQUESTS]: 'api.errors.tooManyRequests',
   [API_ERROR_CODES.UPLOAD_ABORTED]: 'api.errors.uploadAborted',
 } satisfies Record<ApiErrorCode, string>
 
