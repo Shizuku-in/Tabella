@@ -738,9 +738,7 @@ async fn process_single_file(
     .fetch_one(&mut *tx)
     .await?;
 
-    for tag in processed.tags_to_insert {
-        crate::tags::attach_tag_to_image(&mut tx, image_id, &tag).await?;
-    }
+    crate::tags::bulk_attach_tags_to_image(&mut tx, image_id, &processed.tags_to_insert).await?;
 
     tx.commit().await?;
 

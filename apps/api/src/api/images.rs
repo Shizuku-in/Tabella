@@ -815,15 +815,11 @@ async fn update_image(
             .await
             .map_err(|e| ApiError::internal(e.into()))?;
 
-        for tag_str in tags {
-            let Some(tag) = parse_tag(tag_str) else {
-                continue;
-            };
+        let parsed_tags: Vec<_> = tags.iter().filter_map(|s| parse_tag(s)).collect();
 
-            crate::tags::attach_tag_to_image(&mut tx, image_id, &tag)
-                .await
-                .map_err(|e| ApiError::internal(e.into()))?;
-        }
+        crate::tags::bulk_attach_tags_to_image(&mut tx, image_id, &parsed_tags)
+            .await
+            .map_err(|e| ApiError::internal(e.into()))?;
 
         crate::tags::cleanup_orphan_tags(&mut tx, &previous_tag_ids)
             .await

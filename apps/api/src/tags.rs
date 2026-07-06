@@ -12,50 +12,69 @@ pub(crate) struct ParsedTag {
     pub(crate) normalized_name: String,
 }
 
-/// Finds an existing tag by its normalized identity, inserting it if absent,
-/// and returns the tag id. Safe to call concurrently thanks to the
-/// `ON CONFLICT` upsert. Takes a `&mut PgConnection` so callers can run it
-/// inside a transaction — pass `&mut *tx` for a `Transaction` or `&mut conn`
-/// for an acquired `PoolConnection`.
-pub(crate) async fn upsert_tag(
-    conn: &mut PgConnection,
-    tag: &ParsedTag,
-) -> Result<i64, sqlx::Error> {
-    sqlx::query_scalar(
-        r#"
-        WITH new_tag AS (
-            INSERT INTO tags (namespace, name, normalized_namespace, normalized_name)
-            VALUES ($1, $2, $3, $4)
-            ON CONFLICT (normalized_namespace, normalized_name) DO NOTHING
-            RETURNING id
-        )
-        SELECT id FROM new_tag
-        UNION ALL
-        SELECT id FROM tags WHERE normalized_namespace = $3 AND normalized_name = $4
-        LIMIT 1
-        "#,
-    )
-    .bind(&tag.namespace)
-    .bind(&tag.name)
-    .bind(&tag.normalized_namespace)
-    .bind(&tag.normalized_name)
-    .fetch_one(conn)
-    .await
-}
-
-/// Upserts a tag and links it to the given image. Idempotent: re-linking an
-/// already-attached tag is a no-op.
-pub(crate) async fn attach_tag_to_image(
+/// Links an image to a set of tags in 3 queries (regardless of tag count):
+/// bulk upsert → bulk id lookup → bulk `image_tags` insert. Idempotent:
+/// existing tags and links are silently skipped via `ON CONFLICT DO NOTHING`.
+pub(crate) async fn bulk_attach_tags_to_image(
     conn: &mut PgConnection,
     image_id: i64,
-    tag: &ParsedTag,
+    tags: &[ParsedTag],
 ) -> Result<(), sqlx::Error> {
-    let tag_id = upsert_tag(conn, tag).await?;
-    sqlx::query("INSERT INTO image_tags (image_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING")
-        .bind(image_id)
-        .bind(tag_id)
-        .execute(conn)
-        .await?;
+    if tags.is_empty() {
+        return Ok(());
+    }
+
+    let namespaces: Vec<&str> = tags.iter().map(|t| t.namespace.as_str()).collect();
+    let names: Vec<&str> = tags.iter().map(|t| t.name.as_str()).collect();
+    let nn: Vec<&str> = tags
+        .iter()
+        .map(|t| t.normalized_namespace.as_str())
+        .collect();
+    let nm: Vec<&str> = tags.iter().map(|t| t.normalized_name.as_str()).collect();
+
+    // 1. Bulk upsert all tags.
+    sqlx::query(
+        r#"
+        INSERT INTO tags (namespace, name, normalized_namespace, normalized_name)
+        SELECT * FROM UNNEST($1::text[], $2::text[], $3::text[], $4::text[])
+        ON CONFLICT (normalized_namespace, normalized_name) DO NOTHING
+        "#,
+    )
+    .bind(&namespaces)
+    .bind(&names)
+    .bind(&nn)
+    .bind(&nm)
+    .execute(&mut *conn)
+    .await?;
+
+    // 2. Fetch all tag ids (existing + just-inserted) in one query.
+    let tag_ids: Vec<i64> = sqlx::query_scalar(
+        r#"
+        WITH input(ns, nm) AS (
+            SELECT * FROM UNNEST($1::text[], $2::text[])
+        )
+        SELECT t.id FROM tags t
+        INNER JOIN input ON t.normalized_namespace = input.ns AND t.normalized_name = input.nm
+        "#,
+    )
+    .bind(&nn)
+    .bind(&nm)
+    .fetch_all(&mut *conn)
+    .await?;
+
+    // 3. Bulk link to the image.
+    sqlx::query(
+        r#"
+        INSERT INTO image_tags (image_id, tag_id)
+        SELECT $1, UNNEST($2::bigint[])
+        ON CONFLICT DO NOTHING
+        "#,
+    )
+    .bind(image_id)
+    .bind(&tag_ids)
+    .execute(&mut *conn)
+    .await?;
+
     Ok(())
 }
 
