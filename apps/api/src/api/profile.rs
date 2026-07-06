@@ -152,16 +152,12 @@ async fn update_profile(
             ApiError::internal(err.into())
         })?;
 
-    if password_changed
-        && let Some(current_session_id) =
-            crate::auth::session_id_from_jar(&jar, &state.config.session_cookie_name)
-    {
-        sqlx::query("delete from sessions where user_id = $1 and id != $2")
-            .bind(user.id)
-            .bind(current_session_id)
-            .execute(&state.pool)
+    if password_changed {
+        let current_session_id =
+            crate::auth::session_id_from_jar(&jar, &state.config.session_cookie_name);
+        crate::auth::invalidate_other_sessions(&state.pool, user.id, current_session_id)
             .await
-            .map_err(|e| ApiError::internal(e.into()))?;
+            .map_err(ApiError::internal)?;
     }
 
     use sqlx::Row;

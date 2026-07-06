@@ -205,6 +205,32 @@ pub(crate) async fn destroy_session(pool: &PgPool, session_id: Uuid) -> Result<(
     Ok(())
 }
 
+/// Invalidates all sessions for `user_id` except `current_session_id` (when
+/// provided). Used after password or role changes to log out other devices
+/// while keeping the caller's own session alive. When `current_session_id` is
+/// `None`, **all** sessions for the user are deleted.
+pub(crate) async fn invalidate_other_sessions(
+    pool: &PgPool,
+    user_id: i64,
+    current_session_id: Option<Uuid>,
+) -> Result<()> {
+    if let Some(sid) = current_session_id {
+        sqlx::query("delete from sessions where user_id = $1 and id != $2")
+            .bind(user_id)
+            .bind(sid)
+            .execute(pool)
+            .await
+            .context("failed to invalidate other sessions")?;
+    } else {
+        sqlx::query("delete from sessions where user_id = $1")
+            .bind(user_id)
+            .execute(pool)
+            .await
+            .context("failed to invalidate all sessions")?;
+    }
+    Ok(())
+}
+
 /// Builds a Set-Cookie header value for a new session.
 ///
 /// HttpOnly + SameSite=Lax always; Secure is toggled via `secure_cookies`
