@@ -4,9 +4,10 @@
 
 import { DownloadOutlined, Favorite, FavoriteBorder } from '@mui/icons-material'
 import { Box, IconButton, Stack, Typography } from '@mui/material'
-import { alpha } from '@mui/material/styles'
+import { alpha, useTheme } from '@mui/material/styles'
 
-import { ratingLabel, ratingTone } from '../lib/constants.ts'
+import { ratingLabel } from '../lib/constants.ts'
+import { getRatingColor } from '../lib/tags.ts'
 import type { GalleryItem, LayoutMode } from '../types.ts'
 import { LazyImage } from './lazy-image.tsx'
 
@@ -49,6 +50,7 @@ export function GalleryCard({
   isSelected,
 }: GalleryCardProps) {
   const { t } = useTranslation()
+  const theme = useTheme()
 
   const isGrid = layoutMode === 'grid'
 
@@ -64,7 +66,7 @@ export function GalleryCard({
         cursor: 'pointer',
         borderRadius: 0.75,
         breakInside: layoutMode === 'masonry' ? 'avoid' : 'auto',
-        bgcolor: 'rgba(17, 20, 29, 0.04)',
+        bgcolor: alpha(theme.palette.text.primary, 0.04),
       }}
     >
       {isSelected && (
@@ -73,7 +75,7 @@ export function GalleryCard({
             position: 'absolute',
             inset: 0,
             zIndex: 10,
-            bgcolor: 'rgba(0, 0, 0, 0.4)',
+            bgcolor: alpha(theme.palette.common.black, 0.4),
             border: '2px solid',
             borderColor: 'primary.main',
             borderRadius: 'inherit',
@@ -134,6 +136,9 @@ export function GalleryCard({
             p: 1,
             opacity: { xs: showMobileDetails ? 1 : 0, md: 0 },
             transition: 'opacity 0.18s ease',
+            willChange: 'opacity',
+            backfaceVisibility: 'hidden',
+            transform: 'translateZ(0)',
             '.gallery-card:hover &': {
               opacity: 1,
             },
@@ -148,8 +153,8 @@ export function GalleryCard({
               borderRadius: 999,
               fontSize: '0.68rem',
               fontWeight: 700,
-              color: 'rgba(18, 23, 35, 0.94)',
-              bgcolor: ratingTone[item.rating],
+              color: theme.palette.getContrastText(getRatingColor(item.rating, theme)),
+              bgcolor: getRatingColor(item.rating, theme),
               backdropFilter: 'blur(10px)',
               WebkitBackdropFilter: 'blur(10px)',
               transform: 'translateZ(0)',
@@ -172,8 +177,7 @@ export function GalleryCard({
             gap: 1,
             p: 1,
             color: 'common.white',
-            background:
-              'linear-gradient(180deg, rgba(6,9,14,0) 0%, rgba(6,9,14,0.28) 34%, rgba(6,9,14,0.78) 100%)',
+            background: `linear-gradient(180deg, transparent 0%, ${alpha(theme.palette.common.black, 0.28)} 34%, ${alpha(theme.palette.common.black, 0.78)} 100%)`,
             opacity: { xs: showMobileDetails ? 1 : 0, md: 0 },
             transform: { xs: 'translateY(0)', md: 'translateY(10px)' },
             transition: 'opacity 0.18s ease, transform 0.18s ease',
@@ -191,7 +195,7 @@ export function GalleryCard({
                 variant="body2"
                 sx={{
                   fontWeight: 700,
-                  textShadow: '0 1px 6px rgba(0,0,0,0.45)',
+                  textShadow: `0 1px 6px ${alpha(theme.palette.common.black, 0.45)}`,
                 }}
                 noWrap
               >
@@ -202,8 +206,8 @@ export function GalleryCard({
               <Typography
                 variant="caption"
                 sx={{
-                  color: 'rgba(255,255,255,0.74)',
-                  textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                  color: alpha(theme.palette.common.white, 0.74),
+                  textShadow: `0 1px 4px ${alpha(theme.palette.common.black, 0.3)}`,
                 }}
                 noWrap
               >
@@ -239,12 +243,12 @@ export function GalleryCard({
                   height: 32,
                   flexShrink: 0,
                   color: 'common.white',
-                  bgcolor: alpha('#ffffff', 0.12),
+                  bgcolor: alpha(theme.palette.common.white, 0.12),
                   backdropFilter: 'blur(10px)',
                   WebkitBackdropFilter: 'blur(10px)',
                   transform: 'translateZ(0)',
                   '&:hover': {
-                    bgcolor: alpha('#ffffff', 0.18),
+                    bgcolor: alpha(theme.palette.common.white, 0.18),
                   },
                 }}
               >
@@ -266,12 +270,12 @@ export function GalleryCard({
                   height: 32,
                   flexShrink: 0,
                   color: 'common.white',
-                  bgcolor: alpha('#ffffff', 0.12),
+                  bgcolor: alpha(theme.palette.common.white, 0.12),
                   backdropFilter: 'blur(10px)',
                   WebkitBackdropFilter: 'blur(10px)',
                   transform: 'translateZ(0)',
                   '&:hover': {
-                    bgcolor: alpha('#ffffff', 0.18),
+                    bgcolor: alpha(theme.palette.common.white, 0.18),
                   },
                 }}
               >

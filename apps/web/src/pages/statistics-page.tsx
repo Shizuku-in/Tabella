@@ -124,7 +124,7 @@ export function StatisticsPage() {
             display: 'flex',
             alignItems: 'center',
             gap: 2,
-            borderRadius: 2,
+            borderRadius: 1,
           }}
         >
           <CollectionsOutlined sx={{ fontSize: 36, color: 'primary.main', opacity: 0.72 }} />
@@ -145,7 +145,7 @@ export function StatisticsPage() {
             display: 'flex',
             alignItems: 'center',
             gap: 2,
-            borderRadius: 2,
+            borderRadius: 1,
           }}
         >
           <StorageOutlined sx={{ fontSize: 36, color: 'primary.main', opacity: 0.72 }} />
@@ -163,7 +163,7 @@ export function StatisticsPage() {
       {/* Tags table */}
       <Paper
         sx={{
-          borderRadius: 2,
+          borderRadius: 1,
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',

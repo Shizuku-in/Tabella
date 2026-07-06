@@ -3,7 +3,7 @@
  */
 
 import { Close, Download, SelectAll } from '@mui/icons-material'
-import { Button, Fade, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material'
+import { Fade, IconButton, Paper, Stack, Tooltip, Typography } from '@mui/material'
 import { useTranslation } from 'react-i18next'
 
 export interface SelectionActionBarProps {
@@ -32,7 +32,7 @@ export function SelectionActionBar({
           left: '50%',
           transform: 'translateX(-50%)',
           zIndex: 1100,
-          borderRadius: 8,
+          borderRadius: 999,
           overflow: 'hidden',
           bgcolor: 'background.paper',
           border: '1px solid',
@@ -58,16 +58,11 @@ export function SelectionActionBar({
             </IconButton>
           </Tooltip>
 
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Download />}
-            disabled={selectedCount === 0}
-            onClick={onDownload}
-            sx={{ borderRadius: 6, textTransform: 'none', px: 2 }}
-          >
-            {t('gallery.selection.download')}
-          </Button>
+          <Tooltip title={t('gallery.selection.download')}>
+            <IconButton size="small" disabled={selectedCount === 0} onClick={onDownload}>
+              <Download />
+            </IconButton>
+          </Tooltip>
         </Stack>
       </Paper>
     </Fade>

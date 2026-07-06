@@ -4,6 +4,7 @@
 
 import { BrokenImage } from '@mui/icons-material'
 import { Box, CircularProgress, keyframes } from '@mui/material'
+import { alpha, useTheme } from '@mui/material/styles'
 import { useState } from 'react'
 
 const slideUpFadeIn = keyframes`
@@ -26,6 +27,7 @@ interface LazyImageProps {
 
 export function LazyImage({ src, alt, aspectRatio, className }: LazyImageProps) {
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading')
+  const theme = useTheme()
 
   return (
     <Box
@@ -34,7 +36,7 @@ export function LazyImage({ src, alt, aspectRatio, className }: LazyImageProps) 
         position: 'relative',
         width: '100%',
         aspectRatio,
-        backgroundColor: 'rgba(17, 20, 29, 0.06)',
+        backgroundColor: alpha(theme.palette.text.primary, 0.06),
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

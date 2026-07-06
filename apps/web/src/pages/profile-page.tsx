@@ -15,6 +15,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import { alpha, useTheme } from '@mui/material/styles'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import React, { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -34,6 +35,7 @@ interface ProfileFieldErrors {
 
 export function ProfilePage() {
   const { t } = useTranslation()
+  const theme = useTheme()
   const { user } = useAuth()
   const queryClient = useQueryClient()
 
@@ -245,11 +247,11 @@ export function ProfilePage() {
                   left: 0,
                   width: '100%',
                   height: '100%',
-                  bgcolor: 'rgba(0, 0, 0, 0.4)',
+                  bgcolor: alpha(theme.palette.common.black, 0.4),
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: 'white',
+                  color: 'common.white',
                   opacity: 0,
                   transition: 'opacity 0.2s',
                 }}

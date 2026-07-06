@@ -1,8 +1,10 @@
 /**
- * Tag display helpers.
+ * Tag and rating display helpers.
  */
 
 import type { Theme } from '@mui/material/styles'
+
+import type { Rating } from '../types.ts'
 
 /**
  * Returns the MUI palette color for a tag based on its namespace.
@@ -26,4 +28,12 @@ export function getTagColor(tag: string, theme: Theme): string {
     default:
       return theme.palette.tags.unprefixed
   }
+}
+
+/**
+ * Returns the MUI palette color for a rating level.
+ * Uses the theme-aware `rating` palette so colors adapt to light/dark mode.
+ */
+export function getRatingColor(rating: Rating, theme: Theme): string {
+  return theme.palette.rating[rating]
 }

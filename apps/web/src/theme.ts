@@ -14,6 +14,11 @@ declare module '@mui/material/styles' {
       general: string
       unprefixed: string
     }
+    rating: {
+      safe: string
+      suggestive: string
+      explicit: string
+    }
   }
   interface PaletteOptions {
     tags?: {
@@ -22,6 +27,11 @@ declare module '@mui/material/styles' {
       artist: string
       general: string
       unprefixed: string
+    }
+    rating?: {
+      safe: string
+      suggestive: string
+      explicit: string
     }
   }
 }
@@ -56,6 +66,11 @@ export function buildTheme(mode: PaletteMode) {
         artist: isDark ? '#f06292' : '#c2185b', // Pinkish
         general: isDark ? '#82b1ff' : '#1976d2', // Blue
         unprefixed: isDark ? '#bdbdbd' : '#757575', // Grey
+      },
+      rating: {
+        safe: isDark ? 'rgba(185, 195, 215, 0.86)' : 'rgba(238, 241, 248, 0.86)',
+        suggestive: isDark ? 'rgba(215, 195, 140, 0.88)' : 'rgba(255, 238, 196, 0.88)',
+        explicit: isDark ? 'rgba(215, 170, 170, 0.9)' : 'rgba(255, 215, 215, 0.9)',
       },
     },
     shape: {

@@ -166,7 +166,7 @@ export function LoginPage() {
           width: '100%',
           maxWidth: 360,
           p: { xs: 2.5, sm: 3 },
-          borderRadius: 2,
+          borderRadius: 1,
           bgcolor: 'background.paper',
           boxShadow: 'none',
           zIndex: 1,
@@ -183,7 +183,7 @@ export function LoginPage() {
                 height: 34,
                 display: 'grid',
                 placeItems: 'center',
-                borderRadius: 1.5,
+                borderRadius: 1,
                 color: 'primary.main',
                 bgcolor: (theme) => alpha(theme.palette.primary.main, 0.08),
               }}
@@ -208,7 +208,7 @@ export function LoginPage() {
               severity="error"
               sx={{
                 py: 0.25,
-                borderRadius: 1.5,
+                borderRadius: 1,
                 alignItems: 'center',
               }}
             >
