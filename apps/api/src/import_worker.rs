@@ -513,9 +513,13 @@ async fn run_import_job(
     let mut failed = 0;
     let mut has_errors = false;
 
-    // Create originals directory
+    // Create media directories once before the per-file loop
     let originals_dir = config.media_root.join("originals");
+    let thumbnails_dir = config.media_root.join("thumbnails");
+    let samples_dir = config.media_root.join("samples");
     std::fs::create_dir_all(&originals_dir)?;
+    std::fs::create_dir_all(&thumbnails_dir)?;
+    std::fs::create_dir_all(&samples_dir)?;
 
     for (index, file_path) in files_to_process.into_iter().enumerate() {
         match process_single_file(

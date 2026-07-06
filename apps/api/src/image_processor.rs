@@ -48,11 +48,8 @@ pub(crate) fn process_image(
     let img = image::open(source_path).context("failed to open image")?;
     let (width, height) = img.dimensions();
 
-    // Ensure target directories exist
     let thumbnails_dir = media_root.join("thumbnails");
     let samples_dir = media_root.join("samples");
-    std::fs::create_dir_all(&thumbnails_dir).context("failed to create thumbnails directory")?;
-    std::fs::create_dir_all(&samples_dir).context("failed to create samples directory")?;
 
     let thumbnail_filename = format!("{}.webp", sha256);
     let sample_filename = format!("{}.webp", sha256);
