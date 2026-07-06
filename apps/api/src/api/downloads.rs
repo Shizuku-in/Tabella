@@ -343,7 +343,7 @@ async fn download_job_file(
     );
     response.headers_mut().insert(
         header::CONTENT_DISPOSITION,
-        HeaderValue::from_str(&content_disposition).unwrap(),
+        HeaderValue::from_str(&content_disposition).map_err(|e| ApiError::internal(e.into()))?,
     );
 
     Ok(response)
