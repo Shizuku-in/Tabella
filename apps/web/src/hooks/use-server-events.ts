@@ -160,7 +160,7 @@ class ServerEventsManager {
   }
 }
 
-export const serverEvents = new ServerEventsManager()
+const serverEvents = new ServerEventsManager()
 
 /**
  * Subscribes to a server-sent event. Automatically connects on mount and

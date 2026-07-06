@@ -289,20 +289,6 @@ export async function logout(): Promise<void> {
 
 // ----- Gallery API -----
 
-/** Image detail used in the lightbox / detail view. */
-export interface ImageDetails {
-  id: string
-  hash: string
-  width: number
-  height: number
-  format: string
-  file_size: number
-  createdAt: string
-  tags: string[]
-  sourceUrl?: string
-  rating: 'safe' | 'suggestive' | 'explicit'
-}
-
 /** Raw image list item from the backend (`snake_case`). */
 export interface BackendImageListItem {
   id: number

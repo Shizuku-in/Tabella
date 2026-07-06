@@ -6,7 +6,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import type { GalleryItem, LayoutMode } from '../types.ts'
 
-export interface VirtualizerPosition {
+interface VirtualizerPosition {
   x: number
   y: number
   width: number
