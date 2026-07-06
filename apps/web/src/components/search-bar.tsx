@@ -64,13 +64,11 @@ export function SearchBar() {
   const mobileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (searchVisible) {
-      if (isMobile) {
-        setTimeout(() => mobileInputRef.current?.focus(), 100)
-      } else {
-        setTimeout(() => searchInputRef.current?.focus(), 100)
-      }
-    }
+    if (!searchVisible) return
+    const timer = isMobile
+      ? setTimeout(() => mobileInputRef.current?.focus(), 100)
+      : setTimeout(() => searchInputRef.current?.focus(), 100)
+    return () => clearTimeout(timer)
   }, [searchVisible, isMobile])
 
   useEffect(() => {

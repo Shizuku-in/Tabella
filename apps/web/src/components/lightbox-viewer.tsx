@@ -2,7 +2,7 @@
  * Full-screen image lightbox with keyboard and gallery navigation.
  */
 
-/* eslint-disable react-hooks/set-state-in-effect, @typescript-eslint/no-explicit-any */
+/* eslint-disable react-hooks/set-state-in-effect */
 import {
   BrokenImage,
   ChevronLeft,
@@ -52,6 +52,7 @@ import { LightboxViewerInfo } from './lightbox-viewer-info'
 
 const Transition = forwardRef(function Transition(
   props: TransitionProps & {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     children: ReactElement<any, any>
   },
   ref: Ref<unknown>,

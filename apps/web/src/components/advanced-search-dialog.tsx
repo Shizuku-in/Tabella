@@ -1,8 +1,6 @@
 /**
  * Advanced search dialog with date range, dimensions, and aspect-ratio filters.
  */
-
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable react-hooks/set-state-in-effect */
 import {
   Autocomplete,
@@ -417,9 +415,11 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
                   },
                   openPickerButton: {
                     size: 'small',
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   } as any,
                   openPickerIcon: {
                     fontSize: 'small',
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   } as any,
                 }}
               />
@@ -438,9 +438,11 @@ export function AdvancedSearchDialog({ open, onClose }: AdvancedSearchDialogProp
                   },
                   openPickerButton: {
                     size: 'small',
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   } as any,
                   openPickerIcon: {
                     fontSize: 'small',
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                   } as any,
                 }}
               />
@@ -573,7 +575,7 @@ function validateAdvancedSearchFields(
     aspectRatioMin: string
     aspectRatioMax: string
   },
-  t: any,
+  t: import('i18next').TFunction,
 ): AdvancedSearchFieldErrors {
   const errors: AdvancedSearchFieldErrors = {}
 
