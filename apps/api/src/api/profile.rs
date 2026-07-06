@@ -38,16 +38,11 @@ async fn get_profile(
 ) -> Result<Json<UserResponse>, ApiError> {
     let user = require_user(&state, &jar).await?;
 
-    let created_at = sqlx::query_scalar!("select created_at from users where id = $1", user.id)
-        .fetch_one(&state.pool)
-        .await
-        .map_err(|e| ApiError::internal(e.into()))?;
-
     Ok(Json(UserResponse {
         id: user.id,
         username: user.username,
         role: user.role,
-        created_at,
+        created_at: user.created_at,
         avatar_url: user.avatar_url,
     }))
 }

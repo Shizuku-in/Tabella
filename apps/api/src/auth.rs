@@ -71,7 +71,7 @@ pub(crate) async fn authenticate(
 ) -> Result<Option<SessionUser>> {
     let row = sqlx::query(
         r#"
-        select id, username, password_hash, role, avatar_url
+        select id, username, password_hash, role, avatar_url, created_at
         from users
         where normalized_username = $1
         "#,
@@ -94,6 +94,7 @@ pub(crate) async fn authenticate(
         id: row.get("id"),
         username: row.get("username"),
         role: UserRole::try_from(row.get::<String, _>("role").as_str())?,
+        created_at: row.get("created_at"),
         avatar_url: row.get("avatar_url"),
     }))
 }
@@ -144,7 +145,7 @@ pub(crate) async fn current_user_from_jar(
 
     let row = sqlx::query(
         r#"
-        SELECT u.id, u.username, u.role, u.avatar_url
+        SELECT u.id, u.username, u.role, u.avatar_url, u.created_at
         FROM sessions s
         JOIN users u ON u.id = s.user_id
         WHERE s.id = $1 AND s.expires_at > now()
@@ -163,6 +164,7 @@ pub(crate) async fn current_user_from_jar(
         id: row.get("id"),
         username: row.get("username"),
         role: UserRole::try_from(row.get::<String, _>("role").as_str())?,
+        created_at: row.get("created_at"),
         avatar_url: row.get("avatar_url"),
     }))
 }

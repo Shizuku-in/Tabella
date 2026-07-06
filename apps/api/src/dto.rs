@@ -53,6 +53,7 @@ pub(crate) struct SessionUser {
     pub(crate) id: i64,
     pub(crate) username: String,
     pub(crate) role: UserRole,
+    pub(crate) created_at: time::OffsetDateTime,
     pub(crate) avatar_url: Option<String>,
 }
 
