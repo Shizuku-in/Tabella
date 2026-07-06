@@ -261,11 +261,7 @@ async fn list_images(
 
     let mut items = Vec::new();
     for row in rows {
-        let rating = match row.rating.as_str() {
-            "suggestive" => Rating::Suggestive,
-            "explicit" => Rating::Explicit,
-            _ => Rating::Safe,
-        };
+        let rating = row.rating.parse().unwrap_or(Rating::Safe);
 
         let uploader = match (
             row.uploader_id,
@@ -355,11 +351,7 @@ async fn get_image(
         ApiError::not_found(crate::api::error_codes::IMAGE_NOT_FOUND, "Image not found.")
     })?;
 
-    let rating = match row.rating.as_str() {
-        "suggestive" => Rating::Suggestive,
-        "explicit" => Rating::Explicit,
-        _ => Rating::Safe,
-    };
+    let rating = row.rating.parse().unwrap_or(Rating::Safe);
     let uploader = match (
         row.uploader_id,
         row.uploader_username,
@@ -542,11 +534,7 @@ async fn random_image(
         )
     })?;
 
-    let rating = match row.rating.as_str() {
-        "suggestive" => Rating::Suggestive,
-        "explicit" => Rating::Explicit,
-        _ => Rating::Safe,
-    };
+    let rating = row.rating.parse().unwrap_or(Rating::Safe);
     let url = random_image_url(&row, &query.quality);
 
     Ok(Json(RandomImageResponse {
