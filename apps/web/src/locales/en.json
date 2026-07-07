@@ -213,6 +213,7 @@
     "login": {
       "checkingSession": "Checking session",
       "restoring": "Restoring the current login state.",
+      "preparing": "Loading…",
       "signIn": "Sign in",
       "signInFailed": "Sign in failed. Please try again.",
       "signingIn": "Signing in",

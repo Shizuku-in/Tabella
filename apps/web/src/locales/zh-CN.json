@@ -213,6 +213,7 @@
     "login": {
       "checkingSession": "检查登录状态",
       "restoring": "正在恢复登录会话...",
+      "preparing": "加载中…",
       "signIn": "登录",
       "signInFailed": "登录失败，请重试。",
       "signingIn": "登录中...",

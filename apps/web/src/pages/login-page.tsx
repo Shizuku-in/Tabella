@@ -15,7 +15,7 @@ import {
 } from '@mui/material'
 import { alpha } from '@mui/material/styles'
 import type { SyntheticEvent } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useSearchParams } from 'react-router-dom'
 
@@ -50,16 +50,50 @@ export function LoginPage() {
   const [submitting, setSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<{ username?: string; password?: string }>({})
-  const [entering, setEntering] = useState(true)
+  const [entering, setEntering] = useState(false)
   const [exiting, setExiting] = useState(false)
+  const enteredRef = useRef(false)
   const isAnimating = entering || exiting
   const next = searchParams.get('next') || ROUTES.HOME
   const targetLabel = useMemo(() => (next === ROUTES.HOME ? 'gallery' : next), [next])
   const tachie = useMemo(() => pickTachie(), [])
+  const [tachieReady, setTachieReady] = useState(() => !tachie)
+  const [tachieFailed, setTachieFailed] = useState(false)
+  const contentLoading = status === 'loading' || !tachieReady
+
+  // Preload the tachie image so it renders instantly when the form appears.
+  // Errors don't block the page — the form shows without the tachie.
+  useEffect(() => {
+    if (!tachie) return
+    let canceled = false
+    const img = new Image()
+    img.onload = () => {
+      if (!canceled) setTachieReady(true)
+    }
+    img.onerror = () => {
+      if (!canceled) {
+        setTachieFailed(true)
+        setTachieReady(true)
+      }
+    }
+    img.src = tachie
+    return () => {
+      canceled = true
+    }
+  }, [tachie])
+
+  // Kick off the enter animation once both auth and tachie are ready.
+  // enteredRef ensures the animation only plays once per mount.
+  useEffect(() => {
+    if (status !== 'anonymous' || !tachieReady || enteredRef.current || exiting) return
+    enteredRef.current = true
+    setEntering(true)
+  }, [status, tachieReady, exiting])
 
   // Double-RAF so the browser paints the enter-from state before transitioning
   // to idle — without this a hard refresh skips the enter animation.
   useEffect(() => {
+    if (!entering) return
     let canceled = false
     requestAnimationFrame(() => {
       if (canceled) return
@@ -70,7 +104,7 @@ export function LoginPage() {
     return () => {
       canceled = true
     }
-  }, [])
+  }, [entering])
 
   // Hold the login page during the exit animation, then allow navigation.
   useEffect(() => {
@@ -79,18 +113,15 @@ export function LoginPage() {
     return () => clearTimeout(timer)
   }, [exiting])
 
-  // Skip the loading skeleton while animating so there is content to fade out.
-  if (!isAnimating && status === 'loading') {
-    return (
-      <FullscreenState
-        title={t('auth.login.checkingSession')}
-        description={t('auth.login.restoring')}
-      />
-    )
-  }
-
+  // Already authenticated — navigate immediately, no need to wait for tachie.
   if (status === 'authenticated' && !exiting) {
     return <Navigate to={next} replace />
+  }
+
+  // Show loading skeleton while auth or tachie haven't resolved yet.
+  // Skip it during enter/exit animations so there is content to animate.
+  if (!isAnimating && contentLoading) {
+    return <FullscreenState title={t('auth.login.preparing')} />
   }
 
   const handleSubmit = async (event: SyntheticEvent<HTMLFormElement>) => {
@@ -138,7 +169,7 @@ export function LoginPage() {
       }}
     >
       {/* Tachie (standing portrait) — add images to TACHIE_SET above. */}
-      {tachie && (
+      {tachie && !tachieFailed && (
         <Box
           component="img"
           src={tachie}
